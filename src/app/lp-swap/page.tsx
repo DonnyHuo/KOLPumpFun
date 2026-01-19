@@ -426,9 +426,9 @@ export default function LpSwapPage() {
               <div className="h-px bg-white/5" />
               <div className="flex justify-between">
                 <span className="text-gray-400">{lpSwap.shares as string}</span>
-                <span className="text-white">
-                  {myBalance} <span className="text-gray-400">{selectedToken.name}</span>
-                  <span className="ml-2 text-[#FFC519]">({myBalanceRate}%)</span>
+                <span className="text-[#FFC519]">
+                  {myBalance} <span className="text-[#FFC519]">{selectedToken.name}</span>
+                  <span className="ml-2 text-gray-400">({myBalanceRate}%)</span>
                 </span>
               </div>
             </>

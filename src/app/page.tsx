@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { Globe } from 'lucide-react';
 import { useAccount, useDisconnect } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import Image from 'next/image';
@@ -87,9 +88,25 @@ export default function CreatePage() {
     address as `0x${string}`
   );
 
+  // 语言选择下拉菜单
+  const [showLangMenu, setShowLangMenu] = useState(false);
+  const langMenuRef = useRef<HTMLDivElement>(null);
+
+  // 点击外部关闭下拉菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
+        setShowLangMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // 切换语言
-  const toggleLang = () => {
-    setLang(lang === 'zh' ? 'en' : 'zh');
+  const handleSelectLang = (newLang: 'zh' | 'en') => {
+    setLang(newLang);
+    setShowLangMenu(false);
   };
 
   // 获取 KOL 信息
@@ -175,12 +192,34 @@ export default function CreatePage() {
             </button>
           )}
           {/* 语言切换按钮 */}
-          <button
-            onClick={toggleLang}
-            className="h-[36px] px-4 bg-[#1A1A1E] border border-white/10 rounded-xl text-sm text-white hover:bg-[#222226] hover:border-white/20 transition-all"
-          >
-            {lang === 'zh' ? '繁体中文' : 'English'}
-          </button>
+          <div className="relative" ref={langMenuRef}>
+            <button
+              onClick={() => setShowLangMenu(!showLangMenu)}
+              className="h-[36px] w-[36px] bg-[#1A1A1E] border border-white/10 rounded-xl flex items-center justify-center hover:bg-[#222226] hover:border-white/20 transition-all"
+            >
+              <Globe className="w-[18px] h-[18px] text-white" />
+            </button>
+            {showLangMenu && (
+              <div className="absolute right-0 top-[42px] bg-[#1A1A1E] border border-white/10 rounded-xl overflow-hidden z-50 min-w-[120px]">
+                <button
+                  onClick={() => handleSelectLang('zh')}
+                  className={`w-full px-4 py-2.5 text-sm text-left hover:bg-[#222226] transition-colors ${
+                    lang === 'zh' ? 'text-[#FFC519]' : 'text-white'
+                  }`}
+                >
+                  繁体中文
+                </button>
+                <button
+                  onClick={() => handleSelectLang('en')}
+                  className={`w-full px-4 py-2.5 text-sm text-left hover:bg-[#222226] transition-colors ${
+                    lang === 'en' ? 'text-[#FFC519]' : 'text-white'
+                  }`}
+                >
+                  English
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
