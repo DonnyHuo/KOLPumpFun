@@ -37,6 +37,14 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
   // 获取最低质押金额
   const [minDeposit] = useState(100);
 
+  // 三个质押范围（与 Vue 项目一致）
+  const kolTypes = deposit.kolTypes as Record<string, string>;
+  const stakeRanges = [
+    { name: kolTypes?.joint || '聯合KOL', value: 100 },
+    { name: kolTypes?.single || '單一KOL', value: 10000 },
+    { name: kolTypes?.marketMaking || '銘文做市', value: 2100 },
+  ];
+
   // 获取授权额度
   const { data: allowance, refetch: refetchAllowance } = useAllowance(
     CONTRACTS.SOS as `0x${string}`,
@@ -124,7 +132,7 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
   // 获取翻译
   const inputPlaceholder = kol.inputPlaceholder as Record<string, string>;
   const placeholderText = inputPlaceholder?.stakeAmount?.replace('{minDeposit}', minDeposit.toString()) 
-    || `${kol.inputNumber} >= ${minDeposit} SOS`;
+    || `${kol.inputNumber} ≥ ${minDeposit} SOS`;
 
   return (
     <div>
@@ -132,6 +140,19 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
       <div className="flex items-center justify-between text-sm mb-3">
         <span className="text-gray-400">{kol.balance as string}</span>
         <span className="text-white font-semibold">{parseFloat(sosBalance || '0').toFixed(0)} <span className="text-[#FFC519]">SOS</span></span>
+      </div>
+
+      {/* 质押范围展示 */}
+      <div className="grid grid-cols-3 gap-2 mb-3">
+        {stakeRanges.map((range, index) => (
+          <div
+            key={index}
+            className="bg-[#0D0D0F] border border-white/10 rounded-xl p-3 text-center"
+          >
+            <div className="text-xs text-gray-400 mb-1">{range.name}</div>
+            <div className="text-sm font-semibold text-[#FFC519]"><span className="text-xs">≥</span> {range.value} SOS</div>
+          </div>
+        ))}
       </div>
 
       {/* 输入框 */}

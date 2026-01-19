@@ -110,7 +110,7 @@ export default {
       twitter: 'https://x.com/xxx',
       telegram: 'https://t.me/xxx',
       discord: 'https://accounts.binance.cor',
-      stakeAmount: '請輸入質押數量 >= {minDeposit} SOS',
+      stakeAmount: '請輸入質押數量 ≥{minDeposit} SOS',
     },
     tips: [
       '請填寫正確的錢包地址',
