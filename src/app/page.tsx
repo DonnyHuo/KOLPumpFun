@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import Image from 'next/image';
 import { useStore } from '@/store/useStore';
 import { useUserDepositedAmount } from '@/hooks/useDepositContract';
@@ -14,7 +15,7 @@ import zhCN from '@/i18n/zh-CN';
 import enUS from '@/i18n/en-US';
 import { SocialLinks } from '@/components/common/SocialLinks';
 import {
-  logo,
+  logo, wallet,
   step1, step2, step3, success,
 } from '@/assets/images';
 
@@ -72,6 +73,7 @@ function Skeleton() {
 
 export default function CreatePage() {
   const { address, isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
   const { lang, setLang, activeAmount, setActiveAmount, accountInfoStatus, setAccountInfoStatus } = useStore();
   const t = lang === 'zh' ? zhCN : enUS;
 
@@ -149,12 +151,31 @@ export default function CreatePage() {
           <Image src={logo} alt="KOLPumpFun" width={36} height={36} className="h-9 w-auto" />
           <span className="font-bold text-white text-lg">KOLPumpFun</span>
         </div>
-        <button
-          onClick={toggleLang}
-          className="h-[36px] px-4 bg-[#1A1A1E] border border-white/10 rounded-xl text-sm text-white hover:bg-[#222226] hover:border-white/20 transition-all"
-        >
-          {lang === 'zh' ? '繁体中文' : 'English'}
-        </button>
+        <div className="flex items-center gap-2">
+          {/* 钱包连接按钮 */}
+          {isConnected ? (
+            <div className="h-[36px] px-3 bg-[#1A1A1E] border border-[#FFC519]/30 rounded-xl flex items-center gap-2">
+              <Image src={wallet} alt="wallet" width={18} height={18} />
+              <span className="text-xs text-[#FFC519]">
+                {address?.slice(0, 4)}...{address?.slice(-4)}
+              </span>
+            </div>
+          ) : (
+            <button
+              onClick={openConnectModal}
+              className="h-[36px] w-[36px] bg-[#1A1A1E] border border-white/10 rounded-xl flex items-center justify-center hover:bg-[#222226] hover:border-[#FFC519]/30 transition-all"
+            >
+              <Image src={wallet} alt="wallet" width={18} height={18} />
+            </button>
+          )}
+          {/* 语言切换按钮 */}
+          <button
+            onClick={toggleLang}
+            className="h-[36px] px-4 bg-[#1A1A1E] border border-white/10 rounded-xl text-sm text-white hover:bg-[#222226] hover:border-white/20 transition-all"
+          >
+            {lang === 'zh' ? '繁体中文' : 'English'}
+          </button>
+        </div>
       </div>
 
       {/* Banner Title */}
