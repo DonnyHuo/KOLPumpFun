@@ -24,13 +24,13 @@ export function Progress({
   const getColorClasses = () => {
     if (color === 'yellow') {
       return {
-        track: 'bg-[#2A2A2E]',
-        indicator: 'bg-gradient-to-r from-[#FFC519] to-[#FFD54F]',
+        track: 'bg-[var(--background-card-hover)]',
+        indicator: 'bg-gradient-to-r from-[var(--primary-gradient-start)] to-[var(--primary-gradient-end)]',
       };
     }
     return {
-      track: 'bg-[#2A2A2E]',
-      indicator: 'bg-gradient-to-r from-[#FB8018] to-[#FFC519]',
+      track: 'bg-[var(--background-card-hover)]',
+      indicator: 'bg-gradient-to-r from-[var(--primary-gradient-start)] to-[var(--primary-gradient-end)]',
     };
   };
 
@@ -46,12 +46,12 @@ export function Progress({
         )}
         style={{ 
           width: `${percentage}%`,
-          boxShadow: percentage > 0 ? '0 0 10px rgba(255, 197, 25, 0.5)' : 'none',
+          boxShadow: percentage > 0 ? '0 0 10px var(--glow-primary)' : 'none',
         }}
       />
       {showLabel && label && (
         <div
-          className="absolute top-1/2 -translate-y-1/2 text-white text-xs font-medium whitespace-nowrap px-2"
+          className="absolute top-1/2 -translate-y-1/2 text-[var(--foreground)] text-xs font-medium whitespace-nowrap px-2"
           style={{
             left: `${Math.max(percentage - 5, 5)}%`,
             transform: 'translate(-50%, -50%)',

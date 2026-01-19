@@ -138,22 +138,22 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
     <div>
       {/* 余额显示 */}
       <div className="flex items-center justify-between text-sm mb-3">
-        <span className="text-gray-400">{kol.balance as string}</span>
-        <span className="text-white font-semibold">{parseFloat(sosBalance || '0').toFixed(0)} <span className="text-[#FFC519]">SOS</span></span>
+        <span className="text-[var(--text-secondary)]">{kol.balance as string}</span>
+        <span className="text-[var(--foreground)] font-semibold">{parseFloat(sosBalance || '0').toFixed(0)} <span className="text-[var(--primary)]">SOS</span></span>
       </div>
 
       {/* 输入框 */}
-      <div className="w-full flex items-center bg-[#0D0D0F] border border-white/10 px-4 h-[50px] rounded-xl focus-within:border-[#FFC519] transition-colors">
+      <div className="w-full flex items-center bg-[var(--background-card)] border border-[var(--border-color)] px-4 h-[50px] rounded-xl focus-within:border-[var(--primary)] transition-colors">
         <input
           type="text"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder={placeholderText}
-          className="flex-1 outline-none bg-transparent text-white text-sm placeholder:text-gray-500"
+          className="flex-1 outline-none bg-transparent text-[var(--foreground)] text-sm placeholder:text-[var(--text-muted)]"
         />
         <button
           onClick={handleMax}
-          className="bg-[#FFC519]/20 text-[#FFC519] text-xs font-semibold px-4 py-2 rounded-lg hover:bg-[#FFC519]/30 transition-colors"
+          className="bg-[var(--primary)]/20 text-[var(--primary)] text-xs font-semibold px-4 py-2 rounded-lg hover:bg-[var(--primary)]/30 transition-colors"
         >
           {kol.max as string}
         </button>
@@ -164,10 +164,10 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
         {stakeRanges.map((range, index) => (
           <div
             key={index}
-            className="bg-[#0D0D0F] border border-white/10 rounded-xl p-3 text-center"
+            className="bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl p-3 text-center"
           >
-            <div className="text-xs text-gray-400 mb-1">{range.name}</div>
-            <div className="text-sm font-semibold text-[#FFC519]"><span className="text-xs">≥</span> {range.value} SOS</div>
+            <div className="text-xs text-[var(--text-secondary)] mb-1">{range.name}</div>
+            <div className="text-sm font-semibold text-[var(--primary)]"><span className="text-xs">≥</span> {range.value} SOS</div>
           </div>
         ))}
       </div>

@@ -7,6 +7,11 @@ interface AppState {
   lang: 'zh' | 'en';
   setLang: (lang: 'zh' | 'en') => void;
   
+  // 主题
+  theme: 'dark' | 'light';
+  setTheme: (theme: 'dark' | 'light') => void;
+  toggleTheme: () => void;
+  
   // KOL 状态
   activeAmount: number;
   setActiveAmount: (amount: number) => void;
@@ -40,6 +45,11 @@ export const useStore = create<AppState>()(
       lang: 'en',
       setLang: (lang) => set({ lang }),
       
+      // 主题
+      theme: 'dark',
+      setTheme: (theme) => set({ theme }),
+      toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
+      
       // KOL 状态
       activeAmount: 0,
       setActiveAmount: (amount) => set({ activeAmount: amount }),
@@ -69,6 +79,7 @@ export const useStore = create<AppState>()(
       name: 'smartbtc-storage',
       partialize: (state) => ({
         lang: state.lang,
+        theme: state.theme,
         slippage: state.slippage,
         tradeTime: state.tradeTime,
       }),

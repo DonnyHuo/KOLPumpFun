@@ -80,8 +80,8 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
     }
   };
 
-  // 输入框样式 - Web3 暗色风格
-  const inputClass = "bg-[#0D0D0F] border border-white/10 w-full h-[44px] text-sm rounded-xl px-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-[#FFC519] transition-colors disabled:bg-[#0D0D0F]/50 disabled:text-gray-400";
+  // 输入框样式 - 适配主题
+  const inputClass = "bg-[var(--background-card)] border border-[var(--border-color)] w-full h-[44px] text-sm rounded-xl px-4 text-[var(--foreground)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] transition-colors disabled:bg-[var(--background-card)]/50 disabled:text-[var(--text-muted)]";
   
   return (
     <div className="text-sm">

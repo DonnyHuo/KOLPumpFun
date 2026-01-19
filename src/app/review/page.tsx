@@ -390,14 +390,14 @@ export default function ReviewPage() {
 
   // 渲染链接
   const renderLink = (url: string | undefined) => {
-    if (!url) return <span className="text-gray-500">--</span>;
+    if (!url) return <span className="text-[var(--text-muted)]">--</span>;
     if (isValidUrl(url)) {
       return (
         <a
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#FFC519] hover:text-[#e6b117] flex items-center gap-1 truncate max-w-[150px] transition-colors"
+          className="text-[var(--primary)] hover:text-[var(--primary-hover)] flex items-center gap-1 truncate max-w-[150px] transition-colors"
           title={url}
         >
           {url.length > 30 ? `${url.slice(0, 30)}...` : url}
@@ -405,31 +405,31 @@ export default function ReviewPage() {
         </a>
       );
     }
-    return <span className="truncate max-w-[150px] text-white">{url}</span>;
+    return <span className="truncate max-w-[150px] text-[var(--foreground)]">{url}</span>;
   };
 
   if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center h-[60vh] bg-[#0D0D0F]">
-        <p className="text-gray-500">無權限訪問</p>
+      <div className="flex items-center justify-center h-[60vh] bg-[var(--background)]">
+        <p className="text-[var(--text-muted)]">無權限訪問</p>
       </div>
     );
   }
 
   return (
-    <div className="px-5 py-6 min-h-screen bg-[#0D0D0F]">
-      <h1 className="text-xl font-semibold mb-6 text-white">{review.title as string}</h1>
+    <div className="px-5 py-6 min-h-screen bg-[var(--background)]">
+      <h1 className="text-xl font-semibold mb-6 text-[var(--foreground)]">{review.title as string}</h1>
 
       {/* Tabs */}
-      <div className="flex bg-[#1A1A1E] border border-white/10 rounded-xl p-1 mb-6">
+      <div className="flex bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl p-1 mb-6">
         {(['kol', 'project', 'claim', 'migrate'] as Tab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`flex-1 py-2.5 text-sm rounded-lg transition-all ${
               activeTab === tab
-                ? 'bg-gradient-to-r from-[#FB8018] to-[#FFC519] text-black font-semibold shadow-md'
-                : 'text-gray-400 hover:bg-white/5'
+                ? 'bg-gradient-to-r from-[var(--primary-gradient-start)] to-[var(--primary-gradient-end)] text-black font-semibold shadow-md'
+                : 'text-[var(--text-secondary)] hover:bg-[var(--background-card-hover)]'
             }`}
           >
             {tabs[tab]}
@@ -442,19 +442,19 @@ export default function ReviewPage() {
         <div className="space-y-4">
           {dataLoading ? (
             <div className="card text-center py-10">
-              <div className="flex items-center justify-center gap-2 text-gray-400">
-                <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+              <div className="flex items-center justify-center gap-2 text-[var(--text-secondary)]">
+                <span className="w-4 h-4 border-2 border-[var(--text-secondary)] border-t-transparent rounded-full animate-spin" />
                 <span>{t.common.loading as string}</span>
               </div>
             </div>
           ) : kolList.length === 0 ? (
-            <div className="card text-center py-10 text-gray-500">暫無數據</div>
+            <div className="card text-center py-10 text-[var(--text-muted)]">暫無數據</div>
           ) : (
             kolList.map((item, index) => (
               <div key={index} className="card">
                 <div className="space-y-6 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{review.certifyAddress as string}</span>
+                    <span className="text-[var(--text-secondary)]">{review.certifyAddress as string}</span>
                     <a
                       href={getBscScanUrl(item.address, 'address')}
                       target="_blank"
@@ -465,24 +465,24 @@ export default function ReviewPage() {
                     </a>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{review.twitterAddress as string}</span>
+                    <span className="text-[var(--text-secondary)]">{review.twitterAddress as string}</span>
                     {renderLink(item.twitter_account)}
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{review.telegramAddress as string}</span>
+                    <span className="text-[var(--text-secondary)]">{review.telegramAddress as string}</span>
                     {renderLink(item.tg_account)}
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{review.binanceSquare as string}</span>
+                    <span className="text-[var(--text-secondary)]">{review.binanceSquare as string}</span>
                     {renderLink(item.discord_account)}
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{review.status as string}</span>
-                    <span className="text-white">{statusMap[item.status]}</span>
+                    <span className="text-[var(--text-secondary)]">{review.status as string}</span>
+                    <span className="text-[var(--foreground)]">{statusMap[item.status]}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{review.createTime as string}</span>
-                    <span className="text-white">{formatDate(item.created_at)}</span>
+                    <span className="text-[var(--text-secondary)]">{review.createTime as string}</span>
+                    <span className="text-[var(--foreground)]">{formatDate(item.created_at)}</span>
                   </div>
                 </div>
                 <div className="flex gap-3 mt-5">
@@ -516,53 +516,53 @@ export default function ReviewPage() {
         <div className="space-y-4">
           {dataLoading ? (
             <div className="card text-center py-10">
-              <div className="flex items-center justify-center gap-2 text-gray-400">
-                <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+              <div className="flex items-center justify-center gap-2 text-[var(--text-secondary)]">
+                <span className="w-4 h-4 border-2 border-[var(--text-secondary)] border-t-transparent rounded-full animate-spin" />
                 <span>{t.common.loading as string}</span>
               </div>
             </div>
           ) : projectList.length === 0 ? (
-            <div className="card text-center py-10 text-gray-500">暫無數據</div>
+            <div className="card text-center py-10 text-[var(--text-muted)]">暫無數據</div>
           ) : (
             projectList.map((item, index) => (
               <div key={index} className="card">
                 <div className="space-y-6 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{review.tokenName as string}</span>
-                    <span className="text-white">{item.name}</span>
+                    <span className="text-[var(--text-secondary)]">{review.tokenName as string}</span>
+                    <span className="text-[var(--foreground)]">{item.name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{review.tokenSymbol as string}</span>
-                    <span className="text-white">{item.symbol}</span>
+                    <span className="text-[var(--text-secondary)]">{review.tokenSymbol as string}</span>
+                    <span className="text-[var(--foreground)]">{item.symbol}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{review.totalSupply as string}</span>
-                    <span className="text-white">{item.total_supply}</span>
+                    <span className="text-[var(--text-secondary)]">{review.totalSupply as string}</span>
+                    <span className="text-[var(--foreground)]">{item.total_supply}</span>
                   </div>
-                  <div className="mt-4 pt-4 border-t border-white/10">
-                    <p className="text-gray-400 mb-3">{review.distribution as string}</p>
+                  <div className="mt-4 pt-4 border-t border-[var(--border-color)]">
+                    <p className="text-[var(--text-secondary)] mb-3">{review.distribution as string}</p>
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="flex justify-between bg-white/5 p-2.5 rounded-lg border border-white/5">
-                        <span className="text-gray-400">{review.crossChain as string}</span>
-                        <span className="text-white">{item.cross_percent / 100}%</span>
+                      <div className="flex justify-between bg-[var(--background-card-hover)] p-2.5 rounded-lg border border-[var(--border-color)]">
+                        <span className="text-[var(--text-secondary)]">{review.crossChain as string}</span>
+                        <span className="text-[var(--foreground)]">{item.cross_percent / 100}%</span>
                       </div>
-                      <div className="flex justify-between bg-white/5 p-2.5 rounded-lg border border-white/5">
-                        <span className="text-gray-400">{review.liquidityIssue as string}</span>
-                        <span className="text-white">{item.le_percent / 100}%</span>
+                      <div className="flex justify-between bg-[var(--background-card-hover)] p-2.5 rounded-lg border border-[var(--border-color)]">
+                        <span className="text-[var(--text-secondary)]">{review.liquidityIssue as string}</span>
+                        <span className="text-[var(--foreground)]">{item.le_percent / 100}%</span>
                       </div>
-                      <div className="flex justify-between bg-white/5 p-2.5 rounded-lg border border-white/5">
-                        <span className="text-gray-400">{review.launchPool as string}</span>
-                        <span className="text-white">{item.lm_percent / 100}%</span>
+                      <div className="flex justify-between bg-[var(--background-card-hover)] p-2.5 rounded-lg border border-[var(--border-color)]">
+                        <span className="text-[var(--text-secondary)]">{review.launchPool as string}</span>
+                        <span className="text-[var(--foreground)]">{item.lm_percent / 100}%</span>
                       </div>
-                      <div className="flex justify-between bg-white/5 p-2.5 rounded-lg border border-white/5">
-                        <span className="text-gray-400">{review.communityAirdrop as string}</span>
-                        <span className="text-white">{item.kol_percent / 100}%</span>
+                      <div className="flex justify-between bg-[var(--background-card-hover)] p-2.5 rounded-lg border border-[var(--border-color)]">
+                        <span className="text-[var(--text-secondary)]">{review.communityAirdrop as string}</span>
+                        <span className="text-[var(--foreground)]">{item.kol_percent / 100}%</span>
                       </div>
                     </div>
                   </div>
                   <div className="flex justify-between pt-2">
-                    <span className="text-gray-400">{review.createTime as string}</span>
-                    <span className="text-white">{formatDate(item.created_at)}</span>
+                    <span className="text-[var(--text-secondary)]">{review.createTime as string}</span>
+                    <span className="text-[var(--foreground)]">{formatDate(item.created_at)}</span>
                   </div>
                 </div>
                 <div className="flex gap-3 mt-5">
@@ -596,13 +596,13 @@ export default function ReviewPage() {
         <div className="space-y-4">
           {dataLoading ? (
             <div className="card text-center py-10">
-              <div className="flex items-center justify-center gap-2 text-gray-400">
-                <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+              <div className="flex items-center justify-center gap-2 text-[var(--text-secondary)]">
+                <span className="w-4 h-4 border-2 border-[var(--text-secondary)] border-t-transparent rounded-full animate-spin" />
                 <span>{t.common.loading as string}</span>
               </div>
             </div>
           ) : claimList.length === 0 ? (
-            <div className="card text-center py-10 text-gray-500">暫無數據</div>
+            <div className="card text-center py-10 text-[var(--text-muted)]">暫無數據</div>
           ) : (
             claimList.map((item, index) => (
               <div key={index} className="card">
@@ -617,7 +617,7 @@ export default function ReviewPage() {
                     </button>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{review.claimAddress as string}</span>
+                    <span className="text-[var(--text-secondary)]">{review.claimAddress as string}</span>
                     <a
                       href={getBscScanUrl(item.address, 'address')}
                       target="_blank"
@@ -628,15 +628,15 @@ export default function ReviewPage() {
                     </a>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{review.twitterAddress as string}</span>
+                    <span className="text-[var(--text-secondary)]">{review.twitterAddress as string}</span>
                     {renderLink(item.twitter_account)}
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{review.telegramAddress as string}</span>
+                    <span className="text-[var(--text-secondary)]">{review.telegramAddress as string}</span>
                     {renderLink(item.tg_account)}
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{review.binanceSquare as string}</span>
+                    <span className="text-[var(--text-secondary)]">{review.binanceSquare as string}</span>
                     {item.discord_account ? (
                       <a
                         href={item.discord_account}
@@ -649,12 +649,12 @@ export default function ReviewPage() {
                         <ExternalLink className="w-3 h-3 shrink-0" />
                       </a>
                     ) : (
-                      <span className="text-gray-500">--</span>
+                      <span className="text-[var(--text-muted)]">--</span>
                     )}
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{review.createTime as string}</span>
-                    <span className="text-white">{formatDate(item.created_at)}</span>
+                    <span className="text-[var(--text-secondary)]">{review.createTime as string}</span>
+                    <span className="text-[var(--foreground)]">{formatDate(item.created_at)}</span>
                   </div>
                 </div>
                 <div className="flex gap-3 mt-5">
@@ -688,7 +688,7 @@ export default function ReviewPage() {
         <div className="card">
           <div className="space-y-4">
             <div>
-              <label className="text-sm mb-2 block text-gray-300 text-left">{review.projectName as string}</label>
+              <label className="text-sm mb-2 block text-[var(--text-secondary)] text-left">{review.projectName as string}</label>
               <input
                 type="text"
                 value={migrateToken.project_name}
@@ -735,11 +735,11 @@ export default function ReviewPage() {
               />
             </div>
 
-            <div className="pt-5 border-t border-white/10">
-              <p className="text-sm font-medium mb-4 text-white text-left">{review.distribution as string}</p>
+            <div className="pt-5 border-t border-[var(--border-color)]">
+              <p className="text-sm font-medium mb-4 text-[var(--foreground)] text-left">{review.distribution as string}</p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-gray-400 mb-2 block text-left">{review.crossChain as string}</label>
+                  <label className="text-xs text-[var(--text-secondary)] mb-2 block text-left">{review.crossChain as string}</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
@@ -747,11 +747,11 @@ export default function ReviewPage() {
                       onChange={(e) => updatePercent(0, e.target.value)}
                       className="input text-sm"
                     />
-                    <span className="text-gray-400">%</span>
+                    <span className="text-[var(--text-secondary)]">%</span>
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400 mb-2 block text-left">{review.liquidityIssue as string}</label>
+                  <label className="text-xs text-[var(--text-secondary)] mb-2 block text-left">{review.liquidityIssue as string}</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
@@ -759,11 +759,11 @@ export default function ReviewPage() {
                       onChange={(e) => updatePercent(1, e.target.value)}
                       className="input text-sm"
                     />
-                    <span className="text-gray-400">%</span>
+                    <span className="text-[var(--text-secondary)]">%</span>
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400 mb-2 block text-left">{review.launchPool as string}</label>
+                  <label className="text-xs text-[var(--text-secondary)] mb-2 block text-left">{review.launchPool as string}</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
@@ -771,11 +771,11 @@ export default function ReviewPage() {
                       onChange={(e) => updatePercent(2, e.target.value)}
                       className="input text-sm"
                     />
-                    <span className="text-gray-400">%</span>
+                    <span className="text-[var(--text-secondary)]">%</span>
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400 mb-2 block text-left">{review.kolReward as string}</label>
+                  <label className="text-xs text-[var(--text-secondary)] mb-2 block text-left">{review.kolReward as string}</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
@@ -783,7 +783,7 @@ export default function ReviewPage() {
                       onChange={(e) => updatePercent(3, e.target.value)}
                       className="input text-sm"
                     />
-                    <span className="text-gray-400">%</span>
+                    <span className="text-[var(--text-secondary)]">%</span>
                   </div>
                 </div>
               </div>
@@ -803,12 +803,12 @@ export default function ReviewPage() {
       {/* 认领审核弹窗 */}
       {showClaimModal && selectedClaim && (
         <div className="fixed inset-0 bg-black/60 flex items-end justify-center z-100">
-          <div className="bg-[#1A1A1E] rounded-t-3xl w-full max-w-md p-6 animate-slide-up border-t border-white/10">
+          <div className="bg-[var(--background-card)] rounded-t-3xl w-full max-w-md p-6 animate-slide-up border-t border-[var(--border-color)]">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-semibold text-white">審核認領項目</h3>
+              <h3 className="text-lg font-semibold text-[var(--foreground)]">審核認領項目</h3>
               <button 
                 onClick={() => setShowClaimModal(false)}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-[var(--text-secondary)] hover:text-[var(--foreground)] transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -816,15 +816,15 @@ export default function ReviewPage() {
 
             <div className="space-y-4 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-400">{review.stakeAmount as string}</span>
-                <span className="text-white">{parseFloat(userDeposited).toFixed(2)} SOS</span>
+                <span className="text-[var(--text-secondary)]">{review.stakeAmount as string}</span>
+                <span className="text-[var(--foreground)]">{parseFloat(userDeposited).toFixed(2)} SOS</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">{review.currentWeight as string}</span>
-                <span className="text-white">{tokenAirdropKols} / 100</span>
+                <span className="text-[var(--text-secondary)]">{review.currentWeight as string}</span>
+                <span className="text-[var(--foreground)]">{tokenAirdropKols} / 100</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">{review.allocationRatio as string}</span>
+                <span className="text-[var(--text-secondary)]">{review.allocationRatio as string}</span>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
@@ -833,7 +833,7 @@ export default function ReviewPage() {
                     className="input w-20 text-sm text-center"
                     placeholder="0"
                   />
-                  <span className="text-gray-400">%</span>
+                  <span className="text-[var(--text-secondary)]">%</span>
                 </div>
               </div>
             </div>

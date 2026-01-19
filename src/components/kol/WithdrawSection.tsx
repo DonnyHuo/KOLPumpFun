@@ -53,10 +53,10 @@ export function WithdrawSection({ kolInfo, activeAmount, onSuccess, t }: Withdra
     <div>
       <div className="text-left flex flex-col gap-4">
         {/* 质押数量显示 */}
-        <div className="text-sm text-gray-400">{home.dispositNumber as string || '質押數量'}</div>
-        <div className="bg-[#0D0D0F] border border-white/10 h-[50px] flex items-center justify-between px-4 rounded-xl">
-          <span className="text-xl font-bold text-white">{activeAmount.toFixed(2)}</span>
-          <span className="text-[#FFC519] font-semibold">SOS</span>
+        <div className="text-sm text-[var(--text-secondary)]">{home.dispositNumber as string || '質押數量'}</div>
+        <div className="bg-[var(--background-card)] border border-[var(--border-color)] h-[50px] flex items-center justify-between px-4 rounded-xl">
+          <span className="text-xl font-bold text-[var(--foreground)]">{activeAmount.toFixed(2)}</span>
+          <span className="text-[var(--primary)] font-semibold">SOS</span>
         </div>
 
         {/* 提示文字 */}

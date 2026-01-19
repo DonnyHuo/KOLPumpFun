@@ -21,12 +21,13 @@ export function useTokenRatiosIndex(projectName: string) {
 }
 
 // 获取可提取金额
-export function useCanWithdrawValue(tokenId?: bigint) {
+export function useCanWithdrawValue(tokenId?: bigint, address?: `0x${string}`) {
   const { data, ...rest } = useReadContract({
     address: KOL_ADDRESS,
     abi: kolAbi,
     functionName: 'viewCanWithdrawValue',
     args: tokenId !== undefined ? [tokenId] : undefined,
+    account: address, // 指定调用账户地址
     query: {
       enabled: tokenId !== undefined,
     },

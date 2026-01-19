@@ -214,17 +214,17 @@ export default function ManagePage() {
   };
 
   return (
-    <div className="bg-[#0D0D0F] min-h-screen p-5">
+    <div className="bg-[var(--background)] min-h-screen p-5">
       {/* Header */}
       <div className="flex justify-end mb-6">
         {isConnected && address ? (
           <div
-            className="flex items-center gap-2 cursor-pointer bg-[#1A1A1E] border border-white/10 px-3 py-2 rounded-xl hover:border-white/20 transition-colors"
+            className="flex items-center gap-2 cursor-pointer bg-[var(--background-card)] border border-[var(--border-color)] px-3 py-2 rounded-xl hover:border-[var(--border-color-hover)] transition-colors"
             onClick={handleCopy}
           >
-            <span className="text-sm text-white">{shortAddress(address)}</span>
+            <span className="text-sm text-[var(--foreground)]">{shortAddress(address)}</span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={copy.src} alt="copy" className="w-3.5 h-3.5 invert opacity-70" />
+            <img src={copy.src} alt="copy" className="w-3.5 h-3.5 opacity-70" style={{ filter: 'brightness(0) saturate(100%) invert(var(--icon-invert))' }} />
           </div>
         ) : (
           <button
@@ -237,25 +237,25 @@ export default function ManagePage() {
       </div>
 
       {/* 标题 */}
-      <h1 className="text-left text-lg font-semibold mb-6 text-white">{manage.title}</h1>
+      <h1 className="text-left text-lg font-semibold mb-6 text-[var(--foreground)]">{manage.title}</h1>
 
       {/* LP 余额领取 */}
-      <div className="text-left text-sm flex items-center justify-between py-3 text-gray-300 font-medium">
+      <div className="text-left text-sm flex items-center justify-between py-3 text-[var(--text-secondary)] font-medium">
         {manage.lpWithdraw}
       </div>
 
       {/* 列表 */}
       <div className="card space-y-1">
         {loading ? (
-          <div className="text-center py-8 text-gray-500">{t.common.loading as string}</div>
+          <div className="text-center py-8 text-[var(--text-muted)]">{t.common.loading as string}</div>
         ) : exchangePairs.length > 0 ? (
           exchangePairs.map((item) => (
             <div
               key={item.id}
-              className="flex items-center justify-between py-3 px-3 bg-white/5 rounded-xl text-sm border border-white/5 hover:border-white/10 transition-colors"
+              className="flex items-center justify-between py-3 px-3 bg-[var(--background-card-hover)] rounded-xl text-sm border border-[var(--border-color)] hover:border-[var(--border-color-hover)] transition-colors"
             >
-              <div className="text-white font-medium">{item.disPlayName}</div>
-              <span className="text-gray-300">{Number(item.lpTokenBalance || 0).toFixed(2)}</span>
+              <div className="text-[var(--foreground)] font-medium">{item.disPlayName}</div>
+              <span className="text-[var(--text-secondary)]">{Number(item.lpTokenBalance || 0).toFixed(2)}</span>
               <button
                 onClick={() => handleWithdraw(item.id)}
                 disabled={withdrawingId === item.id || isPending || isConfirming}
@@ -266,13 +266,13 @@ export default function ManagePage() {
             </div>
           ))
         ) : (
-          <div className="text-center py-8 text-gray-500">{t.common.noData as string}</div>
+          <div className="text-center py-8 text-[var(--text-muted)]">{t.common.noData as string}</div>
         )}
       </div>
 
       {/* 权限提示 */}
       {!isOwner && isConnected && (
-        <div className="mt-6 text-center text-sm text-orange-400 bg-orange-500/10 border border-orange-500/20 rounded-xl p-3">
+        <div className="mt-6 text-center text-sm text-[var(--warning)] bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-xl p-3">
           {manage.noPermission}
         </div>
       )}

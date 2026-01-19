@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Globe } from 'lucide-react';
+import { Globe, Sun, Moon } from 'lucide-react';
 import { useAccount, useDisconnect } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import Image from 'next/image';
@@ -77,7 +77,7 @@ export default function CreatePage() {
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { openConnectModal } = useConnectModal();
-  const { lang, setLang, activeAmount, setActiveAmount, accountInfoStatus, setAccountInfoStatus } = useStore();
+  const { lang, setLang, theme, toggleTheme, activeAmount, setActiveAmount, accountInfoStatus, setAccountInfoStatus } = useStore();
   const t = lang === 'zh' ? zhCN : enUS;
 
   const [loading, setLoading] = useState(true);
@@ -163,19 +163,19 @@ export default function CreatePage() {
   const hasProject = [4, 5].includes(accountInfoStatus);
 
   return (
-    <div className="bg-[#0D0D0F] bg-grid p-4 min-h-full text-left">
+    <div className="bg-[var(--background)] bg-grid p-4 min-h-full text-left">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Image src={logo} alt="KOLPumpFun" width={36} height={36} className="h-9 w-auto" />
-          <span className="font-bold text-white text-lg">KOLPumpFun</span>
+          <span className="font-bold text-[var(--foreground)] text-lg">KOLPumpFun</span>
         </div>
         <div className="flex items-center gap-2">
           {/* 钱包连接/断开按钮 */}
           {isConnected ? (
             <button
               onClick={() => disconnect()}
-              className="h-[36px] px-3 bg-[#1A1A1E] border border-[#FFC519]/30 rounded-xl flex items-center gap-2 hover:bg-[#2A1A1A] hover:border-red-500/50 transition-all group"
+              className="h-[36px] px-3 bg-[var(--background-card)] border border-[var(--primary)]/30 rounded-xl flex items-center gap-2 hover:bg-[var(--background-card-hover)] hover:border-red-500/50 transition-all group"
               title={lang === 'zh' ? '點擊斷開連接' : 'Click to disconnect'}
             >
               <Image src={wallet} alt="wallet" width={18} height={18} />
@@ -186,33 +186,45 @@ export default function CreatePage() {
           ) : (
             <button
               onClick={openConnectModal}
-              className="h-[36px] w-[36px] bg-[#1A1A1E] border border-white/10 rounded-xl flex items-center justify-center hover:bg-[#222226] hover:border-[#FFC519]/30 transition-all"
+              className="h-[36px] w-[36px] bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl flex items-center justify-center hover:bg-[var(--background-card-hover)] hover:border-[var(--primary)]/30 transition-all"
             >
               <Image src={wallet} alt="wallet" width={18} height={18} />
             </button>
           )}
+          {/* 主题切换按钮 */}
+          <button
+            onClick={toggleTheme}
+            className="h-[36px] w-[36px] bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl flex items-center justify-center hover:bg-[var(--background-card-hover)] hover:border-[var(--border-color-hover)] transition-all"
+            title={theme === 'dark' ? (lang === 'zh' ? '切換到淺色模式' : 'Switch to Light Mode') : (lang === 'zh' ? '切換到深色模式' : 'Switch to Dark Mode')}
+          >
+            {theme === 'dark' ? (
+              <Sun className="w-[18px] h-[18px] text-[var(--foreground)]" />
+            ) : (
+              <Moon className="w-[18px] h-[18px] text-[var(--foreground)]" />
+            )}
+          </button>
           {/* 语言切换按钮 */}
           <div className="relative" ref={langMenuRef}>
             <button
               onClick={() => setShowLangMenu(!showLangMenu)}
-              className="h-[36px] w-[36px] bg-[#1A1A1E] border border-white/10 rounded-xl flex items-center justify-center hover:bg-[#222226] hover:border-white/20 transition-all"
+              className="h-[36px] w-[36px] bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl flex items-center justify-center hover:bg-[var(--background-card-hover)] hover:border-[var(--border-color-hover)] transition-all"
             >
-              <Globe className="w-[18px] h-[18px] text-white" />
+              <Globe className="w-[18px] h-[18px] text-[var(--foreground)]" />
             </button>
             {showLangMenu && (
-              <div className="absolute right-0 top-[42px] bg-[#1A1A1E] border border-white/10 rounded-xl overflow-hidden z-50 min-w-[120px]">
+              <div className="absolute right-0 top-[42px] bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl overflow-hidden z-50 min-w-[120px]">
                 <button
                   onClick={() => handleSelectLang('zh')}
-                  className={`w-full px-4 py-2.5 text-sm text-left hover:bg-[#222226] transition-colors ${
-                    lang === 'zh' ? 'text-[#FFC519]' : 'text-white'
+                  className={`w-full px-4 py-2.5 text-sm text-left hover:bg-[var(--background-card-hover)] transition-colors ${
+                    lang === 'zh' ? 'text-[var(--primary)]' : 'text-[var(--foreground)]'
                   }`}
                 >
                   繁体中文
                 </button>
                 <button
                   onClick={() => handleSelectLang('en')}
-                  className={`w-full px-4 py-2.5 text-sm text-left hover:bg-[#222226] transition-colors ${
-                    lang === 'en' ? 'text-[#FFC519]' : 'text-white'
+                  className={`w-full px-4 py-2.5 text-sm text-left hover:bg-[var(--background-card-hover)] transition-colors ${
+                    lang === 'en' ? 'text-[var(--primary)]' : 'text-[var(--foreground)]'
                   }`}
                 >
                   English
@@ -228,10 +240,10 @@ export default function CreatePage() {
         <h1 className="text-[32px] font-bold gradient-text leading-tight">
           {t.create.title}
         </h1>
-        <p className="text-sm text-gray-400 mt-3">
+        <p className="text-sm text-[var(--text-secondary)] mt-3">
           {t.create.subtitle}
         </p>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
           {t.create.rewardNote}
         </p>
       </div>
@@ -240,13 +252,13 @@ export default function CreatePage() {
       <div className="card mt-8 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#FFC519]/10 via-transparent to-[#FB8018]/5" />
         <div className="relative z-10 py-6">
-          <div className="text-lg font-bold text-white text-center">
+          <div className="text-lg font-bold text-[var(--foreground)] text-center">
             {t.create.bannerTitle}
           </div>
-          <div className="text-lg font-bold text-white text-center">
+          <div className="text-lg font-bold text-[var(--foreground)] text-center">
             {t.create.bannerSubtitle}
           </div>
-          <div className="flex items-center justify-center flex-wrap gap-x-3 gap-y-2 text-gray-400 mt-4 text-xs px-4">
+          <div className="flex items-center justify-center flex-wrap gap-x-3 gap-y-2 text-[var(--text-secondary)] mt-4 text-xs px-4">
             {t.create.features.map((feature, index) => (
               <span key={index} className="flex items-center">
                 <span className="w-1 h-1 rounded-full bg-[#FFC519] mr-2" />

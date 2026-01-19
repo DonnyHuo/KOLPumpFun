@@ -313,20 +313,20 @@ export default function BtcSwapPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0D0D0F] bg-grid pb-24">
+    <div className="min-h-screen bg-[var(--background)] bg-grid pb-24">
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-4">
         <div className="flex items-center gap-2">
           <Image src={logo} alt="Logo" width={36} height={36} className="rounded-full" />
-          <span className="font-bold text-white">KOLPumpFun</span>
+          <span className="font-bold text-[var(--foreground)]">KOLPumpFun</span>
         </div>
         {btcAddress ? (
           <div 
-            className="flex items-center gap-2 px-3 py-2 bg-[#1A1A1E] border border-white/10 rounded-xl cursor-pointer hover:border-[#FFC519]/30 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl cursor-pointer hover:border-[var(--primary)]/30 transition-colors"
             onClick={() => handleCopy(btcAddress)}
           >
-            <span className="text-sm text-white">{shortAddress(btcAddress)}</span>
-            <Copy className="w-3.5 h-3.5 text-gray-400" />
+            <span className="text-sm text-[var(--foreground)]">{shortAddress(btcAddress)}</span>
+            <Copy className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
           </div>
         ) : (
           <button
@@ -368,15 +368,15 @@ export default function BtcSwapPage() {
         {/* Title */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
-            <span className="font-semibold text-lg text-white">{btcSwap.swap as string}</span>
-            <span className="text-xs text-gray-400 bg-white/5 border border-white/10 px-2 py-1 rounded-lg">BTC → BSC</span>
+            <span className="font-semibold text-lg text-[var(--foreground)]">{btcSwap.swap as string}</span>
+            <span className="text-xs text-[var(--text-secondary)] bg-[var(--background-card)] border border-[var(--border-color)] px-2 py-1 rounded-lg">BTC → BSC</span>
           </div>
           <button
             onClick={() => setShowChainModal(true)}
-            className="flex items-center gap-2 px-3 py-2 bg-[#1A1A1E] border border-white/10 rounded-xl text-sm text-white hover:border-[#FFC519]/30 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl text-sm text-[var(--foreground)] hover:border-[var(--primary)]/30 transition-colors"
           >
             <span>{selectedChain || (btcSwap.select as string)}</span>
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+            <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" />
           </button>
         </div>
 
@@ -386,56 +386,56 @@ export default function BtcSwapPage() {
           <div className="card">
             <div className="flex justify-between items-start">
               <div className="flex-1 text-left">
-                <p className="text-sm text-gray-400 mb-3">{btcSwap.send as string}</p>
+                <p className="text-sm text-[var(--text-secondary)] mb-3">{btcSwap.send as string}</p>
                 <input
                   type="text"
                   value={selectedCoin.amount || 0}
                   disabled
-                  className="w-full bg-transparent text-2xl font-bold text-white outline-none mb-4"
+                  className="w-full bg-transparent text-2xl font-bold text-[var(--foreground)] outline-none mb-4"
                 />
                 <a
                   href="https://www.okx.com/zh-hans/web3/marketplace/inscription/ordinals/token/SOS"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-[#FFC519] hover:text-[#FFD54F] transition-colors"
+                  className="text-sm text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors"
                 >
                   {btcSwap.buy as string} →
                 </a>
               </div>
               <button
                 onClick={() => setShowCoinModal(true)}
-                className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-2 rounded-xl text-sm text-white hover:border-[#FFC519]/30 transition-colors"
+                className="flex items-center gap-2 bg-[var(--background-card)] border border-[var(--border-color)] px-3 py-2 rounded-xl text-sm text-[var(--foreground)] hover:border-[var(--primary)]/30 transition-colors"
               >
                 <span>
                   {selectedCoin.tokenName}
                   {selectedCoin.inscriptionNumber && `#${selectedCoin.inscriptionNumber}`}
                 </span>
-                <ChevronDown className="w-4 h-4 text-gray-400" />
+                <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" />
               </button>
             </div>
           </div>
 
           {/* Swap Icon */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-            <div className="bg-[#1A1A1E] border-4 border-[#0D0D0F] rounded-full p-3 shadow-lg">
+            <div className="bg-[var(--background-card)] border-4 border-[var(--background)] rounded-full p-3 shadow-lg">
               <Image src={swapDown} alt="swap" width={20} height={20} style={{ filter: 'brightness(0) saturate(100%) invert(76%) sepia(98%) saturate(1000%) hue-rotate(359deg) brightness(103%) contrast(106%)' }} />
             </div>
           </div>
 
           {/* To */}
           <div className="card mt-2">
-            <p className="text-sm text-gray-400 mb-3 text-left">{btcSwap.reviceAddress as string}</p>
+            <p className="text-sm text-[var(--text-secondary)] mb-3 text-left">{btcSwap.reviceAddress as string}</p>
             <div className="input flex items-center justify-between">
               <input
                 type="text"
                 value={toAddress}
                 onChange={(e) => setToAddress(e.target.value)}
                 placeholder="0x..."
-                className="flex-1 outline-none text-sm bg-transparent text-white placeholder:text-gray-500"
+                className="flex-1 outline-none text-sm bg-transparent text-[var(--foreground)] placeholder:text-[var(--text-muted)]"
               />
               <button
                 onClick={handlePaste}
-                className="text-sm text-[#FFC519] hover:text-[#FFD54F] transition-colors shrink-0"
+                className="text-sm text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors shrink-0"
               >
                 {btcSwap.paste as string}
               </button>
@@ -455,13 +455,13 @@ export default function BtcSwapPage() {
         {/* Records */}
         <div className="mt-10">
           <div className="flex items-center justify-between mb-5">
-            <span className="text-base font-semibold text-white">{btcSwap.history as string}</span>
+            <span className="text-base font-semibold text-[var(--foreground)]">{btcSwap.history as string}</span>
             <button
               onClick={fetchRecordList}
               disabled={loading}
-              className="w-10 h-10 flex items-center justify-center bg-[#1A1A1E] border border-white/10 rounded-xl hover:border-[#FFC519]/30 transition-colors"
+              className="w-10 h-10 flex items-center justify-center bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl hover:border-[var(--primary)]/30 transition-colors"
             >
-              <RefreshCw className={`w-4 h-4 text-gray-400 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 text-[var(--text-secondary)] ${loading ? 'animate-spin' : ''}`} />
             </button>
           </div>
 
@@ -471,61 +471,61 @@ export default function BtcSwapPage() {
                 <div key={index} className="card space-y-3 text-sm">
                   {record.brc20_txid && (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-400">{btcSwap.hash as string}</span>
+                      <span className="text-[var(--text-secondary)]">{btcSwap.hash as string}</span>
                       <div className="flex items-center gap-2">
                         <a
                           href={`https://www.oklink.com/zh-hans/btc/tx/${record.brc20_txid}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[#FFC519] hover:text-[#FFD54F] transition-colors"
+                          className="text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors"
                         >
                           {shortAddress(record.brc20_txid)}
                         </a>
                         <button onClick={() => handleCopy(record.brc20_txid!)} className="opacity-60 hover:opacity-100 transition-opacity">
-                          <Copy className="w-3.5 h-3.5 text-gray-400" />
+                          <Copy className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
                         </button>
                       </div>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-gray-400">From ({record.from_net})</span>
-                    <span className="text-white">{shortAddress(record.from_net_address)}</span>
+                    <span className="text-[var(--text-secondary)]">From ({record.from_net})</span>
+                    <span className="text-[var(--foreground)]">{shortAddress(record.from_net_address)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">To ({record.to_net})</span>
-                    <span className="text-white">{shortAddress(record.to_net_address)}</span>
+                    <span className="text-[var(--text-secondary)]">To ({record.to_net})</span>
+                    <span className="text-[var(--foreground)]">{shortAddress(record.to_net_address)}</span>
                   </div>
                   {record.convert_txid && (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-400">{btcSwap.convertHash as string}</span>
+                      <span className="text-[var(--text-secondary)]">{btcSwap.convertHash as string}</span>
                       <div className="flex items-center gap-2">
                         <a
                           href={`https://bscscan.com/tx/${record.convert_txid}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[#FFC519] hover:text-[#FFD54F] transition-colors"
+                          className="text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors"
                         >
                           {shortAddress(record.convert_txid)}
                         </a>
                         <button onClick={() => handleCopy(record.convert_txid!)} className="opacity-60 hover:opacity-100 transition-opacity">
-                          <Copy className="w-3.5 h-3.5 text-gray-400" />
+                          <Copy className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
                         </button>
                       </div>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{btcSwap.orderStatus as string}</span>
-                    <span className="text-[#FFC519]">{getStatusText(record.order_state)}</span>
+                    <span className="text-[var(--text-secondary)]">{btcSwap.orderStatus as string}</span>
+                    <span className="text-[var(--primary)]">{getStatusText(record.order_state)}</span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
             <div className="card text-center py-12">
-              <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 rounded-full bg-[var(--background-card)] flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">📋</span>
               </div>
-              <p className="text-gray-500 text-sm">{btcSwap.allData as string}</p>
+              <p className="text-[var(--text-muted)] text-sm">{btcSwap.allData as string}</p>
             </div>
           )}
         </div>
@@ -541,11 +541,11 @@ export default function BtcSwapPage() {
           onClick={() => setShowChainModal(false)}
         >
           <div 
-            className="bg-[#1A1A1E] w-full rounded-t-3xl border-t border-white/10 animate-slide-up"
+            className="bg-[var(--background-card)] w-full rounded-t-3xl border-t border-[var(--border-color)] animate-slide-up"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-12 h-1 bg-gray-600 rounded-full mx-auto mt-4" />
-            <div className="text-center py-4 font-semibold text-white text-lg">
+            <div className="w-12 h-1 bg-[var(--text-muted)] rounded-full mx-auto mt-4" />
+            <div className="text-center py-4 font-semibold text-[var(--foreground)] text-lg">
               {btcSwap.select as string}
             </div>
             <div className="max-h-[60vh] overflow-y-auto px-2 pb-6">
@@ -555,8 +555,8 @@ export default function BtcSwapPage() {
                   onClick={() => handleSelectChain(token.name)}
                   className={`w-full px-4 py-4 flex items-center gap-3 rounded-xl transition-all ${
                     selectedChain === token.name 
-                      ? 'bg-[#FFC519]/10 text-[#FFC519] border border-[#FFC519]/30' 
-                      : 'text-white hover:bg-white/5'
+                      ? 'bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/30' 
+                      : 'text-[var(--foreground)] hover:bg-[var(--background-card-hover)]'
                   }`}
                 >
                   <Image
@@ -581,11 +581,11 @@ export default function BtcSwapPage() {
           onClick={() => setShowCoinModal(false)}
         >
           <div 
-            className="bg-[#1A1A1E] w-full rounded-t-3xl border-t border-white/10 animate-slide-up"
+            className="bg-[var(--background-card)] w-full rounded-t-3xl border-t border-[var(--border-color)] animate-slide-up"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-12 h-1 bg-gray-600 rounded-full mx-auto mt-4" />
-            <div className="text-center py-4 font-semibold text-white text-lg">
+            <div className="w-12 h-1 bg-[var(--text-muted)] rounded-full mx-auto mt-4" />
+            <div className="text-center py-4 font-semibold text-[var(--foreground)] text-lg">
               {btcSwap.select as string}
             </div>
             <div className="max-h-[60vh] overflow-y-auto px-2 pb-6">
@@ -596,18 +596,18 @@ export default function BtcSwapPage() {
                     onClick={() => handleSelectCoin(coin)}
                     className={`w-full px-4 py-4 flex items-center justify-between rounded-xl transition-all ${
                       selectedCoin.inscriptionNumber === coin.inscriptionNumber 
-                        ? 'bg-[#FFC519]/10 text-[#FFC519] border border-[#FFC519]/30' 
-                        : 'text-white hover:bg-white/5'
+                        ? 'bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/30' 
+                        : 'text-[var(--foreground)] hover:bg-[var(--background-card-hover)]'
                     }`}
                   >
                     <span className="font-medium">
                       {coin.tokenName}#{coin.inscriptionNumber}
                     </span>
-                    <span className="text-gray-400">{coin.amount}</span>
+                    <span className="text-[var(--text-secondary)]">{coin.amount}</span>
                   </button>
                 ))
               ) : (
-                <div className="py-12 text-center text-gray-500 text-sm">
+                <div className="py-12 text-center text-[var(--text-muted)] text-sm">
                   {(btcSwap.tips as string)?.replace('{selectedChain}', selectedChain) || `暫無${selectedChain}餘額`}
                 </div>
               )}

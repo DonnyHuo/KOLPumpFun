@@ -51,7 +51,7 @@ export function Footer() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-[500px] mx-auto bg-[#0D0D0F]/95 backdrop-blur-xl border-t border-white/5 pt-3 pb-[max(env(safe-area-inset-bottom),12px)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-[500px] mx-auto bg-[var(--background)]/95 backdrop-blur-xl border-t border-[var(--border-color)] pt-3 pb-[max(env(safe-area-inset-bottom),12px)]">
       <div className="flex items-center justify-around">
         {navList.map((item) => {
           const isActive = pathname === item.route;
@@ -61,12 +61,12 @@ export function Footer() {
               href={item.route}
               className={`flex flex-col items-center text-xs no-underline transition-all duration-200 ${
                 isActive 
-                  ? 'text-[#FFC519]' 
-                  : 'text-gray-500 hover:text-gray-300'
+                  ? 'text-[var(--primary)]' 
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
               }`}
             >
               <div className={`p-2 rounded-xl transition-all ${
-                isActive ? 'bg-[#FFC519]/10' : ''
+                isActive ? 'bg-[var(--primary)]/10' : ''
               }`}>
                 <Image
                   src={item.iconAct}
@@ -78,7 +78,7 @@ export function Footer() {
                   }`}
                 />
               </div>
-              <div className={`pt-1 text-[11px] font-medium ${isActive ? 'text-[#FFC519]' : ''}`}>
+              <div className={`pt-1 text-[11px] font-medium ${isActive ? 'text-[var(--primary)]' : ''}`}>
                 {item.text}
               </div>
             </Link>

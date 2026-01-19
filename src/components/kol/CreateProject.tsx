@@ -36,8 +36,8 @@ const PercentBox = ({ label, value, editable = false, onChange }: {
   editable?: boolean;
   onChange?: (value: string) => void;
 }) => (
-  <div className="flex items-center justify-between bg-[#0D0D0F] border border-white/10 h-[48px] px-4 rounded-xl">
-    <span className="text-xs text-gray-400">{label}</span>
+  <div className="flex items-center justify-between bg-[var(--background-card)] border border-[var(--border-color)] h-[48px] px-4 rounded-xl">
+    <span className="text-xs text-[var(--text-secondary)]">{label}</span>
     {editable ? (
       <div className="flex items-center">
         <input
@@ -45,12 +45,12 @@ const PercentBox = ({ label, value, editable = false, onChange }: {
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
           placeholder="> 0"
-          className="w-[50px] h-[30px] text-xs text-right bg-[#1A1A1E] border border-white/10 rounded-lg px-2 text-white focus:outline-none focus:border-[#FFC519]"
+          className="w-[50px] h-[30px] text-xs text-right bg-[var(--background-card)] border border-[var(--border-color)] rounded-lg px-2 text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)]"
         />
-        <span className="ml-2 text-gray-400">%</span>
+        <span className="ml-2 text-[var(--text-secondary)]">%</span>
       </div>
     ) : (
-      <span className="font-semibold text-[#FFC519]">{value}%</span>
+      <span className="font-semibold text-[var(--primary)]">{value}%</span>
     )}
   </div>
 );
@@ -421,27 +421,27 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
     <div className="relative my-4">
       <button
         onClick={() => setShowTokenList(!showTokenList)}
-        className="w-full flex items-center justify-between bg-[#0D0D0F] border border-white/10 rounded-xl px-4 py-3 hover:border-white/20 transition-colors"
+        className="w-full flex items-center justify-between bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl px-4 py-3 hover:border-[var(--border-color-hover)] transition-colors"
       >
         <div className="flex items-center gap-3">
-          <span className="font-semibold text-sm text-white">{selectedToken?.mint_base_token || 'BNB'}</span>
-          <span className="text-xs text-gray-400">
-            1 {selectedToken?.mint_base_token || 'BNB'} = <span className="text-[#FFC519]">{selectedToken?.exchange_rate || '9000000'}</span> 代幣
+          <span className="font-semibold text-sm text-[var(--foreground)]">{selectedToken?.mint_base_token || 'BNB'}</span>
+          <span className="text-xs text-[var(--text-secondary)]">
+            1 {selectedToken?.mint_base_token || 'BNB'} = <span className="text-[var(--primary)]">{selectedToken?.exchange_rate || '9000000'}</span> 代幣
           </span>
         </div>
-        <ChevronDown className={`w-5 h-5 text-[#FFC519] transition-transform ${showTokenList ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-5 h-5 text-[var(--primary)] transition-transform ${showTokenList ? 'rotate-180' : ''}`} />
       </button>
       
       {showTokenList && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-[#1A1A1E] border border-white/10 rounded-xl shadow-2xl z-10 max-h-48 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl shadow-2xl z-10 max-h-48 overflow-y-auto">
           {tokenList.map((token, index) => (
             <button
               key={index}
               onClick={() => handleSelectToken(token)}
               className={`w-full text-left px-4 py-3 text-sm transition-colors ${
                 selectedToken?.mint_base_token === token.mint_base_token 
-                  ? 'bg-[#FFC519]/10 text-[#FFC519]' 
-                  : 'text-white hover:bg-white/5'
+                  ? 'bg-[var(--primary)]/10 text-[var(--primary)]' 
+                  : 'text-[var(--foreground)] hover:bg-[var(--background-card-hover)]'
               }`}
             >
               {token.mint_base_token} - 1 {token.mint_base_token} = {token.exchange_rate} 代幣
@@ -455,24 +455,16 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
   return (
     <div>
       {/* Tab 切换 */}
-      <div className="flex bg-[#0D0D0F] rounded-xl p-1 mb-6">
+      <div className="tab-container mb-6">
         <button
           onClick={() => setActiveTab('create')}
-          className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
-            activeTab === 'create' 
-              ? 'bg-gradient-to-r from-[#FFC519] to-[#FFD54F] text-black' 
-              : 'text-gray-400 hover:text-white'
-          }`}
+          className={activeTab === 'create' ? 'tab-item-active' : 'tab-item-inactive'}
         >
           {home?.createProject as string}
         </button>
         <button
           onClick={() => setActiveTab('claim')}
-          className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
-            activeTab === 'claim' 
-              ? 'bg-gradient-to-r from-[#FFC519] to-[#FFD54F] text-black' 
-              : 'text-gray-400 hover:text-white'
-          }`}
+          className={activeTab === 'claim' ? 'tab-item-active' : 'tab-item-inactive'}
         >
           {home?.claimProject as string}
         </button>
@@ -484,7 +476,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
           <div className="flex justify-center mb-6">
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="w-[200px] h-[150px] border-2 border-dashed border-white/20 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-[#FFC519]/50 transition-colors bg-[#0D0D0F]"
+              className="w-[200px] h-[150px] border-2 border-dashed border-[var(--border-color)] rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-[var(--primary)]/50 transition-colors bg-[var(--background-card)]"
             >
               {logoPreview ? (
                 <div className="relative w-full h-full">
@@ -502,11 +494,11 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
                 </div>
               ) : (
                 <>
-                  <div className="w-12 h-12 mb-3 flex items-center justify-center rounded-xl bg-white/5">
-                    <Upload className="w-6 h-6 text-gray-500" />
+                  <div className="w-12 h-12 mb-3 flex items-center justify-center rounded-xl bg-[var(--background-card-hover)]">
+                    <Upload className="w-6 h-6 text-[var(--text-muted)]" />
                   </div>
-                  <p className="text-xs text-gray-400">PNG-JPEG-WEBP-GIF</p>
-                  <p className="text-xs text-gray-500">Max Size: 5MB</p>
+                  <p className="text-xs text-[var(--text-secondary)]">PNG-JPEG-WEBP-GIF</p>
+                  <p className="text-xs text-[var(--text-muted)]">Max Size: 5MB</p>
                 </>
               )}
             </div>
@@ -520,7 +512,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
           </div>
 
           {/* 模式选择 */}
-          <div className="h-[44px] bg-[#0D0D0F] border border-white/10 flex items-center rounded-xl p-1 text-xs mb-6">
+          <div className="h-[44px] bg-[var(--background-card)] border border-[var(--border-color)] flex items-center rounded-xl p-1 text-xs mb-6">
             {(['joint', 'single', 'marketMaking'] as KolMode[]).map((mode) => (
               <button
                 key={mode}
@@ -528,10 +520,10 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
                 disabled={!canSelectMode(mode)}
                 className={`flex-1 h-full flex items-center justify-center cursor-pointer rounded-lg transition-all ${
                   activeMode === mode
-                    ? 'bg-gradient-to-r from-[#FFC519] to-[#FFD54F] text-black font-semibold'
+                    ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] text-black font-semibold'
                     : canSelectMode(mode)
-                    ? 'text-gray-400 hover:text-white'
-                    : 'text-gray-600 cursor-not-allowed opacity-40'
+                    ? 'text-[var(--text-secondary)] hover:text-[var(--foreground)]'
+                    : 'text-[var(--text-muted)] cursor-not-allowed opacity-40'
                 }`}
               >
                 {kolTypes[mode]}
@@ -774,7 +766,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
         <div>
           {/* 已认领项目展示 */}
           {hasClaimedProject ? (
-            <div className="bg-[#0D0D0F] border border-white/10 rounded-xl p-5 my-4">
+            <div className="bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl p-5 my-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <img 
@@ -782,7 +774,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
                     alt="project" 
                     className="w-[36px] h-[36px] rounded-full"
                   />
-                  <span className="font-semibold text-white">
+                  <span className="font-semibold text-[var(--foreground)]">
                     {kolInfo?.project_name?.split('100T-')[1] || kolInfo?.project_name}
                   </span>
                 </div>
@@ -797,17 +789,17 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
           <div className="flex items-center justify-between gap-4 mb-4">
             <button 
               onClick={() => handleSort()} 
-              className="flex items-center gap-2 bg-[#0D0D0F] border border-white/10 px-4 py-2.5 rounded-xl hover:bg-[#141416] transition-colors"
+              className="flex items-center gap-2 bg-[var(--background-card)] border border-[var(--border-color)] px-4 py-2.5 rounded-xl hover:bg-[var(--background-card-hover)] transition-colors"
             >
-              <span className="text-white text-sm">{newData.marketCap || '市值'}</span>
+              <span className="text-[var(--foreground)] text-sm">{newData.marketCap || '市值'}</span>
               <div className="flex flex-col gap-[2px]">
                 <div 
                   className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[4px]"
-                  style={{ borderBottomColor: sortOrder === 'asc' ? '#FFC519' : '#4B5563' }}
+                  style={{ borderBottomColor: sortOrder === 'asc' ? 'var(--primary)' : 'var(--text-muted)' }}
                 />
                 <div 
                   className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px]"
-                  style={{ borderTopColor: sortOrder === 'desc' ? '#FFC519' : '#4B5563' }}
+                  style={{ borderTopColor: sortOrder === 'desc' ? 'var(--primary)' : 'var(--text-muted)' }}
                 />
               </div>
             </button>
@@ -816,7 +808,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               placeholder={newData.search || '搜索'}
-              className="flex-1 max-w-[180px] bg-[#0D0D0F] border border-white/10 px-4 py-2.5 rounded-xl text-sm text-white placeholder:text-gray-500 outline-none focus:border-[#FFC519] transition-colors"
+              className="input flex-1 max-w-[180px] text-sm"
             />
           </div>
 
@@ -837,7 +829,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
                 return (
                   <div
                     key={index}
-                    className="bg-[#0D0D0F] border border-white/10 rounded-xl p-4 text-left hover:border-white/20 transition-colors"
+                    className="bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl p-4 text-left hover:border-[var(--border-color-hover)] transition-colors"
                   >
                     {/* 头部：Logo、Symbol、价格 */}
                     <div className="flex items-start justify-between">
@@ -845,19 +837,19 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
                         <img
                           src={project.logo_url || getTokenIcon(project.symbol || '').src}
                           alt={project.symbol}
-                          className="w-[36px] h-[36px] rounded-full object-cover ring-2 ring-white/10"
+                          className="w-[36px] h-[36px] rounded-full object-cover ring-2 ring-[var(--border-color)]"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = getTokenIcon('100t').src;
                           }}
                         />
                         <div>
-                          <div className="text-sm font-semibold text-white">{project.symbol}</div>
-                          <div className="text-gray-400 text-xs mt-0.5">
-                            {newData.marketCap || '市值'}: <span className="text-white">${marketCap}</span>
+                          <div className="text-sm font-semibold text-[var(--foreground)]">{project.symbol}</div>
+                          <div className="text-[var(--text-secondary)] text-xs mt-0.5">
+                            {newData.marketCap || '市值'}: <span className="text-[var(--foreground)]">${marketCap}</span>
                           </div>
                         </div>
                       </div>
-                      <div className="text-sm text-[#FFC519] font-semibold">${Number(project.lastPrice || 0).toFixed(6)}</div>
+                      <div className="text-sm text-[var(--primary)] font-semibold">${Number(project.lastPrice || 0).toFixed(6)}</div>
                     </div>
 
                     {/* 标签：X、Telegram、项目类型 */}
@@ -866,7 +858,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
                         href={project.twitter_account || '#'}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="bg-white/5 border border-white/10 p-1.5 px-2.5 rounded-lg flex items-center gap-1.5 hover:border-white/20 transition-colors text-gray-400 hover:text-white"
+                        className="bg-[var(--background-card-hover)] border border-[var(--border-color)] p-1.5 px-2.5 rounded-lg flex items-center gap-1.5 hover:border-[var(--border-color-hover)] transition-colors text-[var(--text-secondary)] hover:text-[var(--foreground)]"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {/* X (Twitter) Icon */}
@@ -879,13 +871,13 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
                         href={project.tg_account || '#'}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="bg-white/5 border border-white/10 p-1.5 px-2.5 rounded-lg flex items-center gap-1.5 hover:border-white/20 transition-colors text-gray-400 hover:text-white"
+                        className="bg-[var(--background-card-hover)] border border-[var(--border-color)] p-1.5 px-2.5 rounded-lg flex items-center gap-1.5 hover:border-[var(--border-color-hover)] transition-colors text-[var(--text-secondary)] hover:text-[var(--foreground)]"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <Send className="w-3 h-3" />
                         <span>Telegram</span>
                       </a>
-                      <div className="bg-[#FFC519]/10 border border-[#FFC519]/30 text-[#FFC519] p-1.5 px-2.5 rounded-lg">
+                      <div className="bg-[var(--primary)]/10 border border-[var(--primary)]/30 text-[var(--primary)] p-1.5 px-2.5 rounded-lg">
                         {projectTypeName}
                       </div>
                       {!project.details && (
@@ -901,7 +893,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
                     {/* 描述和认领按钮 */}
                     {project.details && (
                       <div className="flex items-center justify-between gap-4 mt-3">
-                        <div className="text-gray-400 text-xs text-left flex-1">
+                        <div className="text-[var(--text-secondary)] text-xs text-left flex-1">
                           {project.details}
                         </div>
                         <button
@@ -915,12 +907,12 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
 
                     {/* 公平发射信息 */}
                     {project.exchange_rate ? (
-                      <div className="mt-3 pt-3 border-t border-white/5">
+                      <div className="mt-3 pt-3 border-t border-[var(--border-color)]">
                         <div className="text-sm mb-2">
-                          <span className="text-white">
+                          <span className="text-[var(--foreground)]">
                             {shareProject?.fairLaunch as string || '公平發射'}
                           </span>
-                          <span className="text-[#FFC519] ml-2">
+                          <span className="text-[var(--primary)] ml-2">
                             1{project.display_name?.split('-')[0] || 'BNB'} = {project.exchange_rate || 0}{project.symbol}
                           </span>
                         </div>
@@ -951,7 +943,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
 
                     {/* 无公平发射但有mint_pool_id时也显示入口 */}
                     {!project.exchange_rate && project.mint_pool_id ? (
-                      <div className="mt-3 pt-3 border-t border-white/5">
+                      <div className="mt-3 pt-3 border-t border-[var(--border-color)]">
                         <div className="flex items-center gap-2 justify-end">
                           <button 
                             onClick={(e) => {
@@ -982,10 +974,10 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
             </div>
           ) : (
             <div className="text-center py-12">
-              <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 rounded-full bg-[var(--background-card-hover)] flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">📭</span>
               </div>
-              <p className="text-gray-500 text-sm">{newData.noData || '暫無數據'}</p>
+              <p className="text-[var(--text-muted)] text-sm">{newData.noData || '暫無數據'}</p>
             </div>
           )}
             </>

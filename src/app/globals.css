@@ -31,6 +31,46 @@
   /* 发光效果 */
   --glow-primary: rgba(255, 197, 25, 0.3);
   --glow-success: rgba(16, 185, 129, 0.3);
+  
+  /* 图标反转 - 暗色主题下图标为白色，不需要反转 */
+  --icon-invert: 1;
+}
+
+/* 浅色主题 - 保持 Web3 风格 */
+:root.light {
+  /* Web3 浅色主题配色 - 保持相同的渐变和发光效果 */
+  --primary: #FFC519;
+  --primary-hover: #FFD54F;
+  --primary-gradient-start: #FB8018;
+  --primary-gradient-end: #FFC519;
+  
+  /* 浅色背景 - 使用柔和的浅色但保持 Web3 风格 */
+  --background: #FAFAFC;
+  --background-secondary: #F0F0F2;
+  --background-card: #FFFFFF;
+  --background-card-hover: #F5F5F7;
+  
+  /* 边框 - 浅色主题下的边框 */
+  --border-color: rgba(0, 0, 0, 0.08);
+  --border-color-hover: rgba(0, 0, 0, 0.15);
+  
+  /* 文字颜色 */
+  --foreground: #1A1A1E;
+  --text-secondary: #4B5563;
+  --text-muted: #6B7280;
+  
+  /* 状态颜色 - 保持不变 */
+  --success: #10B981;
+  --error: #EF4444;
+  --warning: #F59E0B;
+  --info: #3B82F6;
+  
+  /* 发光效果 - 浅色主题下稍微减弱但保持 Web3 风格 */
+  --glow-primary: rgba(255, 197, 25, 0.25);
+  --glow-success: rgba(16, 185, 129, 0.25);
+  
+  /* 图标反转 - 浅色主题下图标需要反转为黑色 */
+  --icon-invert: 0;
 }
 
 body {
@@ -39,7 +79,7 @@ body {
   font-family: var(--font-poppins), system-ui, sans-serif;
 }
 
-/* 自定义滚动条 - 暗色风格 */
+/* 自定义滚动条 - 适配主题 */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -51,12 +91,14 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3A3A3E;
+  background: var(--text-muted);
   border-radius: 3px;
+  opacity: 0.5;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4A4A4E;
+  background: var(--text-secondary);
+  opacity: 0.8;
 }
 
 /* Web3 按钮样式 */
@@ -99,7 +141,7 @@ body {
   background: rgba(255, 197, 25, 0.1);
 }
 
-/* Web3 输入框样式 */
+/* Web3 输入框样式 - 适配主题 */
 .input {
   @apply w-full px-4 py-3 rounded-xl transition-all duration-200;
   background: var(--background-card);
@@ -117,6 +159,38 @@ body {
   color: var(--text-muted);
 }
 
+/* Web3 Select 选择框样式 - 适配主题 */
+select.input,
+select {
+  @apply w-full px-4 py-3 rounded-xl transition-all duration-200 appearance-none cursor-pointer;
+  background: var(--background-card);
+  border: 1px solid var(--border-color);
+  color: var(--foreground);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23FFC519' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
+}
+
+select.input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--glow-primary);
+}
+
+select.input option,
+select option {
+  background: var(--background-card);
+  color: var(--foreground);
+  padding: 8px;
+}
+
+select.input:hover,
+select:hover {
+  border-color: var(--border-color-hover);
+}
+
 /* Web3 卡片样式 */
 .card {
   @apply rounded-2xl p-5;
@@ -126,7 +200,7 @@ body {
 
 .card-glass {
   @apply rounded-2xl p-5;
-  background: rgba(26, 26, 30, 0.8);
+  background: color-mix(in srgb, var(--background-card) 80%, transparent);
   backdrop-filter: blur(20px);
   border: 1px solid var(--border-color);
 }
@@ -156,30 +230,30 @@ body {
 /* Web3 标签样式 */
 .badge-success {
   @apply text-xs px-3 py-1 rounded-full font-medium;
-  background: rgba(16, 185, 129, 0.15);
-  color: #10B981;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+  color: var(--success);
+  border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
 }
 
 .badge-warning {
   @apply text-xs px-3 py-1 rounded-full font-medium;
-  background: rgba(245, 158, 11, 0.15);
-  color: #F59E0B;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: color-mix(in srgb, var(--warning) 15%, transparent);
+  color: var(--warning);
+  border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
 }
 
 .badge-error {
   @apply text-xs px-3 py-1 rounded-full font-medium;
-  background: rgba(239, 68, 68, 0.15);
-  color: #EF4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: color-mix(in srgb, var(--error) 15%, transparent);
+  color: var(--error);
+  border: 1px solid color-mix(in srgb, var(--error) 30%, transparent);
 }
 
 .badge-info {
   @apply text-xs px-3 py-1 rounded-full font-medium;
-  background: rgba(59, 130, 246, 0.15);
-  color: #3B82F6;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: color-mix(in srgb, var(--info) 15%, transparent);
+  color: var(--info);
+  border: 1px solid color-mix(in srgb, var(--info) 30%, transparent);
 }
 
 /* Web3 步骤圆圈 */
@@ -202,7 +276,7 @@ body {
   border: 1px solid var(--border-color);
 }
 
-/* Web3 Tab 样式 */
+/* Web3 Tab 样式 - 适配主题 */
 .tab-container {
   @apply flex rounded-xl p-1;
   background: var(--background-card);
@@ -210,13 +284,16 @@ body {
 }
 
 .tab-item-active {
-  @apply flex-1 py-2.5 text-sm rounded-lg transition-all font-semibold text-black;
-  background: linear-gradient(135deg, #FFC519 0%, #FFD54F 100%);
+  @apply flex-1 py-2.5 text-sm rounded-lg transition-all font-semibold;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  color: #000;
+  box-shadow: 0 0 12px var(--glow-primary);
 }
 
 .tab-item-inactive {
   @apply flex-1 py-2.5 text-sm rounded-lg transition-all font-medium;
   color: var(--text-secondary);
+  background: transparent;
 }
 
 .tab-item-inactive:hover {
@@ -224,10 +301,10 @@ body {
   background: var(--background-card-hover);
 }
 
-/* Web3 进度条 */
+/* Web3 进度条 - 适配主题 */
 .progress-bar {
   @apply h-2.5 rounded-full overflow-hidden;
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
 }
 
 .progress-indicator {
@@ -316,15 +393,15 @@ body {
   outline: none !important;
 }
 
-/* 网格背景效果 */
+/* 网格背景效果 - 适配主题 */
 .bg-grid {
   background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--foreground) 3%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--foreground) 3%, transparent) 1px, transparent 1px);
   background-size: 50px 50px;
 }
 
-/* 渐变背景 */
+/* 渐变背景 - 适配主题 */
 .bg-gradient-radial {
-  background: radial-gradient(ellipse at top, rgba(255, 197, 25, 0.1) 0%, transparent 50%);
+  background: radial-gradient(ellipse at top, var(--glow-primary) 0%, transparent 50%);
 }

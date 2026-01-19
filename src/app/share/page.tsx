@@ -109,22 +109,22 @@ export default function SharePage() {
   };
 
   return (
-    <div className="bg-[#0D0D0F] bg-grid min-h-screen px-5 py-5">
+    <div className="bg-[var(--background)] bg-grid min-h-screen px-5 py-5">
       {/* Header: 排序 + 搜索 */}
       <div className="flex items-center justify-between gap-4 text-sm mb-5">
         <button 
           onClick={handleSort} 
-          className="flex items-center gap-2 bg-[#1A1A1E] border border-white/10 px-4 py-2.5 rounded-xl hover:bg-[#222226] transition-colors"
+          className="flex items-center gap-2 bg-[var(--background-card)] border border-[var(--border-color)] px-4 py-2.5 rounded-xl hover:bg-[var(--background-card-hover)] transition-colors"
         >
-          <span className="text-white text-sm">{newData.marketCap}</span>
+          <span className="text-[var(--foreground)] text-sm">{newData.marketCap}</span>
           <div className="flex flex-col gap-[2px]">
             <div
               className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent"
-              style={{ borderBottomColor: sort === 'asc' ? '#FFC519' : '#4B5563' }}
+              style={{ borderBottomColor: sort === 'asc' ? 'var(--primary)' : 'var(--text-muted)' }}
             />
             <div
               className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent"
-              style={{ borderTopColor: sort === 'desc' ? '#FFC519' : '#4B5563' }}
+              style={{ borderTopColor: sort === 'desc' ? 'var(--primary)' : 'var(--text-muted)' }}
             />
           </div>
         </button>
@@ -133,14 +133,14 @@ export default function SharePage() {
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           placeholder={newData.search}
-          className="flex-1 max-w-[200px] bg-[#1A1A1E] border border-white/10 px-4 py-2.5 rounded-xl text-sm text-white placeholder:text-gray-500 outline-none focus:border-[#FFC519] transition-colors"
+          className="input flex-1 max-w-[200px] text-sm"
         />
       </div>
 
       {/* 加载中 */}
       {loading && (
         <div className="h-[400px] flex items-center justify-center">
-          <div className="w-10 h-10 border-2 border-white/10 border-t-[#FFC519] rounded-full animate-spin" />
+          <div className="w-10 h-10 border-2 border-[var(--border-color)] border-t-[var(--primary)] rounded-full animate-spin" />
         </div>
       )}
 
@@ -150,12 +150,12 @@ export default function SharePage() {
           {searchList.map((item, index) => (
             <div
               key={index}
-              className="card hover:bg-[#222226] transition-colors"
+              className="card hover:bg-[var(--background-card-hover)] transition-colors"
             >
               {/* 项目头部 */}
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#222226] ring-2 ring-white/10 overflow-hidden">
+                  <div className="w-10 h-10 rounded-full bg-[var(--background-card-hover)] ring-2 ring-[var(--border-color)] overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={item.logo_url || brc20_100t.src}
@@ -167,13 +167,13 @@ export default function SharePage() {
                     />
                   </div>
                   <div className="text-left">
-                    <span className="text-white font-semibold">{item.symbol}</span>
-                    <div className="text-gray-400 text-xs mt-0.5">
-                      {newData.marketCap}: <span className="text-white">${(Number(item.total_supply) * Number(item.lastPrice || 0)).toFixed(0)}</span>
+                    <span className="text-[var(--foreground)] font-semibold">{item.symbol}</span>
+                    <div className="text-[var(--text-secondary)] text-xs mt-0.5">
+                      {newData.marketCap}: <span className="text-[var(--foreground)]">${(Number(item.total_supply) * Number(item.lastPrice || 0)).toFixed(0)}</span>
                     </div>
                   </div>
                 </div>
-                <div className="text-[#FFC519] font-semibold">${Number(item.lastPrice || 0).toFixed(6)}</div>
+                <div className="text-[var(--primary)] font-semibold">${Number(item.lastPrice || 0).toFixed(6)}</div>
               </div>
 
               {/* 社交链接和标签 */}
@@ -182,7 +182,7 @@ export default function SharePage() {
                   href={item.twitter_account || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-[#0D0D0F] border border-white/10 px-2 py-1 rounded-lg flex items-center gap-1.5 hover:border-white/20 transition-colors text-gray-400 hover:text-white"
+                  className="bg-[var(--background-card)] border border-[var(--border-color)] px-2 py-1 rounded-lg flex items-center gap-1.5 hover:border-[var(--border-color-hover)] transition-colors text-[var(--text-secondary)] hover:text-[var(--foreground)]"
                   onClick={(e) => !item.twitter_account && e.preventDefault()}
                 >
                   {/* X (Twitter) Icon */}
@@ -195,13 +195,13 @@ export default function SharePage() {
                   href={item.tg_account || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-[#0D0D0F] border border-white/10 px-2 py-1 rounded-lg flex items-center gap-1.5 hover:border-white/20 transition-colors text-gray-400 hover:text-white"
+                  className="bg-[var(--background-card)] border border-[var(--border-color)] px-2 py-1 rounded-lg flex items-center gap-1.5 hover:border-[var(--border-color-hover)] transition-colors text-[var(--text-secondary)] hover:text-[var(--foreground)]"
                   onClick={(e) => !item.tg_account && e.preventDefault()}
                 >
                   <Send className="w-3 h-3" />
                   <span>{(shareProject.social as Record<string, string>).telegram}</span>
                 </a>
-                <div className="bg-[#FFC519]/10 border border-[#FFC519]/30 text-[#FFC519] px-2 py-1 rounded-lg">
+                <div className="bg-[var(--primary)]/10 border border-[var(--primary)]/30 text-[var(--primary)] px-2 py-1 rounded-lg">
                   {getProjectType(item.project_type)}
                 </div>
 
@@ -219,7 +219,7 @@ export default function SharePage() {
               {/* 项目描述 */}
               {item.details && (
                 <div className="flex items-center justify-between gap-4 mt-4">
-                  <div className="text-gray-400 text-xs">
+                  <div className="text-[var(--text-secondary)] text-xs">
                     {item.details}
                   </div>
                   <button
@@ -233,10 +233,10 @@ export default function SharePage() {
 
               {/* 公平发射信息 */}
               {item.exchange_rate ? (
-                <div className="mt-4 pt-4 border-t border-white/5">
+                <div className="mt-4 pt-4 border-t border-[var(--border-color)]">
                   <div className="text-sm mb-3 text-left">
-                    <span className="text-white">{shareProject.fairLaunch as string}</span>
-                    <span className="text-[#FFC519] ml-2">
+                    <span className="text-[var(--foreground)]">{shareProject.fairLaunch as string}</span>
+                    <span className="text-[var(--primary)] ml-2">
                       1{item.display_name?.split('-')[0] || 'BNB'} = {item.exchange_rate}{item.symbol}
                     </span>
                   </div>
@@ -259,7 +259,7 @@ export default function SharePage() {
 
               {/* 无公平发射但有mint_pool_id时也显示入口 */}
               {!item.exchange_rate && item.mint_pool_id ? (
-                <div className="mt-4 pt-4 border-t border-white/5">
+                <div className="mt-4 pt-4 border-t border-[var(--border-color)]">
                   <div className="flex items-center gap-2 justify-end">
                     <button 
                       onClick={() => goToPoolDetail(item)}
@@ -284,10 +284,10 @@ export default function SharePage() {
       {/* 无数据 */}
       {!loading && searchList.length === 0 && (
         <div className="h-[400px] flex flex-col items-center justify-center">
-          <div className="w-16 h-16 rounded-full bg-[#1A1A1E] flex items-center justify-center mb-4">
+          <div className="w-16 h-16 rounded-full bg-[var(--background-card)] flex items-center justify-center mb-4">
             <span className="text-2xl">📭</span>
           </div>
-          <p className="text-gray-500">{newData.noData}</p>
+          <p className="text-[var(--text-muted)]">{newData.noData}</p>
         </div>
       )}
     </div>

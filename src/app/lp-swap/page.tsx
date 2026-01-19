@@ -323,7 +323,7 @@ export default function LpSwapPage() {
   // 骨架屏
   if (loading) {
     return (
-      <div className="px-5 py-6 space-y-4 bg-[#0D0D0F] min-h-screen">
+      <div className="px-5 py-6 space-y-4 bg-[var(--background)] min-h-screen">
         <div className="skeleton h-8 w-48" />
         <div className="skeleton h-64 rounded-2xl" />
         <div className="space-y-3">
@@ -335,15 +335,15 @@ export default function LpSwapPage() {
   }
 
   return (
-    <div className="px-5 py-5 bg-[#0D0D0F] bg-grid bg-gradient-radial min-h-screen text-left text-sm">
+    <div className="px-5 py-5 bg-[var(--background)] bg-grid bg-gradient-radial min-h-screen text-left text-sm">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-base font-semibold text-white">{lpSwap.title as string}</h1>
+        <h1 className="text-base font-semibold text-[var(--foreground)]">{lpSwap.title as string}</h1>
         
         {/* 代币选择器 */}
         <button
           onClick={() => setShowTokenSelect(true)}
-          className="flex items-center gap-2 bg-[#1A1A1E] border border-white/10 px-4 py-2 rounded-xl transition-all duration-200 hover:bg-[#222226] hover:border-white/20"
+          className="flex items-center gap-2 bg-[var(--background-card)] border border-[var(--border-color)] px-4 py-2 rounded-xl transition-all duration-200 hover:bg-[var(--background-card-hover)] hover:border-[var(--border-color-hover)]"
         >
           {selectedToken && selectedToken.name !== '--' && (
             <Image
@@ -354,14 +354,14 @@ export default function LpSwapPage() {
               className="rounded-full"
             />
           )}
-          <span className="text-sm text-white">{selectedToken?.name || '--'}</span>
-          <ChevronDown className="w-4 h-4 text-gray-400" />
+          <span className="text-sm text-[var(--foreground)]">{selectedToken?.name || '--'}</span>
+          <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" />
         </button>
       </div>
 
       {/* 描述 */}
       {selectedToken && (
-        <p className="text-sm text-gray-400 mb-6">
+        <p className="text-sm text-[var(--text-secondary)] mb-6">
           {selectedToken.name !== 'SOS'
             ? (lpSwap.desc as string).replace('{name}', selectedToken.name).replace('{total}', totalDisplay)
             : (lpSwap.desc2 as string).replace('{total}', totalDisplay)}
@@ -397,7 +397,7 @@ export default function LpSwapPage() {
                 verticalAlign="bottom"
                 height={50}
                 formatter={(value, entry) => (
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-[var(--text-secondary)]">
                     {value} ({(entry.payload as { value: number }).value}%)
                   </span>
                 )}
@@ -411,24 +411,24 @@ export default function LpSwapPage() {
       {selectedToken && (
         <div className="card mb-6 space-y-3 text-sm">
           <div className="flex justify-between">
-            <span className="text-gray-400">{lpSwap.address as string}</span>
+            <span className="text-[var(--text-secondary)]">{lpSwap.address as string}</span>
             <a
               href={`https://bscscan.com/token/${selectedToken.address}#balances`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#FFC519] hover:text-[#FFD54F] transition-colors"
+              className="text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors"
             >
               {shortAddress(selectedToken.address)} ↗
             </a>
           </div>
           {address && (
             <>
-              <div className="h-px bg-white/5" />
+              <div className="h-px bg-[var(--border-color)]" />
               <div className="flex justify-between">
-                <span className="text-gray-400">{lpSwap.shares as string}</span>
-                <span className="text-[#FFC519]">
-                  {myBalance} <span className="text-[#FFC519]">{selectedToken.name}</span>
-                  <span className="ml-2 text-gray-400">({myBalanceRate}%)</span>
+                <span className="text-[var(--text-secondary)]">{lpSwap.shares as string}</span>
+                <span className="text-[var(--primary)]">
+                  {myBalance} <span className="text-[var(--primary)]">{selectedToken.name}</span>
+                  <span className="ml-2 text-[var(--text-secondary)]">({myBalanceRate}%)</span>
                 </span>
               </div>
             </>
@@ -439,8 +439,8 @@ export default function LpSwapPage() {
       {/* 进度条 */}
       <div className="card mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-white">{lpSwap.navTitle as string}</h3>
-          <span className="text-sm text-[#FFC519] font-semibold">{percentage}%</span>
+          <h3 className="text-sm font-medium text-[var(--foreground)]">{lpSwap.navTitle as string}</h3>
+          <span className="text-sm text-[var(--primary)] font-semibold">{percentage}%</span>
         </div>
         <div className="progress-bar">
           <div
@@ -458,16 +458,16 @@ export default function LpSwapPage() {
         </div>
       ) : pairs.length === 0 ? (
         <div className="card text-center py-10">
-          <p className="text-gray-500 text-sm">{lpSwap.noData as string}</p>
+          <p className="text-[var(--text-muted)] text-sm">{lpSwap.noData as string}</p>
         </div>
       ) : (
         <div className="space-y-3 mb-6">
           {pairs.map((pair) => (
-            <div key={pair.pairId} className="card flex items-center justify-between hover:bg-[#222226] transition-colors">
+            <div key={pair.pairId} className="card flex items-center justify-between hover:bg-[var(--background-card-hover)] transition-colors">
               <div>
-                <h4 className="text-lg text-white font-semibold mb-1">{pair.disPlayName}</h4>
-                <p className="text-xs text-gray-400">
-                  {lpSwap.timely as string} <span className="text-[#FFC519]">{pair.rate}%</span>
+                <h4 className="text-lg text-[var(--foreground)] font-semibold mb-1">{pair.disPlayName}</h4>
+                <p className="text-xs text-[var(--text-secondary)]">
+                  {lpSwap.timely as string} <span className="text-[var(--primary)]">{pair.rate}%</span>
                 </p>
               </div>
               <Link
@@ -488,11 +488,11 @@ export default function LpSwapPage() {
           onClick={() => setShowTokenSelect(false)}
         >
           <div 
-            className="bg-[#1A1A1E] border-t border-white/10 rounded-t-3xl w-full max-w-md p-5 pb-8 animate-slide-up"
+            className="bg-[var(--background-card)] border-t border-[var(--border-color)] rounded-t-3xl w-full max-w-md p-5 pb-8 animate-slide-up"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-12 h-1 bg-gray-600 rounded-full mx-auto mb-6" />
-            <div className="text-center text-sm font-semibold text-white mb-6">
+            <div className="w-12 h-1 bg-[var(--text-muted)] rounded-full mx-auto mb-6" />
+            <div className="text-center text-sm font-semibold text-[var(--foreground)] mb-6">
               {lpSwap.select as string}
             </div>
 
@@ -507,8 +507,8 @@ export default function LpSwapPage() {
                     }}
                     className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all duration-200 ${
                       selectedToken?.address === token.address 
-                        ? 'bg-[#FFC519]/10 border border-[#FFC519]/30' 
-                        : 'bg-[#0D0D0F] border border-transparent hover:border-white/10'
+                        ? 'bg-[var(--primary)]/10 border border-[var(--primary)]/30' 
+                        : 'bg-[var(--background-secondary)] border border-transparent hover:border-[var(--border-color)]'
                     }`}
                   >
                     <Image
@@ -519,7 +519,7 @@ export default function LpSwapPage() {
                       className="rounded-full"
                     />
                     <span className={`text-sm font-medium ${
-                      selectedToken?.address === token.address ? 'text-[#FFC519]' : 'text-white'
+                      selectedToken?.address === token.address ? 'text-[var(--primary)]' : 'text-[var(--foreground)]'
                     }`}>
                       {token.name}
                     </span>
@@ -527,7 +527,7 @@ export default function LpSwapPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-10 text-gray-500 text-sm">
+              <div className="text-center py-10 text-[var(--text-muted)] text-sm">
                 No Exchange Token
               </div>
             )}

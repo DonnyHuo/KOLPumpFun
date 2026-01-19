@@ -186,20 +186,27 @@ export default function EarlyBirdDetailPage() {
   const isDisabled = numAmount === 0 || numBalance < numAmount || isTransferring || buyLoading;
 
   return (
-    <div className="min-h-full bg-[#0D0D0F] pb-6">
+    <div className="min-h-full bg-[var(--background)] pb-6">
       {/* Header */}
       <div className="px-4 py-3 flex items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
+          className="w-10 h-10 rounded-xl bg-[var(--background-card)] border border-[var(--border-color)] flex items-center justify-center hover:bg-[var(--background-card-hover)] transition-colors"
         >
-          <Image src={goBack1} alt="back" width={20} height={20} />
+          <Image 
+            src={goBack1} 
+            alt="back" 
+            width={20} 
+            height={20} 
+            className="opacity-80"
+            style={{ filter: 'brightness(0) saturate(100%) invert(var(--icon-invert))' }}
+          />
         </button>
       </div>
 
       {/* Token Image */}
       <div className="px-4 mt-4">
-        <div className="rounded-2xl overflow-hidden bg-[#1A1A1E] border border-white/5">
+        <div className="rounded-2xl overflow-hidden bg-[var(--background-card)] border border-[var(--border-color)]">
           <Image
             src={poolInfo.logoUrl || '/images/default-token.png'}
             alt={poolInfo.symbol}
@@ -214,14 +221,14 @@ export default function EarlyBirdDetailPage() {
       {/* Token Info */}
       <div className="px-4 mt-4 text-left">
         <div className="flex items-center gap-3 mb-3">
-          <span className="text-2xl font-bold text-white">{poolInfo.symbol}</span>
-          <span className="bg-[#FFC519] text-xs text-black rounded-full px-3 py-1 font-medium">
+          <span className="text-2xl font-bold text-[var(--foreground)]">{poolInfo.symbol}</span>
+          <span className="bg-[var(--primary)] text-xs text-black rounded-full px-3 py-1 font-medium">
             {getProjectType(poolInfo.type, t)}
           </span>
         </div>
-        <p className="text-sm text-gray-400 mb-2">{poolInfo.details}</p>
+        <p className="text-sm text-[var(--text-secondary)] mb-2">{poolInfo.details}</p>
         {poolInfo.createTime && (
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-[var(--text-muted)]">
             {t.poolDetail.createTime} {dayjs(poolInfo.createTime).format('YYYY-MM-DD HH:mm:ss')}
           </p>
         )}
@@ -229,8 +236,8 @@ export default function EarlyBirdDetailPage() {
         {/* Progress */}
         <div className="mt-6">
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-gray-400">{t.poolDetail.launchProgress}</span>
-            <span className="text-white font-bold">
+            <span className="text-[var(--text-secondary)]">{t.poolDetail.launchProgress}</span>
+            <span className="text-[var(--foreground)] font-bold">
               {Number(poolInfo.processPercent) < 0.01
                 ? '<0.01'
                 : Number(poolInfo.processPercent).toFixed(4)}
@@ -244,15 +251,15 @@ export default function EarlyBirdDetailPage() {
       {/* Buy Section */}
       <div className="px-4 mt-8">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-white font-bold">{t.poolDetail.buy}</span>
-          <span className="text-sm text-gray-400">
+          <span className="text-[var(--foreground)] font-bold">{t.poolDetail.buy}</span>
+          <span className="text-sm text-[var(--text-secondary)]">
             {t.poolDetail.balance}：{parseFloat(sosBalance).toFixed(2)} SOS
           </span>
         </div>
 
         {/* Input */}
         <div className="card flex items-center justify-between gap-4">
-          <span className="text-gray-400 text-sm">{t.poolDetail.payment}</span>
+          <span className="text-[var(--text-secondary)] text-sm">{t.poolDetail.payment}</span>
           <div className="flex flex-1 items-center gap-2">
             <input
               type="number"
@@ -260,9 +267,9 @@ export default function EarlyBirdDetailPage() {
               onChange={(e) => setAmount(e.target.value)}
               onBlur={validateAmount}
               placeholder={t.poolDetail.inputAmount}
-              className="bg-transparent text-right text-white w-24 outline-none flex-1"
+              className="bg-transparent text-right text-[var(--foreground)] w-24 outline-none flex-1"
             />
-            <span className="text-white font-medium shrink-0">SOS</span>
+            <span className="text-[var(--foreground)] font-medium shrink-0">SOS</span>
           </div>
         </div>
 
@@ -272,7 +279,7 @@ export default function EarlyBirdDetailPage() {
             <button
               key={val}
               onClick={() => changeAmount(val)}
-              className="flex-1 py-3 rounded-xl bg-[#1A1A1E] text-white font-bold text-sm hover:bg-[#222226] transition-colors border border-white/5"
+              className="flex-1 py-3 rounded-xl bg-[var(--background-card)] text-[var(--foreground)] font-bold text-sm hover:bg-[var(--background-card-hover)] transition-colors border border-[var(--border-color)]"
             >
               {val}
             </button>
@@ -308,17 +315,17 @@ export default function EarlyBirdDetailPage() {
       {/* Orders Section */}
       <div className="px-4 mt-8">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-white font-bold">{t.poolDetail.allOrders}</span>
+          <span className="text-[var(--foreground)] font-bold">{t.poolDetail.allOrders}</span>
           {/* 只有连接钱包后才显示 Only Me 开关 */}
           {address && (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-400">{t.poolDetail.onlyMe}</span>
+              <span className="text-sm text-[var(--text-secondary)]">{t.poolDetail.onlyMe}</span>
               <button
                 onClick={handleToggleOnlyMe}
                 className={`w-11 h-6 rounded-full transition-all duration-300 relative ${
                   onlyMe 
-                    ? 'bg-[#FFC519] shadow-[0_0_10px_rgba(255,197,25,0.4)]' 
-                    : 'bg-[#3A3A3E]'
+                    ? 'bg-[var(--primary)] shadow-[0_0_10px_var(--glow-primary)]' 
+                    : 'bg-[var(--background-card-hover)]'
                 }`}
               >
                 <span
@@ -344,37 +351,37 @@ export default function EarlyBirdDetailPage() {
                 className="card space-y-3"
               >
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">{t.poolDetail.orders.orderId}</span>
-                  <span className="text-white">{order.order_id}</span>
+                  <span className="text-[var(--text-secondary)]">{t.poolDetail.orders.orderId}</span>
+                  <span className="text-[var(--foreground)]">{order.order_id}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">{t.poolDetail.orders.address}</span>
-                  <span className="text-white">{shortStr(order.address)}</span>
+                  <span className="text-[var(--text-secondary)]">{t.poolDetail.orders.address}</span>
+                  <span className="text-[var(--foreground)]">{shortStr(order.address)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">{t.poolDetail.orders.token}</span>
-                  <span className="text-white">{shortStr(order.token)}</span>
+                  <span className="text-[var(--text-secondary)]">{t.poolDetail.orders.token}</span>
+                  <span className="text-[var(--foreground)]">{shortStr(order.token)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">{t.poolDetail.orders.spendAmount}</span>
-                  <span className="text-white">
+                  <span className="text-[var(--text-secondary)]">{t.poolDetail.orders.spendAmount}</span>
+                  <span className="text-[var(--foreground)]">
                     {(parseFloat(order.a_amount) / 10 ** 18).toFixed(0)} SOS
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">{t.poolDetail.orders.txId}</span>
+                  <span className="text-[var(--text-secondary)]">{t.poolDetail.orders.txId}</span>
                   <a
                     href={`https://bscscan.com/tx/${order.spend_txid}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[#FFC519] underline"
+                    className="text-[var(--primary)] underline"
                   >
                     {shortStr(order.spend_txid)}
                   </a>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">{t.poolDetail.orders.time}</span>
-                  <span className="text-white">
+                  <span className="text-[var(--text-secondary)]">{t.poolDetail.orders.time}</span>
+                  <span className="text-[var(--foreground)]">
                     {dayjs(order.updated_at).format('YYYY-MM-DD HH:mm:ss')}
                   </span>
                 </div>

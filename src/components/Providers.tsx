@@ -3,7 +3,7 @@
 import { ReactNode, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
-import { RainbowKitProvider, darkTheme, type Locale } from '@rainbow-me/rainbowkit';
+import { RainbowKitProvider, darkTheme, lightTheme, type Locale } from '@rainbow-me/rainbowkit';
 import { Toaster } from 'sonner';
 import { config } from '@/lib/wagmi';
 import { useStore } from '@/store/useStore';
@@ -20,18 +20,26 @@ const localeMap: Record<'zh' | 'en', Locale> = {
   en: 'en-US',
 };
 
-// 内部组件用于读取 store 中的语言设置
+// 内部组件用于读取 store 中的语言和主题设置
 function RainbowKitWrapper({ children }: { children: ReactNode }) {
   const lang = useStore((state) => state.lang);
+  const theme = useStore((state) => state.theme);
   const rainbowKitLocale = localeMap[lang] || 'zh-CN';
 
   return (
         <RainbowKitProvider
-          theme={darkTheme({
-            accentColor: '#FFC519',
-            accentColorForeground: '#000',
-            borderRadius: 'medium',
-          })}
+          theme={theme === 'dark' 
+            ? darkTheme({
+                accentColor: '#FFC519',
+                accentColorForeground: '#000',
+                borderRadius: 'medium',
+              })
+            : lightTheme({
+                accentColor: '#FFC519',
+                accentColorForeground: '#000',
+                borderRadius: 'medium',
+              })
+          }
       locale={rainbowKitLocale}
         >
           {children}
@@ -40,20 +48,28 @@ function RainbowKitWrapper({ children }: { children: ReactNode }) {
             toastOptions={{
               duration: 3000,
               style: {
-                background: '#1A1A1E',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: theme === 'dark' ? '#1A1A1E' : '#FFFFFF',
+                border: theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
                 borderRadius: '16px',
-                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+                boxShadow: theme === 'dark' ? '0 20px 60px rgba(0, 0, 0, 0.5)' : '0 20px 60px rgba(0, 0, 0, 0.1)',
                 padding: '14px 18px',
                 fontSize: '14px',
-                color: '#fff',
+                color: theme === 'dark' ? '#fff' : '#1A1A1E',
               },
               classNames: {
                 toast: 'font-medium',
-                success: '!bg-[#1A1A1E] !border-[#10B981]/30 !text-[#10B981]',
-                error: '!bg-[#1A1A1E] !border-[#EF4444]/30 !text-[#EF4444]',
-                warning: '!bg-[#1A1A1E] !border-[#F59E0B]/30 !text-[#F59E0B]',
-                info: '!bg-[#1A1A1E] !border-[#3B82F6]/30 !text-[#3B82F6]',
+                success: theme === 'dark' 
+                  ? '!bg-[#1A1A1E] !border-[#10B981]/30 !text-[#10B981]'
+                  : '!bg-[#FFFFFF] !border-[#10B981]/30 !text-[#10B981]',
+                error: theme === 'dark'
+                  ? '!bg-[#1A1A1E] !border-[#EF4444]/30 !text-[#EF4444]'
+                  : '!bg-[#FFFFFF] !border-[#EF4444]/30 !text-[#EF4444]',
+                warning: theme === 'dark'
+                  ? '!bg-[#1A1A1E] !border-[#F59E0B]/30 !text-[#F59E0B]'
+                  : '!bg-[#FFFFFF] !border-[#F59E0B]/30 !text-[#F59E0B]',
+                info: theme === 'dark'
+                  ? '!bg-[#1A1A1E] !border-[#3B82F6]/30 !text-[#3B82F6]'
+                  : '!bg-[#FFFFFF] !border-[#3B82F6]/30 !text-[#3B82F6]',
               },
             }}
           />

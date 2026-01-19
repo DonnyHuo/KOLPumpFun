@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Poppins } from 'next/font/google';
 import { Providers } from '@/components/Providers';
 import { Footer } from '@/components/layout/Footer';
+import { ThemeProvider } from '@/components/ThemeProvider';
 import './globals.css';
 
 const poppins = Poppins({
@@ -31,16 +32,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" suppressHydrationWarning>
       <body className={`${poppins.variable} font-sans antialiased`}>
-        <Providers>
-          <div id="app" className="max-w-[500px] mx-auto h-screen relative text-center text-[#2c3e50]">
-            <main className="h-[calc(100vh-50px-max(env(safe-area-inset-bottom),10px))] overflow-y-auto">
-              {children}
-            </main>
-            <Footer />
-          </div>
-        </Providers>
+        <ThemeProvider>
+          <Providers>
+            <div id="app" className="max-w-[500px] mx-auto h-screen relative text-center text-[var(--foreground)]">
+              <main className="h-[calc(100vh-50px-max(env(safe-area-inset-bottom),10px))] overflow-y-auto">
+                {children}
+              </main>
+              <Footer />
+            </div>
+          </Providers>
+        </ThemeProvider>
       </body>
     </html>
   );
