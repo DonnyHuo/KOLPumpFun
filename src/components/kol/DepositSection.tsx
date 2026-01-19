@@ -142,19 +142,6 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
         <span className="text-white font-semibold">{parseFloat(sosBalance || '0').toFixed(0)} <span className="text-[#FFC519]">SOS</span></span>
       </div>
 
-      {/* 质押范围展示 */}
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        {stakeRanges.map((range, index) => (
-          <div
-            key={index}
-            className="bg-[#0D0D0F] border border-white/10 rounded-xl p-3 text-center"
-          >
-            <div className="text-xs text-gray-400 mb-1">{range.name}</div>
-            <div className="text-sm font-semibold text-[#FFC519]"><span className="text-xs">≥</span> {range.value} SOS</div>
-          </div>
-        ))}
-      </div>
-
       {/* 输入框 */}
       <div className="w-full flex items-center bg-[#0D0D0F] border border-white/10 px-4 h-[50px] rounded-xl focus-within:border-[#FFC519] transition-colors">
         <input
@@ -170,6 +157,19 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
         >
           {kol.max as string}
         </button>
+      </div>
+
+      {/* 质押范围展示 */}
+      <div className="grid grid-cols-3 gap-2 mt-3">
+        {stakeRanges.map((range, index) => (
+          <div
+            key={index}
+            className="bg-[#0D0D0F] border border-white/10 rounded-xl p-3 text-center"
+          >
+            <div className="text-xs text-gray-400 mb-1">{range.name}</div>
+            <div className="text-sm font-semibold text-[#FFC519]"><span className="text-xs">≥</span> {range.value} SOS</div>
+          </div>
+        ))}
       </div>
 
       {/* 提示文字 */}
