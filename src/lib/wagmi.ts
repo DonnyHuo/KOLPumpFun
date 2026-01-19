@@ -3,7 +3,7 @@ import { bsc } from 'wagmi/chains';
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 
 export const config = getDefaultConfig({
-  appName: 'SmartBTC',
+  appName: 'KOLPumpFun',
   projectId: '47880ce5545390f0d42c6c86de184feb',
   chains: [bsc],
   transports: {
