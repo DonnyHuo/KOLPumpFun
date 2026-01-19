@@ -234,7 +234,7 @@ export default function SharePage() {
               {/* 公平发射信息 */}
               {item.exchange_rate ? (
                 <div className="mt-4 pt-4 border-t border-white/5">
-                  <div className="text-sm mb-3">
+                  <div className="text-sm mb-3 text-left">
                     <span className="text-white">{shareProject.fairLaunch as string}</span>
                     <span className="text-[#FFC519] ml-2">
                       1{item.display_name?.split('-')[0] || 'BNB'} = {item.exchange_rate}{item.symbol}
