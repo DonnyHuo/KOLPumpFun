@@ -58,7 +58,7 @@ const PercentBox = ({ label, value, editable = false, onChange }: {
 export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreateProjectProps) {
   const router = useRouter();
   const { address } = useAccount();
-  const { accountInfoStatus, setCurrentProject } = useStore();
+  const { accountInfoStatus, setCurrentProject, theme } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // 从 t 中解构翻译
@@ -986,44 +986,44 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
           {/* 认领规则弹窗 */}
           {showClaimModal && selectedProject && (
             <div
-              className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm"
+              className={`fixed inset-0 z-[100] flex items-end justify-center bg-black/60 ${theme === 'dark' ? 'backdrop-blur-sm' : ''}`}
               onClick={() => setShowClaimModal(false)}
             >
               <div
-                className="bg-[#1A1A1E] border-t border-white/10 w-full max-w-md max-h-[90vh] rounded-t-3xl p-6 pb-8 animate-slide-up overflow-hidden flex flex-col"
+                className="bg-background-card border-t border-border w-full max-w-md max-h-[90vh] rounded-t-3xl p-6 pb-8 animate-slide-up overflow-hidden flex flex-col"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* 拖动条 */}
-                <div className="w-12 h-1 bg-gray-600 rounded-full mx-auto mb-4 shrink-0" />
+                <div className="w-12 h-1 bg-text-muted rounded-full mx-auto mb-4 shrink-0" />
                 
                 {/* 标题 */}
-                <h3 className="text-center font-bold text-lg text-white mb-5 shrink-0">
+                <h3 className="text-center font-bold text-lg text-foreground mb-5 shrink-0">
                   {kol?.claimRule as string || '認領規則'}
                 </h3>
 
                 {/* 规则内容 */}
-                <div className="text-left text-sm leading-6 mb-5 flex-1 overflow-y-auto text-gray-300">
+                <div className="text-left text-sm leading-6 mb-5 flex-1 overflow-y-auto text-text-secondary">
                   {contentDesc.map((desc, i) => (
                     <p key={i} className="mb-3">{desc}</p>
                   ))}
                   
                   {/* 推文文案 */}
-                  <div className="mt-5 p-4 bg-[#0D0D0F] border border-white/10 rounded-xl">
+                  <div className="mt-5 p-4 bg-background border border-border rounded-xl">
                     <div
                       className="flex items-start gap-2 cursor-pointer"
                       onClick={handleCopyTweet}
                     >
-                      <span className="text-[#FFC519] font-bold">*</span>
-                      <span className="text-white font-medium flex-1 break-all text-sm">
+                      <span className="text-primary font-bold">*</span>
+                      <span className="text-foreground font-medium flex-1 break-all text-sm">
                         {getTweetText()}
                       </span>
                       {copied ? (
-                        <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
+                        <Check className="w-4 h-4 text-success flex-shrink-0" />
                       ) : (
-                        <Copy className="w-4 h-4 text-gray-500 flex-shrink-0 hover:text-[#FFC519]" />
+                        <Copy className="w-4 h-4 text-text-muted flex-shrink-0 hover:text-primary" />
                       )}
                     </div>
-                    <p className="text-gray-500 mt-3 text-xs">
+                    <p className="text-text-muted mt-3 text-xs">
                       {kol?.tweetTips as string || '复制以上文案发布推特并@smartbtcdao'}
                     </p>
                   </div>
@@ -1035,9 +1035,9 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
                     type="checkbox"
                     checked={claimChecked}
                     onChange={(e) => setClaimChecked(e.target.checked)}
-                    className="mt-0.5 w-5 h-5 rounded border-white/20 bg-[#0D0D0F] checked:bg-[#FFC519] checked:border-[#FFC519]"
+                    className="mt-0.5 w-5 h-5 rounded border-border bg-background checked:bg-primary checked:border-primary"
                   />
-                  <span className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
+                  <span className="text-sm text-text-secondary group-hover:text-text-secondary transition-colors">
                     {kol?.sure as string || '我已閱讀並認可認領規則，同意認領此項目。'}
                   </span>
                 </label>
