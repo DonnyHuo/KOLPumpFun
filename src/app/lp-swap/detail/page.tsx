@@ -296,7 +296,7 @@ function LpSwapDetailContent() {
     if (exchangeSuccess) {
       toast.success(poolDetail.swapSuccess as string);
       startTransition(() => {
-        setInputValue('');
+      setInputValue('');
         fetchLpBalanceRef.current();
       });
     }
