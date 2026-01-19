@@ -5,7 +5,7 @@ import { useAccount } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { toast } from 'sonner';
 import { kolApi, type KolInfo } from '@/lib/api';
-import { Copy } from 'lucide-react';
+import { Copy, ExternalLink } from 'lucide-react';
 import { shortAddress, copyToClipboard } from '@/lib/utils';
 
 interface KolCertificationProps {
@@ -159,9 +159,10 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
               href={binanceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={`${inputClass} flex items-center cursor-pointer hover:border-[#FFC519]`}
+              className={`${inputClass} bg-[#0D0D0F]/50 flex items-center justify-between cursor-pointer hover:border-white/10 focus:border-white/10`}
             >
-              @Binance Square
+              <span>@Username</span>
+              <ExternalLink className="w-4 h-4 text-gray-500" />
             </a>
           ) : (
             <input
