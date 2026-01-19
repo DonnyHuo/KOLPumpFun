@@ -22,6 +22,7 @@ export default {
     operationFailed: 'Operation Failed',
     stakeSuccess: 'Staked Successfully',
     withdrawSuccess: 'Withdraw Successfully',
+    withdrawFailed: 'Withdraw Failed',
     migrateFailed: 'Migration Failed',
     migrateSuccess: 'Migrated Successfully',
     transferFailed: 'Transfer Failed',

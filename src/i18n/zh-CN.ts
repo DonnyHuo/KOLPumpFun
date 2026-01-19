@@ -22,6 +22,7 @@ export default {
     operationFailed: '操作失敗',
     stakeSuccess: '質押成功',
     withdrawSuccess: '提取成功',
+    withdrawFailed: '提取失敗',
     migrateFailed: '遷移失敗',
     migrateSuccess: '遷移成功',
     transferFailed: '轉帳失敗',
