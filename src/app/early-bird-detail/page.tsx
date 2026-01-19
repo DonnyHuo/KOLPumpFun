@@ -251,18 +251,18 @@ export default function EarlyBirdDetailPage() {
         </div>
 
         {/* Input */}
-        <div className="card flex items-center justify-between">
+        <div className="card flex items-center justify-between gap-4">
           <span className="text-gray-400 text-sm">{t.poolDetail.payment}</span>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-1 items-center gap-2">
             <input
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               onBlur={validateAmount}
               placeholder={t.poolDetail.inputAmount}
-              className="bg-transparent text-right text-white w-24 outline-none"
+              className="bg-transparent text-right text-white w-24 outline-none flex-1"
             />
-            <span className="text-white font-medium">SOS</span>
+            <span className="text-white font-medium shrink-0">SOS</span>
           </div>
         </div>
 
