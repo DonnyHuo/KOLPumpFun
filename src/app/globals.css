@@ -56,8 +56,8 @@
   
   /* 文字颜色 */
   --foreground: #1A1A1E;
-  --text-secondary: #4B5563;
-  --text-muted: #6B7280;
+  --text-secondary: #374151;
+  --text-muted: #4B5563;
   
   /* 状态颜色 - 保持不变 */
   --success: #10B981;

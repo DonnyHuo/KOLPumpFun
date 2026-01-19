@@ -15,7 +15,7 @@ import {
 
 export function Footer() {
   const pathname = usePathname();
-  const { lang } = useStore();
+  const { lang, theme } = useStore();
   const t = lang === 'zh' ? zhCN : enUS;
   const footer = t.footer as Record<string, string>;
 
@@ -74,7 +74,7 @@ export function Footer() {
                   width={22}
                   height={22}
                   className={`w-[22px] h-[22px] transition-all ${
-                    !isActive ? 'grayscale opacity-40' : ''
+                    !isActive ? `grayscale ${theme === 'light' ? 'opacity-60' : 'opacity-40'}` : ''
                   }`}
                 />
               </div>
