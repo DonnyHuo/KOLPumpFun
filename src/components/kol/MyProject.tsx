@@ -116,7 +116,7 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
   return (
     <div className="space-y-4">
       {/* 项目名称和余额 */}
-      <div className="flex items-center justify-between py-3 px-4 bg-[#1A1A1E] rounded-xl">
+      <div className="flex items-center justify-between py-3 bg-[#1A1A1E] rounded-xl">
         <span className="text-gray-400">{reserveInfo?.name}</span>
         <span className="font-medium text-white">
           {parseFloat(reserveBalance).toFixed(2)} {reserveInfo?.symbol}
@@ -124,7 +124,7 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
       </div>
 
       {/* 待领取收益 */}
-      <div className="flex items-center justify-between py-3 px-4 bg-[#1A1A1E] rounded-xl">
+      <div className="flex items-center justify-between py-3 bg-[#1A1A1E] rounded-xl">
         <div className="flex flex-col gap-1">
           <span className="text-gray-400 text-sm">{home.revenueCollected as string}</span>
           <span className="font-bold text-[#FFC519] text-lg">
@@ -155,7 +155,7 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
       </div>
 
       {/* 进度信息 */}
-      <div className="bg-[#1A1A1E] rounded-xl p-4 space-y-3">
+      <div className="bg-[#1A1A1E] rounded-xl py-4 space-y-3">
         {/* 跨链进度 */}
         <div className="flex items-center justify-between">
           <span className="text-gray-400 text-sm">{home.crossChainProgress as string}</span>
@@ -178,7 +178,7 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
       </div>
 
       {/* 进度说明 */}
-      <p className="text-xs text-gray-500 leading-5 text-left">
+      <p className="text-xs text-red-500 leading-5 text-left">
         {home.progressDesc as string}
       </p>
     </div>
