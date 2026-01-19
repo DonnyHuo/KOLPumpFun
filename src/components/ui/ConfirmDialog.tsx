@@ -70,7 +70,7 @@ export function ConfirmDialog({
           <button
             onClick={onCancel}
             disabled={loading}
-            className="flex-1 h-[42px] bg-[#0D0D0F] border border-white/10 rounded-xl text-sm text-gray-300 hover:bg-[#222226] hover:border-white/20 transition-all disabled:opacity-50"
+            className="flex-1 h-[42px] bg-background border border-border rounded-xl text-sm text-text-secondary hover:bg-background-card-hover hover:border-border-hover transition-all disabled:opacity-50"
           >
             {cancelText}
           </button>

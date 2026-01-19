@@ -537,7 +537,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
               {/* 代币名称和股票代码 */}
               <div className="flex items-center justify-between gap-3">
                 <div className="w-1/2">
-                  <div className="text-gray-300 font-medium text-xs mb-2">{createProject.tokenFullName as string}</div>
+                  <div className="text-text-secondary font-medium text-xs mb-2">{createProject.tokenFullName as string}</div>
                   <input
                     type="text"
                     value={typeOne.brc20_name}
@@ -547,7 +547,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
                   />
                 </div>
                 <div className="w-1/2">
-                  <div className="text-gray-300 font-medium text-xs mb-2">{createProject.tickerSymbol as string}</div>
+                  <div className="text-text-secondary font-medium text-xs mb-2">{createProject.tickerSymbol as string}</div>
                   <input
                     type="text"
                     value={typeOne.symbol}
@@ -560,7 +560,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
 
               {/* 分配比例（固定） */}
               <div className="mt-5">
-                <div className="text-gray-300 font-medium text-xs mb-3">{createProject.tokenSupplyNote as string}</div>
+                <div className="text-text-secondary font-medium text-xs mb-3">{createProject.tokenSupplyNote as string}</div>
                 <div className="space-y-2">
                   <PercentBox label={createProject.fairLaunchContract as string} value={typeOne.percents[0]} />
                   <PercentBox label={createProject.lpAddContract as string} value={typeOne.percents[1]} />
@@ -577,7 +577,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
 
               {/* 代币描述 */}
               <div className="mt-5">
-                <div className="text-gray-300 font-medium text-xs mb-2">{createProject.tokenDescription as string}</div>
+                <div className="text-text-secondary font-medium text-xs mb-2">{createProject.tokenDescription as string}</div>
                 <input
                   type="text"
                   value={typeOne.details}
@@ -595,7 +595,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
               {/* 代币名称和股票代码 */}
               <div className="flex items-center justify-between gap-3">
                 <div className="w-1/2">
-                  <div className="text-gray-300 font-medium text-xs mb-2">{createProject.tokenFullName as string}</div>
+                  <div className="text-text-secondary font-medium text-xs mb-2">{createProject.tokenFullName as string}</div>
                   <input
                     type="text"
                     value={typeTwo.brc20_name}
@@ -605,7 +605,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
                   />
                 </div>
                 <div className="w-1/2">
-                  <div className="text-gray-300 font-medium text-xs mb-2">{createProject.tickerSymbol as string}</div>
+                  <div className="text-text-secondary font-medium text-xs mb-2">{createProject.tickerSymbol as string}</div>
                   <input
                     type="text"
                     value={typeTwo.symbol}
@@ -618,7 +618,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
 
               {/* 分配比例（部分可编辑） */}
               <div className="mt-5">
-                <div className="text-gray-300 font-medium text-xs mb-3">{createProject.tokenSupplyNote as string}</div>
+                <div className="text-text-secondary font-medium text-xs mb-3">{createProject.tokenSupplyNote as string}</div>
                 <div className="space-y-2">
                   <PercentBox label={createProject.fairLaunchContract as string} value={typeTwo.percents[0]} />
                   <PercentBox 
@@ -645,7 +645,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
 
               {/* 代币描述 */}
               <div className="mt-5">
-                <div className="text-gray-300 font-medium text-xs mb-2">{createProject.tokenDescription as string}</div>
+                <div className="text-text-secondary font-medium text-xs mb-2">{createProject.tokenDescription as string}</div>
                 <input
                   type="text"
                   value={typeTwo.details}
@@ -663,7 +663,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
               {/* 代币和总量 */}
               <div className="flex items-center justify-between gap-3">
                 <div className="w-1/2">
-                  <div className="text-gray-300 font-medium text-xs mb-2">{newData.token || '代幣'}</div>
+                  <div className="text-text-secondary font-medium text-xs mb-2">{newData.token || '代幣'}</div>
                   <input
                     type="text"
                     value={typeThree.brc20_name}
@@ -673,7 +673,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
                   />
                 </div>
                 <div className="w-1/2">
-                  <div className="text-gray-300 font-medium text-xs mb-2">{newData.totalSupply || '總量'}</div>
+                  <div className="text-text-secondary font-medium text-xs mb-2">{newData.totalSupply || '總量'}</div>
                   <input
                     type="text"
                     value={typeThree.brc20_supply}
@@ -686,7 +686,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
 
               {/* 部署铭文ID */}
               <div className="mt-5">
-                <div className="text-gray-300 font-medium text-xs mb-2">{newData.deployInscriptionId || '部署銘文ID'}</div>
+                <div className="text-text-secondary font-medium text-xs mb-2">{newData.deployInscriptionId || '部署銘文ID'}</div>
                 <input
                   type="text"
                   value={typeThree.brc20_id}
@@ -697,7 +697,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
 
               {/* 分配比例（全部可编辑） */}
               <div className="mt-5">
-                <div className="text-gray-300 font-medium text-xs mb-3">{newData.tokenRatio || '代幣比例'}</div>
+                <div className="text-text-secondary font-medium text-xs mb-3">{newData.tokenRatio || '代幣比例'}</div>
                 <div className="space-y-2">
                   <PercentBox 
                     label={newData.inscriptionCrossChain || '銘文跨鏈'} 
@@ -733,7 +733,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
 
               {/* 代币描述 */}
               <div className="mt-5">
-                <div className="text-gray-300 font-medium text-xs mb-2">{newData.tokenDescription || '代幣描述'}</div>
+                <div className="text-text-secondary font-medium text-xs mb-2">{newData.tokenDescription || '代幣描述'}</div>
                 <input
                   type="text"
                   value={typeThree.details}

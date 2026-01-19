@@ -89,7 +89,7 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
       <div className="flex items-start justify-between gap-4 text-xs">
         {/* 钱包地址 */}
         <div className="flex flex-col gap-2 text-left w-full">
-          <span className="text-gray-400">
+          <span className="text-text-secondary">
             <span className="text-red-500 pr-0.5">*</span>{kol.revenueAddress as string}
           </span>
           <div className="relative">
@@ -106,7 +106,7 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
                     onClick={handleCopyAddress}
                     className="absolute right-3 top-1/2 -translate-y-1/2"
                   >
-                    <Copy className="w-4 h-4 text-gray-500 hover:text-[#FFC519] transition-colors" />
+                    <Copy className="w-4 h-4 text-text-muted hover:text-primary transition-colors" />
                   </button>
                 )}
               </>
@@ -123,7 +123,7 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
 
         {/* Twitter */}
         <div className="flex flex-col gap-2 text-left w-full">
-          <span className="text-gray-400">
+          <span className="text-text-secondary">
             <span className="text-red-500 pr-0.5">*</span>{kol.twitterAddress as string}
           </span>
           <input
@@ -140,7 +140,7 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
       <div className="flex items-start justify-between mt-4 gap-4 text-xs">
         {/* Telegram */}
         <div className="flex flex-col gap-2 text-left w-full">
-          <span className="text-gray-400">{kol.telegramAddress as string}</span>
+          <span className="text-text-secondary">{kol.telegramAddress as string}</span>
           <input
             type="text"
             value={telegramUrl}
@@ -153,7 +153,7 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
 
         {/* 关注官推 */}
         <div className="flex flex-col gap-2 text-left w-full">
-          <span className="text-gray-400">{kol.binanceSquare as string}</span>
+          <span className="text-text-secondary">{kol.binanceSquare as string}</span>
           <a
             href={officialTwitterUrl}
             target="_blank"
@@ -161,7 +161,7 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
             className={`${inputClass} bg-[#0D0D0F]/50 flex items-center justify-between cursor-pointer hover:border-white/10 focus:border-white/10`}
           >
             <span>@SmartBTCdao</span>
-            <ExternalLink className="w-4 h-4 text-gray-500" />
+            <ExternalLink className="w-4 h-4 text-text-muted" />
           </a>
         </div>
       </div>
