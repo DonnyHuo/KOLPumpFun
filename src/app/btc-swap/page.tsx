@@ -418,7 +418,7 @@ export default function BtcSwapPage() {
           {/* Swap Icon */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
             <div className="bg-[#1A1A1E] border-4 border-[#0D0D0F] rounded-full p-3 shadow-lg">
-              <Image src={swapDown} alt="swap" width={20} height={20} />
+              <Image src={swapDown} alt="swap" width={20} height={20} style={{ filter: 'brightness(0) saturate(100%) invert(76%) sepia(98%) saturate(1000%) hue-rotate(359deg) brightness(103%) contrast(106%)' }} />
             </div>
           </div>
 
