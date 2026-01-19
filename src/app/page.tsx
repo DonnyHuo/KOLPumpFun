@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useDisconnect } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import Image from 'next/image';
 import { useStore } from '@/store/useStore';
@@ -73,6 +73,7 @@ function Skeleton() {
 
 export default function CreatePage() {
   const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
   const { openConnectModal } = useConnectModal();
   const { lang, setLang, activeAmount, setActiveAmount, accountInfoStatus, setAccountInfoStatus } = useStore();
   const t = lang === 'zh' ? zhCN : enUS;
@@ -152,14 +153,18 @@ export default function CreatePage() {
           <span className="font-bold text-white text-lg">KOLPumpFun</span>
         </div>
         <div className="flex items-center gap-2">
-          {/* 钱包连接按钮 */}
+          {/* 钱包连接/断开按钮 */}
           {isConnected ? (
-            <div className="h-[36px] px-3 bg-[#1A1A1E] border border-[#FFC519]/30 rounded-xl flex items-center gap-2">
+            <button
+              onClick={() => disconnect()}
+              className="h-[36px] px-3 bg-[#1A1A1E] border border-[#FFC519]/30 rounded-xl flex items-center gap-2 hover:bg-[#2A1A1A] hover:border-red-500/50 transition-all group"
+              title={lang === 'zh' ? '點擊斷開連接' : 'Click to disconnect'}
+            >
               <Image src={wallet} alt="wallet" width={18} height={18} />
-              <span className="text-xs text-[#FFC519]">
+              <span className="text-xs text-[#FFC519] group-hover:text-red-400 transition-colors">
                 {address?.slice(0, 4)}...{address?.slice(-4)}
               </span>
-            </div>
+            </button>
           ) : (
             <button
               onClick={openConnectModal}
