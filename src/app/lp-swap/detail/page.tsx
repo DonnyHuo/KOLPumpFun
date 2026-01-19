@@ -314,9 +314,9 @@ function LpSwapDetailContent() {
   if (!pairInfo) {
     return (
       <div className="min-h-screen bg-[#0D0D0F] flex flex-col items-center justify-center p-5">
-        <p className="text-gray-500 mb-4 text-sm">交換對不存在</p>
+        <p className="text-gray-500 mb-4 text-sm">{lpSwapT.pairNotExist as string}</p>
         <Link href="/lp-swap" className="btn-primary px-6">
-          返回列表
+          {lpSwapT.backToList as string}
         </Link>
       </div>
     );
@@ -334,7 +334,7 @@ function LpSwapDetailContent() {
         >
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
-        <h1 className="text-lg font-semibold text-white">LP 兌換</h1>
+        <h1 className="text-lg font-semibold text-white">{lpSwapT.lpExchange as string}</h1>
       </div>
 
       {/* Token 信息卡片 */}
@@ -405,7 +405,7 @@ function LpSwapDetailContent() {
           />
           <button
             onClick={() => setInputValue(lpBalance)}
-            className="shrink-0 bg-[#FFC519]/20 text-[#FFC519] text-xs font-semibold px-4 py-1.5 rounded-lg hover:bg-[#FFC519]/30 transition-colors ml-3"
+            className="w-16 shrink-0 bg-[#FFC519]/20 text-[#FFC519] text-xs font-semibold px-4 py-1.5 rounded-lg hover:bg-[#FFC519]/30 transition-colors ml-3"
           >
             MAX
           </button>

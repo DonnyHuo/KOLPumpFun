@@ -242,6 +242,9 @@ export default {
     errorTips: 'Please enter a valid LP amount',
     swapSuccess: 'Exchange Successful',
     swapFail: 'Exchange Failed',
+    lpExchange: 'LP Exchange',
+    pairNotExist: 'Pair does not exist',
+    backToList: 'Back to List',
   },
   voting: {
     name: 'Token Name',

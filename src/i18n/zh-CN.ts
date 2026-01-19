@@ -242,6 +242,9 @@ export default {
     errorTips: '請輸入正確數量的LP',
     swapSuccess: '兌換成功',
     swapFail: '兌換失敗',
+    lpExchange: 'LP 兌換',
+    pairNotExist: '交換對不存在',
+    backToList: '返回列表',
   },
   voting: {
     name: '幣種名稱',
