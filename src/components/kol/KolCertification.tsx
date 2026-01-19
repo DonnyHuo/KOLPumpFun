@@ -154,13 +154,24 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
         {/* 币安广场 */}
         <div className="flex flex-col gap-2 text-left w-full">
           <span className="text-gray-400">{kol.binanceSquare as string}</span>
-          <input
-            type="text"
-            value={binanceUrl}
-            readOnly
-            disabled
-            className={inputClass}
-          />
+          {hasSubmitted ? (
+            <a
+              href={binanceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${inputClass} flex items-center cursor-pointer hover:border-[#FFC519] truncate`}
+            >
+              {binanceUrl}
+            </a>
+          ) : (
+            <input
+              type="text"
+              value={binanceUrl}
+              readOnly
+              disabled
+              className={inputClass}
+            />
+          )}
         </div>
       </div>
 
