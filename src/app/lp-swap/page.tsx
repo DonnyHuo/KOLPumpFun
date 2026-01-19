@@ -66,7 +66,7 @@ const LP_CONFIG: Record<string, number[]> = {
 
 export default function LpSwapPage() {
   const { address } = useAccount();
-  const { lang } = useStore();
+  const { lang, theme } = useStore();
   const t = lang === 'zh' ? zhCN : enUS;
   const lpSwap = t.lpSwap as Record<string, unknown>;
   const publicClient = usePublicClient();
@@ -484,7 +484,7 @@ export default function LpSwapPage() {
       {/* 代币选择弹窗 */}
       {showTokenSelect && (
         <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end justify-center z-[100]"
+          className={`fixed inset-0 bg-black/60 flex items-end justify-center z-[100] ${theme === 'dark' ? 'backdrop-blur-sm' : ''}`}
           onClick={() => setShowTokenSelect(false)}
         >
           <div 

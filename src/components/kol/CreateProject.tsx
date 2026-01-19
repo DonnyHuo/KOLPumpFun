@@ -990,40 +990,40 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
               onClick={() => setShowClaimModal(false)}
             >
               <div
-                className="bg-background-card border-t border-border w-full max-w-md max-h-[90vh] rounded-t-3xl p-6 pb-8 animate-slide-up overflow-hidden flex flex-col"
+                className="bg-[var(--background-card)] border-t border-[var(--border-color)] w-full max-w-md max-h-[90vh] rounded-t-3xl p-5 pb-8 animate-slide-up overflow-hidden flex flex-col"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* 拖动条 */}
-                <div className="w-12 h-1 bg-text-muted rounded-full mx-auto mb-4 shrink-0" />
+                <div className="w-12 h-1 bg-[var(--text-muted)] rounded-full mx-auto mb-6 shrink-0" />
                 
                 {/* 标题 */}
-                <h3 className="text-center font-bold text-lg text-foreground mb-5 shrink-0">
+                <h3 className="text-center font-semibold text-sm text-[var(--foreground)] mb-6 shrink-0">
                   {kol?.claimRule as string || '認領規則'}
                 </h3>
 
                 {/* 规则内容 */}
-                <div className="text-left text-sm leading-6 mb-5 flex-1 overflow-y-auto text-text-secondary">
+                <div className="text-left text-sm leading-6 mb-5 flex-1 overflow-y-auto text-[var(--text-secondary)]">
                   {contentDesc.map((desc, i) => (
                     <p key={i} className="mb-3">{desc}</p>
                   ))}
                   
                   {/* 推文文案 */}
-                  <div className="mt-5 p-4 bg-background border border-border rounded-xl">
+                  <div className="mt-5 p-4 bg-[var(--background)] border border-[var(--border-color)] rounded-xl">
                     <div
                       className="flex items-start gap-2 cursor-pointer"
                       onClick={handleCopyTweet}
                     >
-                      <span className="text-primary font-bold">*</span>
-                      <span className="text-foreground font-medium flex-1 break-all text-sm">
+                      <span className="text-[var(--primary)] font-bold">*</span>
+                      <span className="text-[var(--foreground)] font-medium flex-1 break-all text-sm">
                         {getTweetText()}
                       </span>
                       {copied ? (
-                        <Check className="w-4 h-4 text-success flex-shrink-0" />
+                        <Check className="w-4 h-4 text-[var(--success)] flex-shrink-0" />
                       ) : (
-                        <Copy className="w-4 h-4 text-text-muted flex-shrink-0 hover:text-primary" />
+                        <Copy className="w-4 h-4 text-[var(--text-muted)] flex-shrink-0 hover:text-[var(--primary)]" />
                       )}
                     </div>
-                    <p className="text-text-muted mt-3 text-xs">
+                    <p className="text-[var(--text-muted)] mt-3 text-xs">
                       {kol?.tweetTips as string || '复制以上文案发布推特并@smartbtcdao'}
                     </p>
                   </div>
@@ -1035,9 +1035,9 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
                     type="checkbox"
                     checked={claimChecked}
                     onChange={(e) => setClaimChecked(e.target.checked)}
-                    className="mt-0.5 w-5 h-5 rounded border-border bg-background checked:bg-primary checked:border-primary"
+                    className="mt-0.5 w-5 h-5 rounded border-[var(--border-color)] bg-[var(--background)] checked:bg-[var(--primary)] checked:border-[var(--primary)]"
                   />
-                  <span className="text-sm text-text-secondary group-hover:text-text-secondary transition-colors">
+                  <span className="text-sm text-[var(--text-secondary)] group-hover:text-[var(--text-secondary)] transition-colors">
                     {kol?.sure as string || '我已閱讀並認可認領規則，同意認領此項目。'}
                   </span>
                 </label>
