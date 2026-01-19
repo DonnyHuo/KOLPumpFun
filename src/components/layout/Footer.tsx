@@ -74,7 +74,7 @@ export function Footer() {
                   width={22}
                   height={22}
                   className={`w-[22px] h-[22px] transition-all ${
-                    !isActive ? `grayscale ${theme === 'light' ? 'opacity-60' : 'opacity-40'}` : ''
+                    !isActive ? `grayscale-0 ${theme === 'light' ? 'opacity-70' : 'opacity-60'}` : ''
                   }`}
                 />
               </div>
