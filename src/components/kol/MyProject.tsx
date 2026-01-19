@@ -56,9 +56,19 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
   console.log('========================');
 
   // 获取进度
-  const { percentage: crossProgressValue } = useCrossProgress(tokenIdBigInt);
-  const { percentage: lpExProgressValue } = useLpExProgress(tokenIdBigInt);
-  const { percentage: kolProgressValue } = useKolProgress(tokenIdBigInt);
+  const { percentage: crossProgressValue, progress: crossProgressRaw } = useCrossProgress(tokenIdBigInt);
+  const { percentage: lpExProgressValue, progress: lpExProgressRaw } = useLpExProgress(tokenIdBigInt);
+  const { percentage: kolProgressValue, progress: kolProgressRaw } = useKolProgress(tokenIdBigInt);
+
+  // 打印进度调试信息
+  console.log('=== 进度调试信息 ===');
+  console.log('跨鏈進度 (原始值):', crossProgressRaw?.toString());
+  console.log('跨鏈進度 (百分比):', crossProgressValue);
+  console.log('LP兌換發行進度 (原始值):', lpExProgressRaw?.toString());
+  console.log('LP兌換發行進度 (百分比):', lpExProgressValue);
+  console.log('KOL獎勵發行進度 (原始值):', kolProgressRaw?.toString());
+  console.log('KOL獎勵發行進度 (百分比):', kolProgressValue);
+  console.log('==================');
 
   // 提取收益
   const { withdraw, isPending, isConfirming, isSuccess } = useWithdrawKolAirdrop();

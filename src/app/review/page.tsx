@@ -349,7 +349,7 @@ export default function ReviewPage() {
           ) : (
             kolList.map((item, index) => (
               <div key={index} className="card">
-                <div className="space-y-3 text-sm">
+                <div className="space-y-6 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-400">{review.certifyAddress as string}</span>
                     <a
@@ -412,7 +412,7 @@ export default function ReviewPage() {
           ) : (
             projectList.map((item, index) => (
               <div key={index} className="card">
-                <div className="space-y-3 text-sm">
+                <div className="space-y-6 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-400">{review.tokenName as string}</span>
                     <span className="text-white">{item.name}</span>
@@ -481,7 +481,7 @@ export default function ReviewPage() {
           ) : (
             claimList.map((item, index) => (
               <div key={index} className="card">
-                <div className="space-y-3 text-sm">
+                <div className="space-y-6 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-400">{review.tokenName as string}</span>
                     <button 
@@ -507,17 +507,32 @@ export default function ReviewPage() {
                     {renderLink(item.twitter_account)}
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-gray-400">{review.telegramAddress as string}</span>
+                    {renderLink(item.tg_account)}
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">{review.binanceSquare as string}</span>
+                    {item.discord_account ? (
+                      <a
+                        href={item.discord_account}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#FFC519] hover:text-[#e6b117] flex items-center gap-1 transition-colors"
+                        title={item.discord_account}
+                      >
+                        @SmartBTCdao
+                        <ExternalLink className="w-3 h-3 shrink-0" />
+                      </a>
+                    ) : (
+                      <span className="text-gray-500">--</span>
+                    )}
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-gray-400">{review.createTime as string}</span>
                     <span className="text-white">{formatDate(item.created_at)}</span>
                   </div>
                 </div>
                 <div className="flex gap-3 mt-5">
-                  <button
-                    onClick={() => goToDetail(item.project_name)}
-                    className="btn-outline flex-1 text-sm"
-                  >
-                    {t.common.viewDetails as string}
-                  </button>
                   <button
                     onClick={() => handleOpenClaimModal(item)}
                     disabled={loading}

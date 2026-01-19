@@ -14,8 +14,8 @@ interface KolCertificationProps {
   t: Record<string, unknown>;
 }
 
-// 币安广场默认链接（与 Vue 项目一致，不允许用户修改）
-const DEFAULT_BINANCE_URL = 'https://accounts.binance.com/zh-CN/login?return_to=aHR0cHM6Ly93d3cuYmluYW5jZS5jb20vemgtQ04vc3F1YXJl';
+// 官推链接
+const OFFICIAL_TWITTER_URL = 'https://x.com/SmartBTCdao';
 
 export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProps) {
   const { address, isConnected } = useAccount();
@@ -23,8 +23,8 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
   const [loading, setLoading] = useState(false);
   const [twitterUrl, setTwitterUrl] = useState('');
   const [telegramUrl, setTelegramUrl] = useState('');
-  // 币安广场使用默认链接，不允许用户修改
-  const binanceUrl = kolInfo?.discord_account || DEFAULT_BINANCE_URL;
+  // 官推链接
+  const officialTwitterUrl = OFFICIAL_TWITTER_URL;
 
   const kol = t.kol as Record<string, unknown>;
   const common = t.common as Record<string, unknown>;
@@ -66,7 +66,7 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
         address,
         twitter_account: twitterUrl,
         tg_account: telegramUrl || undefined,
-        discord_account: binanceUrl || undefined,
+        discord_account: officialTwitterUrl || undefined,
       });
 
       // 与 Vue 项目一致：只要请求成功就显示成功提示
@@ -151,28 +151,18 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
           />
         </div>
 
-        {/* 币安广场 */}
+        {/* 关注官推 */}
         <div className="flex flex-col gap-2 text-left w-full">
           <span className="text-gray-400">{kol.binanceSquare as string}</span>
-          {hasSubmitted ? (
-            <a
-              href={binanceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`${inputClass} bg-[#0D0D0F]/50 flex items-center justify-between cursor-pointer hover:border-white/10 focus:border-white/10`}
-            >
-              <span>@Username</span>
-              <ExternalLink className="w-4 h-4 text-gray-500" />
-            </a>
-          ) : (
-            <input
-              type="text"
-              value="@Binance Square"
-              readOnly
-              disabled
-              className={inputClass}
-            />
-          )}
+          <a
+            href={officialTwitterUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${inputClass} bg-[#0D0D0F]/50 flex items-center justify-between cursor-pointer hover:border-white/10 focus:border-white/10`}
+          >
+            <span>@SmartBTCdao</span>
+            <ExternalLink className="w-4 h-4 text-gray-500" />
+          </a>
         </div>
       </div>
 

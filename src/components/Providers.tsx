@@ -26,38 +26,38 @@ function RainbowKitWrapper({ children }: { children: ReactNode }) {
   const rainbowKitLocale = localeMap[lang] || 'zh-CN';
 
   return (
-    <RainbowKitProvider
-      theme={darkTheme({
-        accentColor: '#FFC519',
-        accentColorForeground: '#000',
-        borderRadius: 'medium',
-      })}
+        <RainbowKitProvider
+          theme={darkTheme({
+            accentColor: '#FFC519',
+            accentColorForeground: '#000',
+            borderRadius: 'medium',
+          })}
       locale={rainbowKitLocale}
-    >
-      {children}
-      <Toaster 
-        position="top-center" 
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: '#1A1A1E',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '16px',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
-            padding: '14px 18px',
-            fontSize: '14px',
-            color: '#fff',
-          },
-          classNames: {
-            toast: 'font-medium',
-            success: '!bg-[#1A1A1E] !border-[#10B981]/30 !text-[#10B981]',
-            error: '!bg-[#1A1A1E] !border-[#EF4444]/30 !text-[#EF4444]',
-            warning: '!bg-[#1A1A1E] !border-[#F59E0B]/30 !text-[#F59E0B]',
-            info: '!bg-[#1A1A1E] !border-[#3B82F6]/30 !text-[#3B82F6]',
-          },
-        }}
-      />
-    </RainbowKitProvider>
+        >
+          {children}
+          <Toaster 
+            position="top-center" 
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: '#1A1A1E',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '16px',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+                padding: '14px 18px',
+                fontSize: '14px',
+                color: '#fff',
+              },
+              classNames: {
+                toast: 'font-medium',
+                success: '!bg-[#1A1A1E] !border-[#10B981]/30 !text-[#10B981]',
+                error: '!bg-[#1A1A1E] !border-[#EF4444]/30 !text-[#EF4444]',
+                warning: '!bg-[#1A1A1E] !border-[#F59E0B]/30 !text-[#F59E0B]',
+                info: '!bg-[#1A1A1E] !border-[#3B82F6]/30 !text-[#3B82F6]',
+              },
+            }}
+          />
+        </RainbowKitProvider>
   );
 }
 

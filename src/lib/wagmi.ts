@@ -30,7 +30,7 @@ const connectors = connectorsForWallets(
     },
   ],
   {
-    appName: 'KOLPumpFun',
+  appName: 'KOLPumpFun',
     projectId,
   }
 );
