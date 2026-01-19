@@ -392,7 +392,7 @@ function LpSwapDetailContent() {
             </span>
           )}
         </div>
-        <div className="flex items-center bg-[#0D0D0F] rounded-xl h-[52px] px-4 border border-white/10 focus-within:border-[#FFC519]/50 transition-colors">
+        <div className="flex items-center justify-between bg-[#0D0D0F] rounded-xl h-[52px] px-4 border border-white/10 focus-within:border-[#FFC519]/50 transition-colors">
           <input
             type="text"
             value={inputValue}
@@ -401,11 +401,11 @@ function LpSwapDetailContent() {
               setInputValue(value);
             }}
             placeholder={poolDetail.placeHolder as string}
-            className="flex-1 bg-transparent border-none outline-none text-white text-base placeholder:text-gray-500"
+            className="w-[calc(100%-70px)] bg-transparent border-none outline-none text-white text-base placeholder:text-gray-500"
           />
           <button
             onClick={() => setInputValue(lpBalance)}
-            className="w-16 shrink-0 bg-[#FFC519]/20 text-[#FFC519] text-xs font-semibold px-4 py-1.5 rounded-lg hover:bg-[#FFC519]/30 transition-colors ml-3"
+            className="w-16 shrink-0 bg-[#FFC519]/20 text-[#FFC519] text-xs font-semibold px-4 py-1.5 rounded-lg hover:bg-[#FFC519]/30 transition-colors"
           >
             MAX
           </button>
