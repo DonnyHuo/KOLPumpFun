@@ -6,16 +6,18 @@ import { useAccount } from 'wagmi';
 import { toast } from 'sonner';
 import { ExternalLink, X } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { adminApi, kolApi, type KolWaitInfo, type ProjectWaitInfo, type BindProjectWaitInfo, type ProjectInfo } from '@/lib/api';
 import { CONTRACTS, ADMIN_ADDRESSES } from '@/constants/contracts';
 import { shortAddress, formatDate, isValidUrl, getBscScanUrl } from '@/lib/utils';
 import { useUserDepositedAmount } from '@/hooks/useDepositContract';
 import { useTokenRatiosIndex, useTokenAirdropKols } from '@/hooks/useKolContract';
-import { useTransfer } from '@/hooks/useERC20';
 import { useStore } from '@/store/useStore';
 import zhCN from '@/i18n/zh-CN';
 import enUS from '@/i18n/en-US';
 import { parseUnits, isAddress } from 'viem';
+import { usePublicClient, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import erc20Abi from '@/constants/abi/erc20.json';
 
 type Tab = 'kol' | 'project' | 'claim' | 'migrate';
 
@@ -43,11 +45,17 @@ export default function ReviewPage() {
   const [claimList, setClaimList] = useState<BindProjectWaitInfo[]>([]);
   const [issuedProjects, setIssuedProjects] = useState<ProjectInfo[]>([]);
   const [loading, setLoading] = useState(false);
+  const [dataLoading, setDataLoading] = useState(false);
 
   // 认领审核弹窗
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [selectedClaim, setSelectedClaim] = useState<BindProjectWaitInfo | null>(null);
   const [percent, setPercent] = useState('');
+
+  // 不通过确认弹窗
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false);
+  const [rejectType, setRejectType] = useState<'kol' | 'project' | 'claim' | null>(null);
+  const [rejectItem, setRejectItem] = useState<KolWaitInfo | ProjectWaitInfo | BindProjectWaitInfo | null>(null);
 
   // 迁移表单
   const [migrateToken, setMigrateToken] = useState<MigrateToken>({
@@ -70,26 +78,57 @@ export default function ReviewPage() {
   );
 
   // 转账（用于迁移）
-  const { transfer, isPending: transferPending, isSuccess: transferSuccess } = useTransfer();
+  const publicClient = usePublicClient();
+  const { writeContract: writeTransfer, data: transferHash, isPending: transferPending } = useWriteContract();
+  const { isLoading: isTransferConfirming, isSuccess: transferSuccess } = useWaitForTransactionReceipt({ hash: transferHash });
 
   // 检查是否管理员
   const isAdmin = address ? ADMIN_ADDRESSES.includes(address.toLowerCase() as typeof ADMIN_ADDRESSES[number]) : false;
 
-  // 获取数据
-  const fetchData = async () => {
+  // 获取 KOL 列表
+  const fetchKolList = async () => {
+    setDataLoading(true);
     try {
-      const [kolRes, projectRes, claimRes, issuedRes] = await Promise.all([
-        kolApi.getKolWaitAgreeList(),
-        kolApi.getProjectWaitAgreeList(),
+      const res = await kolApi.getKolWaitAgreeList();
+      setKolList(res.data || []);
+    } catch (error) {
+      console.error('Failed to fetch KOL list:', error);
+      setKolList([]);
+    } finally {
+      setDataLoading(false);
+    }
+  };
+
+  // 获取项目列表
+  const fetchProjectList = async () => {
+    setDataLoading(true);
+    try {
+      const res = await kolApi.getProjectWaitAgreeList();
+      setProjectList(res.data || []);
+    } catch (error) {
+      console.error('Failed to fetch project list:', error);
+      setProjectList([]);
+    } finally {
+      setDataLoading(false);
+    }
+  };
+
+  // 获取认领列表
+  const fetchClaimList = async () => {
+    setDataLoading(true);
+    try {
+      const [claimRes, issuedRes] = await Promise.all([
         kolApi.getBindProjectWaitList(),
         kolApi.getProjectIssuedList(),
       ]);
-      setKolList(kolRes.data || []);
-      setProjectList(projectRes.data || []);
       setClaimList(claimRes.data || []);
       setIssuedProjects(issuedRes.data || []);
     } catch (error) {
-      console.error('Failed to fetch data:', error);
+      console.error('Failed to fetch claim list:', error);
+      setClaimList([]);
+      setIssuedProjects([]);
+    } finally {
+      setDataLoading(false);
     }
   };
 
@@ -109,13 +148,25 @@ export default function ReviewPage() {
     }
   };
 
+  // 初始加载和 tabs 切换时刷新数据
   useEffect(() => {
-    if (isAdmin) {
-      fetchData();
-      const timer = setInterval(fetchData, 5000);
-      return () => clearInterval(timer);
+    if (!isAdmin) return;
+    
+    switch (activeTab) {
+      case 'kol':
+        fetchKolList();
+        break;
+      case 'project':
+        fetchProjectList();
+        break;
+      case 'claim':
+        fetchClaimList();
+        break;
+      case 'migrate':
+        // migrate tab 不需要数据
+        break;
     }
-  }, [isAdmin]);
+  }, [activeTab, isAdmin]);
 
   // 监听迁移转账成功
   useEffect(() => {
@@ -134,7 +185,7 @@ export default function ReviewPage() {
         toast.error(res.message);
       } else {
         toast.success(agree ? t.common.reviewPass as string : t.common.reviewReject as string);
-        fetchData();
+        fetchKolList();
       }
     } catch (error) {
       toast.error(t.common.operationFailed as string);
@@ -153,7 +204,7 @@ export default function ReviewPage() {
         toast.error(res.message);
       } else {
         toast.success(agree ? t.common.reviewPass as string : t.common.reviewReject as string);
-        fetchData();
+        fetchProjectList();
       }
     } catch (error) {
       toast.error(t.common.operationFailed as string);
@@ -167,6 +218,31 @@ export default function ReviewPage() {
     setSelectedClaim(item);
     setPercent('');
     setShowClaimModal(true);
+  };
+
+  // 审核认领（直接传入 item）
+  const handleClaimAgreeDirect = async (item: BindProjectWaitInfo, agree: boolean) => {
+    if (!address) return;
+    setLoading(true);
+    try {
+      const res = await adminApi.agreeBindProject(
+        address,
+        item.address,
+        item.project_name,
+        agree,
+        200
+      );
+      if (res.message) {
+        toast.error(res.message);
+      } else {
+        toast.success(agree ? t.common.reviewPass as string : t.common.reviewReject as string);
+        fetchClaimList();
+      }
+    } catch (error) {
+      toast.error(t.common.operationFailed as string);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 审核认领
@@ -200,7 +276,7 @@ export default function ReviewPage() {
       } else {
         toast.success(agree ? t.common.reviewPass as string : t.common.reviewReject as string);
         setShowClaimModal(false);
-        fetchData();
+        fetchClaimList();
       }
     } catch (error) {
       toast.error(t.common.operationFailed as string);
@@ -211,7 +287,7 @@ export default function ReviewPage() {
 
   // 迁移 Token
   const handleMigrate = async () => {
-    // 验证表单
+    // 验证表单 - 检查所有必填字段
     if (!migrateToken.project_name || !migrateToken.contract_addr ||
         !migrateToken.token_name || !migrateToken.token_symbol ||
         !migrateToken.total_supply) {
@@ -219,33 +295,56 @@ export default function ReviewPage() {
       return;
     }
 
-    if (!migrateToken.percents.every(p => p && parseFloat(p) > 0)) {
+    // 验证 percents 数组 - 每个值都必须存在且大于0
+    const isPercentsValid = migrateToken.percents.every(p => {
+      const value = parseFloat(p);
+      return p !== '' && !isNaN(value) && value > 0;
+    });
+    if (!isPercentsValid) {
       toast.error(t.common.fillAllRatio as string);
       return;
     }
 
+    // 验证合约地址
     if (!isAddress(migrateToken.contract_addr)) {
       toast.error(t.common.fillCorrectRatio as string);
       return;
     }
 
-    // 计算转账金额
-    const kolPercent = parseFloat(migrateToken.percents[3]) / 100;
-    const transferAmount = parseFloat(migrateToken.total_supply) * kolPercent;
-
     setMigrateLoading(true);
 
     try {
+      // 获取 token 的 decimals
+      const decimals = await publicClient?.readContract({
+        address: migrateToken.contract_addr as `0x${string}`,
+        abi: erc20Abi,
+        functionName: 'decimals',
+      });
+
+      if (!decimals) {
+        toast.error('無法獲取代幣精度');
+        setMigrateLoading(false);
+        return;
+      }
+
+      // 计算转账金额
+      const kolPercent = parseFloat(migrateToken.percents[3]) / 100;
+      const transferAmount = parseFloat(migrateToken.total_supply) * kolPercent;
+
       // 转账到 KOL 分配合约
-      const amount = parseUnits(transferAmount.toString(), 18);
-      transfer(
-        migrateToken.contract_addr as `0x${string}`,
-        CONTRACTS.KOL as `0x${string}`,
-        amount
-      );
+      const amount = parseUnits(transferAmount.toString(), Number(decimals));
+      writeTransfer({
+        address: migrateToken.contract_addr as `0x${string}`,
+        abi: erc20Abi,
+        functionName: 'transfer',
+        args: [CONTRACTS.KOL as `0x${string}`, amount],
+        gas: BigInt(100000),
+        gasPrice: parseUnits('5', 9), // 5 gwei
+      });
     } catch (error) {
       setMigrateLoading(false);
       toast.error(t.common.transferFailed as string);
+      console.error('Migration error:', error);
     }
   };
 
@@ -255,7 +354,7 @@ export default function ReviewPage() {
 
     try {
       const percents = migrateToken.percents.map(p => Math.round(parseFloat(p) * 100));
-      const res = await adminApi.migrateToken({
+      await adminApi.migrateToken({
         admin_address: address,
         project_name: migrateToken.project_name,
         contract_addr: migrateToken.contract_addr,
@@ -265,19 +364,16 @@ export default function ReviewPage() {
         percents,
       });
 
-      if (res.message === 'success') {
-        toast.success(t.common.migrateSuccess as string);
-        setMigrateToken({
-          project_name: '',
-          contract_addr: '',
-          token_name: '',
-          token_symbol: '',
-          total_supply: '',
-          percents: ['', '', '', ''],
-        });
-      } else {
-        toast.error(res.message);
-      }
+      // 与 Vue 项目一致：只要 API 调用成功就显示成功
+      toast.success(t.common.migrateSuccess as string);
+      setMigrateToken({
+        project_name: '',
+        contract_addr: '',
+        token_name: '',
+        token_symbol: '',
+        total_supply: '',
+        percents: ['', '', '', ''],
+      });
     } catch (error) {
       toast.error(t.common.migrateFailed as string);
     } finally {
@@ -344,7 +440,14 @@ export default function ReviewPage() {
       {/* KOL 列表 */}
       {activeTab === 'kol' && (
         <div className="space-y-4">
-          {kolList.length === 0 ? (
+          {dataLoading ? (
+            <div className="card text-center py-10">
+              <div className="flex items-center justify-center gap-2 text-gray-400">
+                <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                <span>{t.common.loading as string}</span>
+              </div>
+            </div>
+          ) : kolList.length === 0 ? (
             <div className="card text-center py-10 text-gray-500">暫無數據</div>
           ) : (
             kolList.map((item, index) => (
@@ -391,7 +494,11 @@ export default function ReviewPage() {
                     {review.approve as string}
                   </button>
                   <button
-                    onClick={() => handleKolAgree(item, false)}
+                    onClick={() => {
+                      setRejectType('kol');
+                      setRejectItem(item);
+                      setShowRejectConfirm(true);
+                    }}
                     disabled={loading || item.status !== 0}
                     className="btn-outline flex-1 text-sm"
                   >
@@ -407,7 +514,14 @@ export default function ReviewPage() {
       {/* 项目列表 */}
       {activeTab === 'project' && (
         <div className="space-y-4">
-          {projectList.length === 0 ? (
+          {dataLoading ? (
+            <div className="card text-center py-10">
+              <div className="flex items-center justify-center gap-2 text-gray-400">
+                <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                <span>{t.common.loading as string}</span>
+              </div>
+            </div>
+          ) : projectList.length === 0 ? (
             <div className="card text-center py-10 text-gray-500">暫無數據</div>
           ) : (
             projectList.map((item, index) => (
@@ -460,7 +574,11 @@ export default function ReviewPage() {
                     {review.approve as string}
                   </button>
                   <button
-                    onClick={() => handleProjectAgree(item, false)}
+                    onClick={() => {
+                      setRejectType('project');
+                      setRejectItem(item);
+                      setShowRejectConfirm(true);
+                    }}
                     disabled={loading}
                     className="btn-outline flex-1 text-sm"
                   >
@@ -476,7 +594,14 @@ export default function ReviewPage() {
       {/* 认领列表 */}
       {activeTab === 'claim' && (
         <div className="space-y-4">
-          {claimList.length === 0 ? (
+          {dataLoading ? (
+            <div className="card text-center py-10">
+              <div className="flex items-center justify-center gap-2 text-gray-400">
+                <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                <span>{t.common.loading as string}</span>
+              </div>
+            </div>
+          ) : claimList.length === 0 ? (
             <div className="card text-center py-10 text-gray-500">暫無數據</div>
           ) : (
             claimList.map((item, index) => (
@@ -542,8 +667,9 @@ export default function ReviewPage() {
                   </button>
                   <button
                     onClick={() => {
-                      setSelectedClaim(item);
-                      handleClaimAgree(false);
+                      setRejectType('claim');
+                      setRejectItem(item);
+                      setShowRejectConfirm(true);
                     }}
                     disabled={loading}
                     className="btn-outline flex-1 text-sm"
@@ -722,6 +848,40 @@ export default function ReviewPage() {
           </div>
         </div>
       )}
+
+      {/* 不通过确认弹窗 */}
+      <ConfirmDialog
+        open={showRejectConfirm}
+        title={lang === 'zh' ? '確認不通過' : 'Confirm Reject'}
+        message={lang === 'zh' ? '確定要審核不通過嗎？' : 'Are you sure you want to reject this review?'}
+        confirmText={t.common.confirm as string || '確認'}
+        cancelText={t.common.cancel as string || '取消'}
+        loading={loading}
+        onConfirm={async () => {
+          if (!rejectItem || !rejectType) return;
+          
+          // 先关闭弹窗
+          setShowRejectConfirm(false);
+          
+          // 根据类型执行相应的不通过操作
+          if (rejectType === 'kol') {
+            await handleKolAgree(rejectItem as KolWaitInfo, false);
+          } else if (rejectType === 'project') {
+            await handleProjectAgree(rejectItem as ProjectWaitInfo, false);
+          } else if (rejectType === 'claim') {
+            await handleClaimAgreeDirect(rejectItem as BindProjectWaitInfo, false);
+          }
+          
+          // 清理状态
+          setRejectType(null);
+          setRejectItem(null);
+        }}
+        onCancel={() => {
+          setShowRejectConfirm(false);
+          setRejectType(null);
+          setRejectItem(null);
+        }}
+      />
     </div>
   );
 }

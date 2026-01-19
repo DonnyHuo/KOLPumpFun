@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { formatUnits } from 'viem';
 import { toast } from 'sonner';
 import { shortAddress, copyToClipboard } from '@/lib/utils';
@@ -53,8 +53,9 @@ export default function ManagePage() {
   });
 
   // 提取 LP
-  const { writeContract, data: hash, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { writeContract, data: hash, isPending, error: writeError } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess, isError: isTransactionError } = useWaitForTransactionReceipt({ hash });
+  const publicClient = usePublicClient();
 
   // 检查是否是 owner
   const isOwner = address && owner && address.toLowerCase() === (owner as string).toLowerCase();
@@ -71,7 +72,7 @@ export default function ManagePage() {
   // 获取交易对列表
   useEffect(() => {
     const fetchPairs = async () => {
-      if (!pairsCount) {
+      if (!pairsCount || !publicClient) {
         setLoading(false);
         return;
       }
@@ -79,32 +80,47 @@ export default function ManagePage() {
       const count = Number(pairsCount);
       const pairs: PairInfo[] = [];
 
-      // 这里需要逐个获取，因为 wagmi 不支持批量调用带参数的函数
-      for (let i = 0; i < count; i++) {
-        try {
-          const response = await fetch(
-            `https://bsc-dataseed.bnbchain.org/`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                jsonrpc: '2.0',
-                method: 'eth_call',
-                params: [
-                  {
-                    to: CONTRACTS.LP_EXCHANGE,
-                    data: `0x${lpExchangeAbi.find(a => a.name === 'pairs')?.name ? '1ab06ee5' + i.toString(16).padStart(64, '0') : ''}`,
-                  },
-                  'latest',
-                ],
-                id: i,
-              }),
-            }
-          );
-          // 简化处理，实际需要解析 ABI
-        } catch (err) {
-          console.error('Failed to fetch pair:', err);
+      try {
+        // 循环获取每个 pair 的信息
+        for (let i = 0; i < count; i++) {
+          try {
+            // 获取 pair 信息
+            const pairData = await publicClient.readContract({
+              address: CONTRACTS.LP_EXCHANGE as `0x${string}`,
+              abi: lpExchangeAbi,
+              functionName: 'pairs',
+              args: [BigInt(i)],
+            }) as [string, string, string, boolean, string, bigint, boolean];
+
+            const [lpToken, pairName, disPlayName, baseTokenIsToken0, changeToken, rate, isOpen] = pairData;
+
+            // 获取 lpToken 的余额（LP_EXCHANGE 合约持有的 LP token 数量）
+            const lpTokenBalance = await publicClient.readContract({
+              address: lpToken as `0x${string}`,
+              abi: erc20Abi,
+              functionName: 'balanceOf',
+              args: [CONTRACTS.LP_EXCHANGE as `0x${string}`],
+            });
+
+            const pairInfo: PairInfo = {
+              id: i,
+              pairName,
+              disPlayName,
+              lpToken,
+              changeToken,
+              rate: rate.toString(),
+              isOpen,
+              baseTokenIsToken0,
+              lpTokenBalance: formatUnits(lpTokenBalance as bigint, 18),
+            };
+
+            pairs.push(pairInfo);
+          } catch (err) {
+            console.error(`Failed to fetch pair ${i}:`, err);
+          }
         }
+      } catch (err) {
+        console.error('Failed to fetch pairs:', err);
       }
 
       setExchangePairs(pairs);
@@ -112,15 +128,74 @@ export default function ManagePage() {
     };
 
     fetchPairs();
-  }, [pairsCount]);
+  }, [pairsCount, publicClient]);
 
-  // 提取成功
+  // 提取成功/失败处理
   useEffect(() => {
     if (isSuccess) {
       toast.success(t.common.withdrawSuccess as string);
       setWithdrawingId(null);
+      // 刷新列表
+      if (pairsCount && publicClient) {
+        const fetchPairs = async () => {
+          const count = Number(pairsCount);
+          const pairs: PairInfo[] = [];
+
+          try {
+            for (let i = 0; i < count; i++) {
+              try {
+                const pairData = await publicClient.readContract({
+                  address: CONTRACTS.LP_EXCHANGE as `0x${string}`,
+                  abi: lpExchangeAbi,
+                  functionName: 'pairs',
+                  args: [BigInt(i)],
+                }) as [string, string, string, boolean, string, bigint, boolean];
+
+                const [lpToken, pairName, disPlayName, baseTokenIsToken0, changeToken, rate, isOpen] = pairData;
+
+                const lpTokenBalance = await publicClient.readContract({
+                  address: lpToken as `0x${string}`,
+                  abi: erc20Abi,
+                  functionName: 'balanceOf',
+                  args: [CONTRACTS.LP_EXCHANGE as `0x${string}`],
+                });
+
+                const pairInfo: PairInfo = {
+                  id: i,
+                  pairName,
+                  disPlayName,
+                  lpToken,
+                  changeToken,
+                  rate: rate.toString(),
+                  isOpen,
+                  baseTokenIsToken0,
+                  lpTokenBalance: formatUnits(lpTokenBalance as bigint, 18),
+                };
+
+                pairs.push(pairInfo);
+              } catch (err) {
+                console.error(`Failed to fetch pair ${i}:`, err);
+              }
+            }
+          } catch (err) {
+            console.error('Failed to fetch pairs:', err);
+          }
+
+          setExchangePairs(pairs);
+        };
+
+        fetchPairs();
+      }
     }
-  }, [isSuccess]);
+  }, [isSuccess, pairsCount, publicClient]);
+
+  // 提取失败处理
+  useEffect(() => {
+    if (writeError || isTransactionError) {
+      toast.error(t.common.withdrawFailed as string || '提取失败');
+      setWithdrawingId(null);
+    }
+  }, [writeError, isTransactionError, t]);
 
   // 提取 LP
   const handleWithdraw = async (pairId: number) => {
