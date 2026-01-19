@@ -1,0 +1,330 @@
+@import "tailwindcss";
+
+:root {
+  /* Web3 暗色主题配色 */
+  --primary: #FFC519;
+  --primary-hover: #FFD54F;
+  --primary-gradient-start: #FB8018;
+  --primary-gradient-end: #FFC519;
+  
+  /* 暗色背景 */
+  --background: #0D0D0F;
+  --background-secondary: #141416;
+  --background-card: #1A1A1E;
+  --background-card-hover: #222226;
+  
+  /* 边框 */
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-color-hover: rgba(255, 255, 255, 0.15);
+  
+  /* 文字颜色 */
+  --foreground: #FFFFFF;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6B7280;
+  
+  /* 状态颜色 */
+  --success: #10B981;
+  --error: #EF4444;
+  --warning: #F59E0B;
+  --info: #3B82F6;
+  
+  /* 发光效果 */
+  --glow-primary: rgba(255, 197, 25, 0.3);
+  --glow-success: rgba(16, 185, 129, 0.3);
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-poppins), system-ui, sans-serif;
+}
+
+/* 自定义滚动条 - 暗色风格 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-secondary);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3A3A3E;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4A4A4E;
+}
+
+/* Web3 按钮样式 */
+.btn-primary {
+  @apply px-4 py-2 h-[44px] text-[14px] font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  background: linear-gradient(135deg, #FFC519 0%, #FFD54F 100%);
+  color: #000;
+  box-shadow: 0 4px 20px var(--glow-primary);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 30px var(--glow-primary);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  @apply px-4 py-2 h-[44px] font-medium rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  background: var(--background-card);
+  color: var(--foreground);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--background-card-hover);
+  border-color: var(--border-color-hover);
+}
+
+.btn-outline {
+  @apply px-4 py-2 h-[44px] font-medium rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: rgba(255, 197, 25, 0.1);
+}
+
+/* Web3 输入框样式 */
+.input {
+  @apply w-full px-4 py-3 rounded-xl transition-all duration-200;
+  background: var(--background-card);
+  border: 1px solid var(--border-color);
+  color: var(--foreground);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--glow-primary);
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Web3 卡片样式 */
+.card {
+  @apply rounded-2xl p-5;
+  background: var(--background-card);
+  border: 1px solid var(--border-color);
+}
+
+.card-glass {
+  @apply rounded-2xl p-5;
+  background: rgba(26, 26, 30, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+}
+
+/* 骨架屏动画 - 暗色 */
+.skeleton {
+  @apply rounded-xl;
+  background: linear-gradient(90deg, var(--background-card) 25%, var(--background-card-hover) 50%, var(--background-card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Web3 渐变文字 */
+.gradient-text {
+  font-weight: 700;
+  background: linear-gradient(135deg, #FFC519 0%, #FFD54F 50%, #FB8018 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Web3 标签样式 */
+.badge-success {
+  @apply text-xs px-3 py-1 rounded-full font-medium;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-warning {
+  @apply text-xs px-3 py-1 rounded-full font-medium;
+  background: rgba(245, 158, 11, 0.15);
+  color: #F59E0B;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-error {
+  @apply text-xs px-3 py-1 rounded-full font-medium;
+  background: rgba(239, 68, 68, 0.15);
+  color: #EF4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-info {
+  @apply text-xs px-3 py-1 rounded-full font-medium;
+  background: rgba(59, 130, 246, 0.15);
+  color: #3B82F6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Web3 步骤圆圈 */
+.step-circle-active {
+  @apply w-8 h-8 rounded-full flex items-center justify-center text-black text-sm font-bold;
+  background: linear-gradient(135deg, #FFC519 0%, #FFD54F 100%);
+  box-shadow: 0 0 20px var(--glow-primary);
+}
+
+.step-circle-completed {
+  @apply w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold;
+  background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+  box-shadow: 0 0 20px var(--glow-success);
+}
+
+.step-circle-inactive {
+  @apply w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium;
+  background: var(--background-card);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+
+/* Web3 Tab 样式 */
+.tab-container {
+  @apply flex rounded-xl p-1;
+  background: var(--background-card);
+  border: 1px solid var(--border-color);
+}
+
+.tab-item-active {
+  @apply flex-1 py-2.5 text-sm rounded-lg transition-all font-semibold text-black;
+  background: linear-gradient(135deg, #FFC519 0%, #FFD54F 100%);
+}
+
+.tab-item-inactive {
+  @apply flex-1 py-2.5 text-sm rounded-lg transition-all font-medium;
+  color: var(--text-secondary);
+}
+
+.tab-item-inactive:hover {
+  color: var(--foreground);
+  background: var(--background-card-hover);
+}
+
+/* Web3 进度条 */
+.progress-bar {
+  @apply h-2.5 rounded-full overflow-hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.progress-indicator {
+  @apply h-full rounded-full transition-all duration-500;
+  background: linear-gradient(90deg, #FFC519 0%, #FFD54F 50%, #FFEB3B 100%);
+  box-shadow: 0 0 12px rgba(255, 197, 25, 0.5);
+}
+
+/* 空状态 */
+.empty-state {
+  @apply text-center py-20;
+  color: var(--text-muted);
+}
+
+/* 链接样式 */
+.link {
+  color: var(--primary);
+  transition: all 0.2s;
+}
+
+.link:hover {
+  text-decoration: underline;
+  text-shadow: 0 0 10px var(--glow-primary);
+}
+
+/* 底部弹窗动画 */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+/* 淡入动画 */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out forwards;
+}
+
+/* 发光边框效果 */
+.glow-border {
+  position: relative;
+}
+
+.glow-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, #FFC519, #FB8018, #FFC519);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.5;
+  transition: opacity 0.3s;
+}
+
+.glow-border:hover::before {
+  opacity: 1;
+}
+
+/* Recharts 去除点击 outline */
+.recharts-sector,
+.recharts-pie,
+.recharts-pie-sector {
+  outline: none !important;
+}
+
+.recharts-sector:focus,
+.recharts-pie:focus,
+.recharts-pie-sector:focus {
+  outline: none !important;
+}
+
+/* 网格背景效果 */
+.bg-grid {
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* 渐变背景 */
+.bg-gradient-radial {
+  background: radial-gradient(ellipse at top, rgba(255, 197, 25, 0.1) 0%, transparent 50%);
+}
