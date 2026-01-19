@@ -152,7 +152,7 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
       </div>
 
       {/* 提示文字 */}
-      <p className="text-left text-xs text-red-400 mt-3">
+      <p className="text-left text-xs text-red-500 mt-3">
         * {deposit.stakeNote as string}
       </p>
 

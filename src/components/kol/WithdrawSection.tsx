@@ -60,7 +60,7 @@ export function WithdrawSection({ kolInfo, activeAmount, onSuccess, t }: Withdra
         </div>
 
         {/* 提示文字 */}
-        <div className="text-red-400 text-xs leading-5">
+        <div className="text-red-500 text-xs leading-5">
           {home.dispositDesc as string || '解除SOS質押，將即時終止KOL資格，且不可申請複效，謹慎操作。'}
         </div>
 

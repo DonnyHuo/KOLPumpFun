@@ -579,7 +579,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
 
               <TokenSelector />
 
-              <div className="text-xs text-red-400 mt-4 leading-5">
+              <div className="text-xs text-red-500 mt-4 leading-5">
                 {createProject.fairLaunchTip as string}
               </div>
 
@@ -647,7 +647,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
 
               <TokenSelector />
 
-              <div className="text-xs text-red-400 mt-4 leading-5">
+              <div className="text-xs text-red-500 mt-4 leading-5">
                 {createProject.fairLaunchTip as string}
               </div>
 
@@ -735,7 +735,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
               </div>
 
               {/* 提示 */}
-              <div className="text-red-400 text-xs mt-5 pb-1 leading-5">
+              <div className="text-red-500 text-xs mt-5 pb-1 leading-5">
                  {newData.launchPoolNote || '啟動池份額由創建人自定義，創建代幣時自動轉入其錢包，應全部用於創建 LP（Pancake V2，基礎代幣可選 USDT、BNB、BTCB 或 SOS），LP 應全部兌換為代幣（全額歸屬創建人）。'}
               </div>
 
@@ -765,7 +765,7 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
           </div>
 
           {/* 底部提示 */}
-          <p className="text-xs text-red-400 text-left leading-5">
+          <p className="text-xs text-red-500 text-left leading-5">
             {createProject?.twitterTip as string || '創建項目時請同步關注官方推特@kolpump_fun，並轉發官推置頂推文，這關乎您的KOL指數和代幣分配。'}
           </p>
         </>

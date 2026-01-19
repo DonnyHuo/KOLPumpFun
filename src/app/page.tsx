@@ -162,7 +162,7 @@ export default function CreatePage() {
               title={lang === 'zh' ? '點擊斷開連接' : 'Click to disconnect'}
             >
               <Image src={wallet} alt="wallet" width={18} height={18} />
-              <span className="text-xs text-[#FFC519] group-hover:text-red-400 transition-colors">
+              <span className="text-xs text-[#FFC519] group-hover:text-red-500 transition-colors">
                 {address?.slice(0, 4)}...{address?.slice(-4)}
               </span>
             </button>

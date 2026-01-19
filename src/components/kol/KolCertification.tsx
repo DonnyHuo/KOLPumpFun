@@ -90,7 +90,7 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
         {/* 钱包地址 */}
         <div className="flex flex-col gap-2 text-left w-full">
           <span className="text-gray-400">
-            <span className="text-red-400 pr-0.5">*</span>{kol.revenueAddress as string}
+            <span className="text-red-500 pr-0.5">*</span>{kol.revenueAddress as string}
           </span>
           <div className="relative">
             {isConnected ? (
@@ -124,7 +124,7 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
         {/* Twitter */}
         <div className="flex flex-col gap-2 text-left w-full">
           <span className="text-gray-400">
-            <span className="text-red-400 pr-0.5">*</span>{kol.twitterAddress as string}
+            <span className="text-red-500 pr-0.5">*</span>{kol.twitterAddress as string}
           </span>
           <input
             type="text"
@@ -165,7 +165,7 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
       </div>
 
       {/* 提示文字 */}
-      <p className="mt-4 text-xs text-red-400 text-left leading-5">
+      <p className="mt-4 text-xs text-red-500 text-left leading-5">
         *{kol.desc1 as string}
       </p>
 
