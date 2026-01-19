@@ -228,19 +228,15 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
     
     setClaimLoading(true);
     try {
-      const res = await kolApi.bindProject({
-        address,
+      await kolApi.bindProject({
+        kol_address: address,
         project_name: selectedProject.project_name,
-        twitter_account: '',
       });
 
-      if (res.message === 'success') {
-        toast.success(kol?.claimSuccess as string || '認領成功');
-        setShowClaimModal(false);
-        onSuccess();
-      } else {
-        toast.error(res.message || '認領失敗');
-      }
+      // 与 Vue 项目一致：只要请求成功就显示成功提示
+      toast.success(kol?.claimSuccess as string || '認領成功');
+      setShowClaimModal(false);
+      onSuccess();
     } catch (error) {
       toast.error('認領失敗');
       console.error(error);

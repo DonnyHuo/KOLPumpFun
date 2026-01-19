@@ -109,7 +109,7 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
       return;
     }
 
-    doDeposit(amount, (decimals as number) || 18);
+    doDeposit(amount, decimals ? Number(decimals) : 18);
   };
 
   // 最大金额

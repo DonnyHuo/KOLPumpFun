@@ -11,6 +11,7 @@ import { KolCertification } from '@/components/kol/KolCertification';
 import { DepositSection } from '@/components/kol/DepositSection';
 import { WithdrawSection } from '@/components/kol/WithdrawSection';
 import { CreateProject } from '@/components/kol/CreateProject';
+import MyProject from '@/components/kol/MyProject';
 import zhCN from '@/i18n/zh-CN';
 import enUS from '@/i18n/en-US';
 import { SocialLinks } from '@/components/common/SocialLinks';
@@ -302,13 +303,8 @@ export default function CreatePage() {
                 {(t.home as Record<string, unknown>).becomeProject as string}
               </span>
             </div>
-            {hasProject ? (
-              <div className="text-center py-10">
-                <div className="w-16 h-16 rounded-full bg-[#FFC519]/20 flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">✓</span>
-                </div>
-                <p className="text-gray-400">{(t.home as Record<string, unknown>).projectCreated as string}</p>
-              </div>
+            {hasProject && kolInfo ? (
+              <MyProject kolInfo={kolInfo} />
             ) : (
               <CreateProject
                 activeAmount={activeAmount}

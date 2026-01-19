@@ -33,7 +33,7 @@ export const kolApi = {
 
   // 提交认证
   certify: (data: CertifyParams) =>
-    request<{ message: string }>('/kol/certify', {
+    request<{ message: string }>('/kol/register', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -291,9 +291,8 @@ export interface CreateProjectParams {
 }
 
 export interface BindProjectParams {
-  address: string;
+  kol_address: string;
   project_name: string;
-  twitter_account: string;
 }
 
 export interface MigrateTokenParams {

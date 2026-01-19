@@ -7,6 +7,7 @@ import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 
 import Image from 'next/image';
 import dayjs from 'dayjs';
 import { parseUnits, formatUnits, maxUint256 } from 'viem';
+import { toast } from 'sonner';
 import { useStore } from '@/store/useStore';
 import { useBalance, useAllowance, useApprove } from '@/hooks/useERC20';
 import { CONTRACTS } from '@/constants/contracts';
@@ -103,18 +104,18 @@ export default function PoolDetailPage() {
   const [rate, setRate] = useState(0);
 
   // 原生 BNB 余额
-  const { data: bnbBalance } = useWagmiBalance({
+  const { data: bnbBalance, refetch: refetchBnbBalance } = useWagmiBalance({
     address: address as `0x${string}`,
   });
 
   // USDT 余额
-  const { formatted: usdtBalance } = useBalance(
+  const { formatted: usdtBalance, refetch: refetchUsdtBalance } = useBalance(
     '0x55d398326f99059ff775485246999027b3197955' as `0x${string}`,
     address as `0x${string}`
   );
 
   // SOS 余额
-  const { formatted: sosBalance } = useBalance(
+  const { formatted: sosBalance, refetch: refetchSosBalance } = useBalance(
     CONTRACTS.SOS as `0x${string}`,
     address as `0x${string}`
   );
@@ -132,7 +133,7 @@ export default function PoolDetailPage() {
   };
 
   // 获取用户贡献金额
-  const { data: userContribution } = useReadContract({
+  const { data: userContribution, refetch: refetchUserContribution } = useReadContract({
     address: CONTRACTS.TOKEN_SHOP as `0x${string}`,
     abi: tokenShopAbi,
     functionName: 'userContributions',
@@ -245,9 +246,18 @@ export default function PoolDetailPage() {
     }
   };
 
+  // 刷新余额
+  const refreshBalances = useCallback(() => {
+    refetchBnbBalance();
+    refetchUsdtBalance();
+    refetchSosBalance();
+    refetchUserContribution();
+  }, [refetchBnbBalance, refetchUsdtBalance, refetchSosBalance, refetchUserContribution]);
+
   // Swap 成功后
   useEffect(() => {
     if (isSwapSuccess && swapHash && address) {
+      toast.success(t.poolDetail.buySuccess as string || '抢购成功');
       recordTrade({
         pool_id: Number(poolInfo.id),
         address,
@@ -257,12 +267,15 @@ export default function PoolDetailPage() {
         order_type: 0,
       });
       setAmount('');
+      // 刷新余额
+      refreshBalances();
     }
   }, [isSwapSuccess, swapHash]);
 
   // Withdraw 成功后
   useEffect(() => {
     if (isWithdrawSuccess && withdrawHash && address) {
+      toast.success(t.poolDetail.redeemSuccess as string || '赎回成功');
       recordTrade({
         pool_id: Number(poolInfo.id),
         address,
@@ -272,6 +285,8 @@ export default function PoolDetailPage() {
         order_type: 1,
       });
       setAmount('');
+      // 刷新余额
+      refreshBalances();
     }
   }, [isWithdrawSuccess, withdrawHash]);
 

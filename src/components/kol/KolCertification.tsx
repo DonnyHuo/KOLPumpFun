@@ -56,25 +56,22 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
     if (!address) return;
     
     if (!twitterUrl) {
-      toast.error(tips?.[5] || 'Please enter Twitter URL');
+      toast.error(tips?.[1] || 'Please enter a valid X address');
       return;
     }
 
     setLoading(true);
     try {
-      const res = await kolApi.certify({
+      await kolApi.certify({
         address,
         twitter_account: twitterUrl,
         tg_account: telegramUrl || undefined,
         discord_account: binanceUrl || undefined,
       });
 
-      if (res.message === 'success') {
-        toast.success(common.success as string || 'Success');
-        onSuccess();
-      } else {
-        toast.error(res.message || (common.failed as string) || 'Failed');
-      }
+      // 与 Vue 项目一致：只要请求成功就显示成功提示
+      toast.success(tips?.[5] || '已提交認證申請');
+      onSuccess();
     } catch (error) {
       toast.error((common.failed as string) || 'Failed');
       console.error(error);

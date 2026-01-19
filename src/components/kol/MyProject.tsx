@@ -98,23 +98,21 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
   const showKolProgress = reserveInfo?.name !== 'SOS';
 
   return (
-    <div className="card bg-[#F8FCFF]">
-      <h3 className="font-semibold text-base mb-4">{home.myProject as string}</h3>
-      
+    <div className="space-y-4">
       {/* 项目名称和余额 */}
-      <div className="flex items-center justify-between py-2 border-b border-gray-100">
-        <span className="text-gray-600">{reserveInfo?.name}</span>
-        <span className="font-medium">
+      <div className="flex items-center justify-between py-3 px-4 bg-[#1A1A1E] rounded-xl">
+        <span className="text-gray-400">{reserveInfo?.name}</span>
+        <span className="font-medium text-white">
           {parseFloat(reserveBalance).toFixed(2)} {reserveInfo?.symbol}
         </span>
       </div>
 
-      {/* 已领取收益 */}
-      <div className="flex items-center justify-between py-2 border-b border-gray-100">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-gray-600">{home.revenueCollected as string}：</span>
-          <span className="font-medium">
-            {parseFloat(viewCanWithdrawValue).toFixed(2)} {reserveInfo?.symbol}
+      {/* 待领取收益 */}
+      <div className="flex items-center justify-between py-3 px-4 bg-[#1A1A1E] rounded-xl">
+        <div className="flex flex-col gap-1">
+          <span className="text-gray-400 text-sm">{home.revenueCollected as string}</span>
+          <span className="font-bold text-[#FFC519] text-lg">
+            {parseFloat(viewCanWithdrawValue).toFixed(4)} {reserveInfo?.symbol}
           </span>
         </div>
         <button
@@ -124,34 +122,37 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
             isConfirming ||
             parseFloat(viewCanWithdrawValue) === 0
           }
-          className="btn-primary text-xs px-3 py-1"
+          className="btn-primary text-sm px-5 py-2"
         >
           {isPending || isConfirming ? '...' : home.receiveBenefits as string}
         </button>
       </div>
 
-      {/* 跨链进度 */}
-      <div className="flex items-center justify-between py-2 border-b border-gray-100">
-        <span className="text-gray-600">{home.crossChainProgress as string}</span>
-        <span className="font-medium">{crossProgressValue} %</span>
-      </div>
-
-      {/* LP 进度 */}
-      <div className="flex items-center justify-between py-2 border-b border-gray-100">
-        <span className="text-gray-600">{home.LpProgress as string}</span>
-        <span className="font-medium">{lpExProgressValue} %</span>
-      </div>
-
-      {/* KOL 进度 */}
-      {showKolProgress && (
-        <div className="flex items-center justify-between py-2 border-b border-gray-100">
-          <span className="text-gray-600">{home.KOLProgress as string}</span>
-          <span className="font-medium">{kolProgressValue} %</span>
+      {/* 进度信息 */}
+      <div className="bg-[#1A1A1E] rounded-xl p-4 space-y-3">
+        {/* 跨链进度 */}
+        <div className="flex items-center justify-between">
+          <span className="text-gray-400 text-sm">{home.crossChainProgress as string}</span>
+          <span className="font-medium text-white">{crossProgressValue} %</span>
         </div>
-      )}
+
+        {/* LP 进度 */}
+        <div className="flex items-center justify-between">
+          <span className="text-gray-400 text-sm">{home.LpProgress as string}</span>
+          <span className="font-medium text-white">{lpExProgressValue} %</span>
+        </div>
+
+        {/* KOL 进度 */}
+        {showKolProgress && (
+          <div className="flex items-center justify-between">
+            <span className="text-gray-400 text-sm">{home.KOLProgress as string}</span>
+            <span className="font-medium text-white">{kolProgressValue} %</span>
+          </div>
+        )}
+      </div>
 
       {/* 进度说明 */}
-      <p className="text-xs text-gray-400 mt-3 leading-5 text-left">
+      <p className="text-xs text-gray-500 leading-5 text-left">
         {home.progressDesc as string}
       </p>
     </div>
