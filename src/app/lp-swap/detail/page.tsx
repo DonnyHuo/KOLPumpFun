@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense, useRef, startTransition } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAccount, usePublicClient, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { formatUnits, parseUnits, maxUint256 } from 'viem';
@@ -97,19 +97,24 @@ function LpSwapDetailContent() {
     }
   }, [publicClient, pairId]);
 
+  // 提取依赖值避免 React Compiler 警告
+  const changeToken = pairInfo?.changeToken;
+  const lpToken = pairInfo?.lpToken;
+  const pairIdValue = pairInfo?.pairId;
+
   // 获取 token 信息
   const fetchTokenInfo = useCallback(async () => {
-    if (!publicClient || !pairInfo?.changeToken) return;
+    if (!publicClient || !changeToken) return;
 
     try {
       const [symbol, decimals] = await Promise.all([
         publicClient.readContract({
-          address: pairInfo.changeToken as `0x${string}`,
+          address: changeToken as `0x${string}`,
           abi: erc20Abi,
           functionName: 'symbol',
         }),
         publicClient.readContract({
-          address: pairInfo.changeToken as `0x${string}`,
+          address: changeToken as `0x${string}`,
           abi: erc20Abi,
           functionName: 'decimals',
         }),
@@ -120,15 +125,15 @@ function LpSwapDetailContent() {
     } catch (error) {
       console.error('fetchTokenInfo error:', error);
     }
-  }, [publicClient, pairInfo?.changeToken]);
+  }, [publicClient, changeToken]);
 
   // 获取 LP 余额
   const fetchLpBalance = useCallback(async () => {
-    if (!publicClient || !pairInfo?.lpToken || !address) return;
+    if (!publicClient || !lpToken || !address) return;
 
     try {
       const balance = await publicClient.readContract({
-        address: pairInfo.lpToken as `0x${string}`,
+        address: lpToken as `0x${string}`,
         abi: erc20Abi,
         functionName: 'balanceOf',
         args: [address],
@@ -140,15 +145,15 @@ function LpSwapDetailContent() {
     } catch (error) {
       console.error('fetchLpBalance error:', error);
     }
-  }, [publicClient, pairInfo?.lpToken, address]);
+  }, [publicClient, lpToken, address]);
 
   // 获取 allowance
   const fetchAllowance = useCallback(async () => {
-    if (!publicClient || !pairInfo?.lpToken || !address) return;
+    if (!publicClient || !lpToken || !address) return;
 
     try {
       const allowance = await publicClient.readContract({
-        address: pairInfo.lpToken as `0x${string}`,
+        address: lpToken as `0x${string}`,
         abi: erc20Abi,
         functionName: 'allowance',
         args: [address, CONTRACTS.LP_EXCHANGE],
@@ -158,11 +163,11 @@ function LpSwapDetailContent() {
     } catch (error) {
       console.error('fetchAllowance error:', error);
     }
-  }, [publicClient, pairInfo?.lpToken, address]);
+  }, [publicClient, lpToken, address]);
 
   // 计算预期兑换数量
   const calculateExpectedTokens = useCallback(async (value: string) => {
-    if (!publicClient || !pairInfo || !value || parseFloat(value) <= 0) {
+    if (!publicClient || !pairIdValue || !value || parseFloat(value) <= 0) {
       setExpectedTokens('--');
       return;
     }
@@ -172,7 +177,7 @@ function LpSwapDetailContent() {
         address: CONTRACTS.LP_EXCHANGE as `0x${string}`,
         abi: lpExchangeAbi,
         functionName: 'viewExchangeLpTokenForTokens',
-        args: [BigInt(pairInfo.pairId), parseUnits(value, 18)],
+        args: [BigInt(pairIdValue), parseUnits(value, 18)],
       }) as bigint;
 
       const formatted = formatUnits(result, tokenDecimals);
@@ -181,7 +186,7 @@ function LpSwapDetailContent() {
       console.error('calculateExpectedTokens error:', error);
       setExpectedTokens('--');
     }
-  }, [publicClient, pairInfo, tokenDecimals]);
+  }, [publicClient, pairIdValue, tokenDecimals]);
 
   // 授权
   const handleApprove = async () => {
@@ -242,36 +247,58 @@ function LpSwapDetailContent() {
     init();
   }, [fetchPairInfo]);
 
+  // 使用 ref 存储最新的函数引用
+  const fetchTokenInfoRef = useRef(fetchTokenInfo);
+  const fetchLpBalanceRef = useRef(fetchLpBalance);
+  const fetchAllowanceRef = useRef(fetchAllowance);
+  const calculateExpectedTokensRef = useRef(calculateExpectedTokens);
+
+  // 更新 ref
+  useEffect(() => {
+    fetchTokenInfoRef.current = fetchTokenInfo;
+    fetchLpBalanceRef.current = fetchLpBalance;
+    fetchAllowanceRef.current = fetchAllowance;
+    calculateExpectedTokensRef.current = calculateExpectedTokens;
+  });
+
   // 获取 token 信息
   useEffect(() => {
     if (pairInfo) {
-      fetchTokenInfo();
-      fetchLpBalance();
-      fetchAllowance();
+      startTransition(() => {
+        fetchTokenInfoRef.current();
+        fetchLpBalanceRef.current();
+        fetchAllowanceRef.current();
+      });
     }
-  }, [pairInfo, fetchTokenInfo, fetchLpBalance, fetchAllowance]);
+  }, [pairInfo]);
 
   // 输入变化时计算预期兑换数量
   useEffect(() => {
-    calculateExpectedTokens(inputValue);
-  }, [inputValue, calculateExpectedTokens]);
+    startTransition(() => {
+      calculateExpectedTokensRef.current(inputValue);
+    });
+  }, [inputValue]);
 
   // 授权成功
   useEffect(() => {
     if (approveSuccess) {
       toast.success(common.approveSuccess as string);
-      fetchAllowance();
+      startTransition(() => {
+        fetchAllowanceRef.current();
+      });
     }
-  }, [approveSuccess, common.approveSuccess, fetchAllowance]);
+  }, [approveSuccess, common.approveSuccess]);
 
   // 兑换成功
   useEffect(() => {
     if (exchangeSuccess) {
       toast.success(poolDetail.swapSuccess as string);
-      setInputValue('');
-      fetchLpBalance();
+      startTransition(() => {
+        setInputValue('');
+        fetchLpBalanceRef.current();
+      });
     }
-  }, [exchangeSuccess, fetchLpBalance, poolDetail.swapSuccess]);
+  }, [exchangeSuccess, poolDetail.swapSuccess]);
 
   if (loading) {
     return (
@@ -378,7 +405,7 @@ function LpSwapDetailContent() {
           />
           <button
             onClick={() => setInputValue(lpBalance)}
-            className="bg-[#FFC519]/20 text-[#FFC519] text-xs font-semibold px-4 py-1.5 rounded-lg hover:bg-[#FFC519]/30 transition-colors ml-3"
+            className="shrink-0 bg-[#FFC519]/20 text-[#FFC519] text-xs font-semibold px-4 py-1.5 rounded-lg hover:bg-[#FFC519]/30 transition-colors ml-3"
           >
             MAX
           </button>
