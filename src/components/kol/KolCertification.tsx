@@ -159,14 +159,14 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
               href={binanceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={`${inputClass} flex items-center cursor-pointer hover:border-[#FFC519] truncate`}
+              className={`${inputClass} flex items-center cursor-pointer hover:border-[#FFC519]`}
             >
-              {binanceUrl}
+              @Binance Square
             </a>
           ) : (
             <input
               type="text"
-              value={binanceUrl}
+              value="@Binance Square"
               readOnly
               disabled
               className={inputClass}
