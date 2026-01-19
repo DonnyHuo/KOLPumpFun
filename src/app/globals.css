@@ -221,10 +221,17 @@ select:hover {
   border: 1px solid var(--border-color);
 }
 
-/* 骨架屏动画 - 暗色 */
+/* 骨架屏动画 - 适配主题 */
 .skeleton {
   @apply rounded-xl;
   background: linear-gradient(90deg, var(--background-card) 25%, var(--background-card-hover) 50%, var(--background-card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* 白色模式下骨架屏更明显 */
+:root.light .skeleton {
+  background: linear-gradient(90deg, #F0F0F2 25%, #E0E0E2 50%, #F0F0F2 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
