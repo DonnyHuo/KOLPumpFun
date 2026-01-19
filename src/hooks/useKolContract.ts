@@ -1,8 +1,7 @@
 'use client';
 
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { formatUnits } from 'viem';
-import { useEffect, useState, useRef, startTransition } from 'react';
 import { CONTRACTS } from '@/constants/contracts';
 import kolAbi from '@/constants/abi/kol.json';
 
@@ -23,99 +22,24 @@ export function useTokenRatiosIndex(projectName: string) {
 
 // 获取可提取金额
 export function useCanWithdrawValue(tokenId?: bigint, address?: `0x${string}`) {
-  const publicClient = usePublicClient();
-  const [data, setData] = useState<bigint | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const prevParamsRef = useRef<{ tokenId?: bigint; address?: `0x${string}` }>({});
+  const { data, ...rest } = useReadContract({
+    address: KOL_ADDRESS,
+    abi: kolAbi,
+    functionName: 'viewCanWithdrawValue',
+    args: tokenId !== undefined ? [tokenId] : undefined,
+    account: address, // 指定调用账户地址（合约内部使用 msg.sender）
+    query: {
+      enabled: tokenId !== undefined && address !== undefined, // 两个参数都需要
+    },
+  });
+  console.log('data', data, address, tokenId);
 
-  useEffect(() => {
-    // 检查参数是否变化
-    const paramsChanged = 
-      prevParamsRef.current.tokenId !== tokenId || 
-      prevParamsRef.current.address !== address;
-
-    if (!paramsChanged && !publicClient) {
-      return;
-    }
-
-    // 更新引用
-    prevParamsRef.current = { tokenId, address };
-
-    if (!tokenId || !address || !publicClient) {
-      // 只在参数变化时才更新状态
-      if (paramsChanged) {
-        startTransition(() => {
-          setData(undefined);
-          setIsLoading(false);
-        });
-      }
-      return;
-    }
-
-    // 使用 startTransition 包装所有 setState 调用
-    startTransition(() => {
-      setIsLoading(true);
-      setError(null);
-    });
-
-    publicClient
-      .readContract({
-        address: KOL_ADDRESS,
-        abi: kolAbi,
-        functionName: 'viewCanWithdrawValue',
-        args: [tokenId],
-        account: address, // 指定调用账户地址，这样合约内部的 msg.sender 就是 address
-      })
-      .then((result) => {
-        startTransition(() => {
-          setData(result as bigint);
-          setIsLoading(false);
-        });
-      })
-      .catch((err) => {
-        console.error('useCanWithdrawValue error:', err);
-        startTransition(() => {
-          setError(err as Error);
-          setIsLoading(false);
-          setData(undefined);
-        });
-      });
-  }, [tokenId, address, publicClient]);
-
-  const formatted = data ? formatUnits(data, 18) : '0';
-
-  // 提供 refetch 函数
-  const refetch = () => {
-    if (!tokenId || !address || !publicClient) return;
-    setIsLoading(true);
-    setError(null);
-    publicClient
-      .readContract({
-        address: KOL_ADDRESS,
-        abi: kolAbi,
-        functionName: 'viewCanWithdrawValue',
-        args: [tokenId],
-        account: address,
-      })
-      .then((result) => {
-        setData(result as bigint);
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        console.error('useCanWithdrawValue refetch error:', err);
-        setError(err as Error);
-        setIsLoading(false);
-        setData(undefined);
-      });
-  };
+  const formatted = data ? formatUnits(data as bigint, 18) : '0';
 
   return {
-    value: data,
+    value: data as bigint | undefined,
     formatted,
-    isLoading,
-    error,
-    refetch,
+    ...rest,
   };
 }
 
@@ -250,4 +174,3 @@ export function useQuitKol() {
     error,
   };
 }
-
