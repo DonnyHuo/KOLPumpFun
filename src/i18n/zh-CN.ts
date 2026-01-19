@@ -86,6 +86,7 @@ export default {
   },
   kol: {
     title: ['KOL認證', '質押SOS', '認領項目'],
+    connectWallet: '連接錢包',
     balance: '餘額',
     approve: '授權',
     goApprove: '去授權',

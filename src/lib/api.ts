@@ -265,6 +265,7 @@ export interface PrivateFundOrder {
 }
 
 export interface PrivateFundParams {
+  pool_id: number;
   address: string;
   token: string;
   spent_amount: string;

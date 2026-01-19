@@ -86,6 +86,7 @@ export default {
   },
   kol: {
     title: ['KOL Certification', 'Stake SOS', 'Claim Project'],
+    connectWallet: 'Connect Wallet',
     balance: 'Balance',
     approve: 'Approve',
     goApprove: 'Approve',

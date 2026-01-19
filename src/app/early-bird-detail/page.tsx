@@ -6,6 +6,7 @@ import { useAccount } from 'wagmi';
 import Image from 'next/image';
 import dayjs from 'dayjs';
 import { parseUnits } from 'viem';
+import { toast } from 'sonner';
 import { useStore } from '@/store/useStore';
 import { useBalance, useTransfer } from '@/hooks/useERC20';
 import { kolApi, type PrivateFundOrder } from '@/lib/api';
@@ -82,42 +83,57 @@ export default function EarlyBirdDetailPage() {
   const { transfer, isPending: isTransferring, isSuccess, hash } = useTransfer();
 
   // 获取订单列表
-  const fetchOrders = useCallback(async () => {
-    if (!poolInfo.contract) return;
+  const fetchOrders = useCallback(async (filterOnlyMe?: boolean) => {
+    const contractAddr = currentProject?.contract_addr;
+    if (!contractAddr) return;
+    
+    // 使用传入的参数或当前状态
+    const shouldFilterOnlyMe = filterOnlyMe !== undefined ? filterOnlyMe : onlyMe;
+    
+    // 构建请求参数
+    const userAddress = shouldFilterOnlyMe ? address : undefined;
+    
+    console.log('fetchOrders params:', { contractAddr, shouldFilterOnlyMe, userAddress });
+    
     try {
-      const params: { token: string; address?: string } = {
-        token: poolInfo.contract,
-      };
-      if (onlyMe && address) {
-        params.address = address;
-      }
-      const res = await kolApi.getProjectPrivateFundList(
-        params.token,
-        params.address
-      );
+      const res = await kolApi.getProjectPrivateFundList(contractAddr, userAddress);
       setOrders(res.data || []);
     } catch (error) {
       console.error('Failed to fetch orders:', error);
     }
-  }, [poolInfo.contract, onlyMe, address]);
+  }, [currentProject?.contract_addr, onlyMe, address]);
 
+  // 初始加载订单
   useEffect(() => {
     fetchOrders();
-  }, [fetchOrders]);
+  }, [currentProject?.contract_addr, address]);
+
+  // 切换 onlyMe 时重新获取订单
+  const handleToggleOnlyMe = () => {
+    const newValue = !onlyMe;
+    setOnlyMe(newValue);
+    // 直接使用新值调用，避免状态更新延迟问题
+    fetchOrders(newValue);
+  };
 
   // 交易成功后刷新
   useEffect(() => {
     if (isSuccess && hash) {
       // 记录订单
       kolApi.projectPrivateFund({
+        pool_id: Number(poolInfo.id),
         address: address || '',
         token: poolInfo.contract,
         spent_amount: String(parseFloat(amount) * 10 ** 18),
         spend_txid: hash,
       }).then(() => {
+        toast.success(t.common.success);
         fetchOrders();
         refetchBalance();
         setAmount('');
+      }).catch((err) => {
+        console.error('Failed to record order:', err);
+        toast.error(t.common.failed);
       });
     }
   }, [isSuccess, hash]);
@@ -130,7 +146,8 @@ export default function EarlyBirdDetailPage() {
   // 验证金额必须为100的倍数
   const validateAmount = () => {
     const numAmount = parseFloat(amount);
-    if (numAmount % 100 !== 0) {
+    if (numAmount && numAmount % 100 !== 0) {
+      toast.warning(t.poolDetail.inputMultipleOf100);
       const roundedAmount = Math.floor(numAmount / 100) * 100;
       setAmount(String(roundedAmount));
     }
@@ -139,6 +156,14 @@ export default function EarlyBirdDetailPage() {
   // 购买
   const handleBuy = async () => {
     if (!amount || !address) return;
+    
+    // 验证金额是否为100的倍数
+    const numAmount = parseFloat(amount);
+    if (numAmount % 100 !== 0) {
+      toast.warning(t.poolDetail.inputMultipleOf100);
+      return;
+    }
+    
     setBuyLoading(true);
     try {
       transfer(
@@ -148,6 +173,7 @@ export default function EarlyBirdDetailPage() {
       );
     } catch (error) {
       console.error('Buy failed:', error);
+      toast.error(t.common.failed);
     } finally {
       setBuyLoading(false);
     }
@@ -272,23 +298,26 @@ export default function EarlyBirdDetailPage() {
       <div className="px-4 mt-8">
         <div className="flex items-center justify-between mb-4">
           <span className="text-white font-bold">{t.poolDetail.allOrders}</span>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">{t.poolDetail.onlyMe}</span>
-            <button
-              onClick={() => setOnlyMe(!onlyMe)}
-              className={`w-11 h-6 rounded-full transition-all duration-300 relative ${
-                onlyMe 
-                  ? 'bg-[#FFC519] shadow-[0_0_10px_rgba(255,197,25,0.4)]' 
-                  : 'bg-[#3A3A3E]'
-              }`}
-            >
-              <span
-                className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300 ${
-                  onlyMe ? 'translate-x-5' : 'translate-x-0'
+          {/* 只有连接钱包后才显示 Only Me 开关 */}
+          {address && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-400">{t.poolDetail.onlyMe}</span>
+              <button
+                onClick={handleToggleOnlyMe}
+                className={`w-11 h-6 rounded-full transition-all duration-300 relative ${
+                  onlyMe 
+                    ? 'bg-[#FFC519] shadow-[0_0_10px_rgba(255,197,25,0.4)]' 
+                    : 'bg-[#3A3A3E]'
                 }`}
-              />
-            </button>
-          </div>
+              >
+                <span
+                  className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300 ${
+                    onlyMe ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          )}
         </div>
 
         {orders.length === 0 ? (

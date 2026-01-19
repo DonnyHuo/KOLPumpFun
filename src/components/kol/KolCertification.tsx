@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { toast } from 'sonner';
 import { kolApi, type KolInfo } from '@/lib/api';
 import { Copy } from 'lucide-react';
@@ -17,7 +18,8 @@ interface KolCertificationProps {
 const DEFAULT_BINANCE_URL = 'https://accounts.binance.com/zh-CN/login?return_to=aHR0cHM6Ly93d3cuYmluYW5jZS5jb20vemgtQ04vc3F1YXJl';
 
 export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProps) {
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
   const [loading, setLoading] = useState(false);
   const [twitterUrl, setTwitterUrl] = useState('');
   const [telegramUrl, setTelegramUrl] = useState('');
@@ -94,18 +96,29 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
             <span className="text-red-400 pr-0.5">*</span>{kol.revenueAddress as string}
           </span>
           <div className="relative">
-            <input
-              disabled
-              type="text"
-              value={address ? shortAddress(address) : '--'}
-              className={inputClass}
-            />
-            {address && (
+            {isConnected ? (
+              <>
+                <input
+                  disabled
+                  type="text"
+                  value={address ? shortAddress(address) : '--'}
+                  className={inputClass}
+                />
+                {address && (
+                  <button
+                    onClick={handleCopyAddress}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                  >
+                    <Copy className="w-4 h-4 text-gray-500 hover:text-[#FFC519] transition-colors" />
+                  </button>
+                )}
+              </>
+            ) : (
               <button
-                onClick={handleCopyAddress}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
+                onClick={openConnectModal}
+                className="bg-[#FFC519] hover:bg-[#FFD54F] text-black font-medium w-full h-[44px] text-sm rounded-xl px-4 transition-colors"
               >
-                <Copy className="w-4 h-4 text-gray-500 hover:text-[#FFC519] transition-colors" />
+                {kol.connectWallet as string || '連接錢包'}
               </button>
             )}
           </div>
