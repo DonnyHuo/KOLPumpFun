@@ -15,8 +15,7 @@ import { useStore } from '@/store/useStore';
 import zhCN from '@/i18n/zh-CN';
 import enUS from '@/i18n/en-US';
 import { getTokenIcon } from '@/assets/images/tokenList';
-import { copy } from '@/assets/images';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Copy } from 'lucide-react';
 
 // Loading 组件
 function LoadingFallback() {
@@ -312,34 +311,34 @@ function LpSwapDetailContent() {
       </div>
 
       {/* Token 信息卡片 */}
-      <div className="card mb-5">
+      <div className="card mb-4">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-[#222226] p-1 ring-2 ring-[#FFC519]/30">
+          <div className="w-14 h-14 rounded-full bg-[#222226] p-1.5 ring-2 ring-[#FFC519]/30">
             <Image
               src={getTokenIcon(tokenName.toLowerCase())}
               alt={tokenName}
-              width={40}
-              height={40}
+              width={44}
+              height={44}
               className="rounded-full"
             />
           </div>
           <div>
-            <h2 className="text-base font-semibold text-white">{pairInfo.disPlayName}</h2>
-            <p className="text-sm text-[#FFC519] mt-0.5">{lpSwapT.timely as string} {pairInfo.rate}%</p>
+            <h2 className="text-lg font-bold text-white">{pairInfo.disPlayName}</h2>
+            <p className="text-sm text-[#FFC519] mt-1">{lpSwapT.timely as string} {pairInfo.rate}%</p>
           </div>
         </div>
       </div>
 
       {/* 合约地址 */}
-      <div className="card mb-5 space-y-3 text-sm">
+      <div className="card mb-4 space-y-4 text-sm">
         <div className="flex justify-between items-center">
           <span className="text-gray-400">{tokenName} {poolDetail.contractAddress as string}</span>
           <div
             className="flex items-center gap-2 cursor-pointer text-[#FFC519] hover:text-[#FFD54F] transition-colors"
             onClick={() => copyAddress(pairInfo.changeToken)}
           >
-            <span>{shortAddress(pairInfo.changeToken)}</span>
-            <Image src={copy} alt="copy" width={14} height={14} className="opacity-70" />
+            <span className="font-medium">{shortAddress(pairInfo.changeToken)}</span>
+            <Copy className="w-3.5 h-3.5" />
           </div>
         </div>
         <div className="h-px bg-white/5" />
@@ -349,7 +348,7 @@ function LpSwapDetailContent() {
             href={`https://bscscan.com/address/${pairInfo.lpToken}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[#FFC519] hover:text-[#FFD54F] transition-colors"
+            className="text-[#FFC519] hover:text-[#FFD54F] transition-colors font-medium"
           >
             {shortAddress(pairInfo.lpToken)} ↗
           </a>
@@ -358,13 +357,15 @@ function LpSwapDetailContent() {
 
       {/* 输入区域 */}
       <div className="card mb-5">
-        <div className="flex items-center justify-between text-sm mb-3">
-          <span className="text-gray-400">{poolDetail.search2 as string}</span>
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-sm text-gray-400">{poolDetail.search2 as string}</span>
           {noLp && (
-            <span className="badge-error">{poolDetail.getLp as string}</span>
+            <span className="text-xs text-[#EF4444] px-3 py-1.5 rounded-full border border-[#EF4444]/50 bg-[#EF4444]/10">
+              {poolDetail.getLp as string}
+            </span>
           )}
         </div>
-        <div className="flex items-center bg-[#0D0D0F] rounded-xl h-[56px] px-4 border border-white/10 focus-within:border-[#FFC519] transition-colors">
+        <div className="flex items-center bg-[#0D0D0F] rounded-xl h-[52px] px-4 border border-white/10 focus-within:border-[#FFC519]/50 transition-colors">
           <input
             type="text"
             value={inputValue}
@@ -373,36 +374,36 @@ function LpSwapDetailContent() {
               setInputValue(value);
             }}
             placeholder={poolDetail.placeHolder as string}
-            className="flex-1 bg-transparent border-none outline-none text-white text-base placeholder:text-gray-600"
+            className="flex-1 bg-transparent border-none outline-none text-white text-base placeholder:text-gray-500"
           />
           <button
             onClick={() => setInputValue(lpBalance)}
-            className="bg-[#FFC519]/20 text-[#FFC519] text-xs font-semibold px-4 py-2 rounded-lg hover:bg-[#FFC519]/30 transition-colors"
+            className="bg-[#FFC519]/20 text-[#FFC519] text-xs font-semibold px-4 py-1.5 rounded-lg hover:bg-[#FFC519]/30 transition-colors ml-3"
           >
             MAX
           </button>
         </div>
 
         {/* 余额和预期 */}
-        <div className="mt-4 space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-400">{poolDetail.balance as string}</span>
-            <span className="text-white">{parseFloat(lpBalance).toFixed(4)} LP</span>
+        <div className="mt-5 space-y-3 text-sm">
+          <div className="flex justify-between items-center">
+            <span className="text-[#FFC519]">{poolDetail.balance as string}</span>
+            <span className="text-white font-medium">{parseFloat(lpBalance).toFixed(4)} LP</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">{poolDetail.expected as string}</span>
+          <div className="flex justify-between items-center">
+            <span className="text-[#FFC519]">{poolDetail.expected as string}</span>
             <span className="text-[#FFC519] font-semibold">{expectedTokens} {tokenName}</span>
           </div>
         </div>
       </div>
 
       {/* 按钮 */}
-      <div className="mb-5">
+      <div className="mb-4">
         {needApprove ? (
           <button
             onClick={handleApprove}
             disabled={approveLoading}
-            className="btn-primary w-full"
+            className="btn-primary w-full h-[52px] text-base font-bold"
           >
             {approveLoading ? `${common.loading}` : poolDetail.approve as string}
           </button>
@@ -410,7 +411,7 @@ function LpSwapDetailContent() {
           <button
             onClick={handleExchange}
             disabled={exchangeLoading || !inputValue}
-            className="btn-primary w-full"
+            className="btn-primary w-full h-[52px] text-base font-bold"
           >
             {exchangeLoading ? `${common.loading}` : poolDetail.stake as string}
           </button>
@@ -422,13 +423,13 @@ function LpSwapDetailContent() {
         href="https://pancakeswap.finance/v2/add/BNB/0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82"
         target="_blank"
         rel="noopener noreferrer"
-        className="card flex items-center justify-between hover:bg-[#222226] transition-colors"
+        className="card flex items-center justify-between hover:bg-[#222226] transition-colors py-4"
       >
         <div className="flex items-center gap-3">
           <span className="text-2xl">🥞</span>
           <span className="text-sm text-gray-300">{poolDetail.goPancake as string}</span>
         </div>
-        <span className="text-[#FFC519]">→</span>
+        <span className="text-[#FFC519] text-xl">→</span>
       </a>
     </div>
   );

@@ -318,7 +318,7 @@ export default function BtcSwapPage() {
       <div className="flex items-center justify-between px-5 pt-4">
         <div className="flex items-center gap-2">
           <Image src={logo} alt="Logo" width={36} height={36} className="rounded-full" />
-          <span className="font-bold text-white">SmartBTC</span>
+          <span className="font-bold text-white">KOLPumpFun</span>
         </div>
         {btcAddress ? (
           <div 
