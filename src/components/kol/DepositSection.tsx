@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { toast } from 'sonner';
 import { useBalance, useAllowance, useApprove } from '@/hooks/useERC20';
 import { useDeposit,  } from '@/hooks/useDepositContract';
@@ -15,7 +16,8 @@ interface DepositSectionProps {
 }
 
 export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
   const [amount, setAmount] = useState('');
 
   const kol = t.kol as Record<string, unknown>;
@@ -155,7 +157,14 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
       </p>
 
       {/* 按钮 */}
-      {!hasAllowance ? (
+      {!isConnected ? (
+        <button
+          onClick={openConnectModal}
+          className="btn-primary w-full mt-5"
+        >
+          {kol.connectWallet as string || '連接錢包'}
+        </button>
+      ) : !hasAllowance ? (
         <button
           onClick={handleApprove}
           disabled={isLoading}

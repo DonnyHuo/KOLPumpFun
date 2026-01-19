@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAccount, useBalance as useWagmiBalance } from 'wagmi';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import Image from 'next/image';
 import dayjs from 'dayjs';
 import { parseUnits, formatUnits, maxUint256 } from 'viem';
@@ -69,7 +70,8 @@ interface MemeOrder {
 
 export default function PoolDetailPage() {
   const router = useRouter();
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
   const { lang, currentProject } = useStore();
   const t = lang === 'zh' ? zhCN : enUS;
 
@@ -514,7 +516,14 @@ export default function PoolDetailPage() {
         </div>
 
         {/* Action Button */}
-        {needsApproval && allowance === 0 ? (
+        {!isConnected ? (
+          <button
+            onClick={openConnectModal}
+            className="btn-primary w-full"
+          >
+            {lang === 'zh' ? '連接錢包' : 'Connect Wallet'}
+          </button>
+        ) : needsApproval && allowance === 0 ? (
           <button
             onClick={handleApprove}
             disabled={isLoading}

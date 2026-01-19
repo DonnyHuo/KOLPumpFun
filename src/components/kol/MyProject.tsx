@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { toast } from 'sonner';
 import { useBalance } from '@/hooks/useERC20';
 import {
@@ -22,7 +23,8 @@ interface MyProjectProps {
 }
 
 export default function MyProject({ kolInfo }: MyProjectProps) {
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
   const { lang } = useStore();
   const t = lang === 'zh' ? zhCN : enUS;
   const home = t.home as Record<string, unknown>;
@@ -38,21 +40,25 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
     address
   );
 
+  // tokenId 已经是 bigint 类型，直接使用
+  const tokenIdBigInt = tokenId !== undefined ? (tokenId as bigint) : undefined;
+
   // 获取可提取金额
-  const { formatted: viewCanWithdrawValue } = useCanWithdrawValue(
-    tokenId !== undefined ? BigInt(tokenId as number) : undefined
-  );
+  const { formatted: viewCanWithdrawValue, value: rawCanWithdrawValue } = useCanWithdrawValue(tokenIdBigInt);
+
+  // 打印调试信息
+  console.log('=== 待收取收益调试信息 ===');
+  console.log('项目名称:', kolInfo.project_name);
+  console.log('Token ID:', tokenId?.toString());
+  console.log('Token ID (bigint):', tokenIdBigInt?.toString());
+  console.log('待收取收益 (原始值):', rawCanWithdrawValue?.toString());
+  console.log('待收取收益 (格式化):', viewCanWithdrawValue);
+  console.log('========================');
 
   // 获取进度
-  const { percentage: crossProgressValue } = useCrossProgress(
-    tokenId !== undefined ? BigInt(tokenId as number) : undefined
-  );
-  const { percentage: lpExProgressValue } = useLpExProgress(
-    tokenId !== undefined ? BigInt(tokenId as number) : undefined
-  );
-  const { percentage: kolProgressValue } = useKolProgress(
-    tokenId !== undefined ? BigInt(tokenId as number) : undefined
-  );
+  const { percentage: crossProgressValue } = useCrossProgress(tokenIdBigInt);
+  const { percentage: lpExProgressValue } = useLpExProgress(tokenIdBigInt);
+  const { percentage: kolProgressValue } = useKolProgress(tokenIdBigInt);
 
   // 提取收益
   const { withdraw, isPending, isConfirming, isSuccess } = useWithdrawKolAirdrop();
@@ -89,8 +95,8 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
 
   // 领取收益
   const handleWithdraw = () => {
-    if (tokenId !== undefined) {
-      withdraw(BigInt(tokenId as number));
+    if (tokenIdBigInt !== undefined) {
+      withdraw(tokenIdBigInt);
     }
   };
 
@@ -112,20 +118,30 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
         <div className="flex flex-col gap-1">
           <span className="text-gray-400 text-sm">{home.revenueCollected as string}</span>
           <span className="font-bold text-[#FFC519] text-lg">
-            {parseFloat(viewCanWithdrawValue).toFixed(4)} {reserveInfo?.symbol}
+            {parseFloat(viewCanWithdrawValue).toFixed(4)}
           </span>
+          <span className="text-[#FFC519] text-[10px]">{reserveInfo?.symbol}</span>
         </div>
-        <button
-          onClick={handleWithdraw}
-          disabled={
-            isPending ||
-            isConfirming ||
-            parseFloat(viewCanWithdrawValue) === 0
-          }
-          className="btn-primary text-sm px-5 py-2"
-        >
-          {isPending || isConfirming ? '...' : home.receiveBenefits as string}
-        </button>
+        {isConnected ? (
+          <button
+            onClick={handleWithdraw}
+            disabled={
+              isPending ||
+              isConfirming ||
+              parseFloat(viewCanWithdrawValue) === 0
+            }
+            className="btn-primary text-sm px-5 py-2"
+          >
+            {isPending || isConfirming ? '...' : home.receiveBenefits as string}
+          </button>
+        ) : (
+          <button
+            onClick={openConnectModal}
+            className="btn-primary text-sm px-5 py-2"
+          >
+            {lang === 'zh' ? '連接錢包' : 'Connect Wallet'}
+          </button>
+        )}
       </div>
 
       {/* 进度信息 */}

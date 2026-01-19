@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import Image from 'next/image';
 import dayjs from 'dayjs';
 import { parseUnits } from 'viem';
@@ -40,7 +41,8 @@ function getProjectType(type: string | number, t: typeof zhCN): string {
 
 export default function EarlyBirdDetailPage() {
   const router = useRouter();
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
   const { lang, currentProject } = useStore();
   const t = lang === 'zh' ? zhCN : enUS;
 
@@ -278,20 +280,29 @@ export default function EarlyBirdDetailPage() {
         </div>
 
         {/* Buy Button */}
-        <button
-          onClick={handleBuy}
-          disabled={isDisabled}
-          className="btn-primary w-full mt-6"
-        >
-          {isTransferring || buyLoading ? (
-            <span className="flex items-center justify-center gap-2">
-              <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-              {t.common.loading}
-            </span>
-          ) : (
-            t.poolDetail.buyToken
-          )}
-        </button>
+        {!isConnected ? (
+          <button
+            onClick={openConnectModal}
+            className="btn-primary w-full mt-6"
+          >
+            {lang === 'zh' ? '連接錢包' : 'Connect Wallet'}
+          </button>
+        ) : (
+          <button
+            onClick={handleBuy}
+            disabled={isDisabled}
+            className="btn-primary w-full mt-6"
+          >
+            {isTransferring || buyLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                {t.common.loading}
+              </span>
+            ) : (
+              t.poolDetail.buyToken
+            )}
+          </button>
+        )}
       </div>
 
       {/* Orders Section */}

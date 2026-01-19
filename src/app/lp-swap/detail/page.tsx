@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, Suspense, useRef, startTransition } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAccount, usePublicClient, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { formatUnits, parseUnits, maxUint256 } from 'viem';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -40,7 +41,8 @@ interface PairInfo {
 function LpSwapDetailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
   const { lang } = useStore();
   const t = lang === 'zh' ? zhCN : enUS;
   const poolDetail = t.poolDetail as Record<string, unknown>;
@@ -426,7 +428,14 @@ function LpSwapDetailContent() {
 
       {/* 按钮 */}
       <div className="mb-4">
-        {needApprove ? (
+        {!isConnected ? (
+          <button
+            onClick={openConnectModal}
+            className="btn-primary w-full h-[52px] text-base font-bold"
+          >
+            {lang === 'zh' ? '連接錢包' : 'Connect Wallet'}
+          </button>
+        ) : needApprove ? (
           <button
             onClick={handleApprove}
             disabled={approveLoading}
