@@ -8,6 +8,7 @@ import { useBalance, useAllowance, useApprove } from "@/hooks/useERC20";
 import { useDeposit } from "@/hooks/useDepositContract";
 import { CONTRACTS } from "@/constants/contracts";
 import type { KolInfo } from "@/lib/api";
+import ConfirmButton from "../ui/ConfirmButton";
 
 interface DepositSectionProps {
   kolInfo: KolInfo | null;
@@ -190,25 +191,23 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
           {(kol.connectWallet as string) || "連接錢包"}
         </button>
       ) : !hasAllowance ? (
-        <button
+        <ConfirmButton
           onClick={handleApprove}
           disabled={isLoading}
           className="btn-primary w-full mt-5"
+          loading={isApproving || isApproveConfirming}
         >
-          {isApproving || isApproveConfirming
-            ? (common.loading as string)
-            : (kol.goApprove as string)}
-        </button>
+          {(kol.goApprove as string)}
+        </ConfirmButton>
       ) : (
-        <button
+        <ConfirmButton
           onClick={handleDeposit}
           disabled={isLoading || !amount}
           className="btn-primary w-full mt-5"
+          loading={isDepositing || isDepositConfirming}
         >
-          {isDepositing || isDepositConfirming
-            ? (common.loading as string)
-            : (kol.deposit as string)}
-        </button>
+          {(kol.deposit as string)}
+        </ConfirmButton>
       )}
     </div>
   );

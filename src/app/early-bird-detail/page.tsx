@@ -17,6 +17,7 @@ import { Progress } from "@/components/ui/Progress";
 import zhCN from "@/i18n/zh-CN";
 import enUS from "@/i18n/en-US";
 import { goBack1 } from "@/assets/images";
+import ConfirmButton from "@/components/ui/ConfirmButton";
 
 // 短地址
 function shortStr(str?: string, start = 6, end = 4): string {
@@ -344,20 +345,14 @@ export default function EarlyBirdDetailPage() {
               {lang === "zh" ? "連接錢包" : "Connect Wallet"}
             </button>
           ) : (
-            <button
+            <ConfirmButton
               onClick={handleBuy}
               disabled={isDisabled}
               className="btn-primary w-full mt-6"
+              loading={isTransferring || buyLoading}
             >
-              {isTransferring || buyLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                  {t.common.loading}
-                </span>
-              ) : (
-                t.poolDetail.buyToken
-              )}
-            </button>
+              {t.poolDetail.buyToken}
+            </ConfirmButton>
           )}
         </div>
       )}

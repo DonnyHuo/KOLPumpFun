@@ -23,6 +23,7 @@ import enUS from "@/i18n/en-US";
 import { goBack1 } from "@/assets/images";
 import tokenShopAbi from "@/constants/abi/tokenShop.json";
 import { kolApi } from "@/lib/api";
+import ConfirmButton from "@/components/ui/ConfirmButton";
 
 // 短地址
 function shortStr(str?: string, start = 6, end = 4): string {
@@ -591,50 +592,32 @@ export default function PoolDetailPage() {
             {lang === "zh" ? "連接錢包" : "Connect Wallet"}
           </button>
         ) : needsApproval && allowance === 0 ? (
-          <button
+          <ConfirmButton
             onClick={handleApprove}
             disabled={isLoading}
             className="btn-primary w-full"
+            loading={isApproving}
           >
-            {isApproving ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                {t.common.loading}
-              </span>
-            ) : (
-              t.poolDetail.approve
-            )}
-          </button>
+            {t.poolDetail.approve}
+          </ConfirmButton>
         ) : activeTab === "buy" ? (
-          <button
+          <ConfirmButton
             onClick={handleBuy}
             disabled={isDisabled || isLoading}
             className="btn-primary w-full"
+            loading={isSwapping || isSwapConfirming}
           >
-            {isSwapping || isSwapConfirming ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                {t.common.loading}
-              </span>
-            ) : (
-              t.poolDetail.buyToken
-            )}
-          </button>
+            {t.poolDetail.buyToken}
+          </ConfirmButton>
         ) : (
-          <button
+          <ConfirmButton
             onClick={handleWithdraw}
             disabled={isDisabled || isLoading}
             className="btn-primary w-full"
+            loading={isWithdrawing || isWithdrawConfirming}
           >
-            {isWithdrawing || isWithdrawConfirming ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                {t.common.loading}
-              </span>
-            ) : (
-              t.poolDetail.earlyRedeem
-            )}
-          </button>
+            {t.poolDetail.earlyRedeem}
+          </ConfirmButton>
         )}
       </div>
 
