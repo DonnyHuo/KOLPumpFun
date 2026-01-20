@@ -110,10 +110,13 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
     <div className="space-y-4">
       {/* 项目名称和余额 */}
       <div className="flex items-center justify-between py-3 bg-background-card rounded-xl">
-        <span className="text-text-secondary">{reserveInfo?.name}</span>
-        <span className="font-medium text-secondary">
-          {parseFloat(reserveBalance).toFixed(2)} {reserveInfo?.symbol}
-        </span>
+        <span className="text-text-secondary text-sm">{reserveInfo?.name}</span>
+        <div className="flex items-center gap-1">
+          <span className="font-bold text-secondary">
+            {parseFloat(reserveBalance).toFixed(2)}
+          </span>
+          <span className="text-primary font-bold">{reserveInfo?.symbol}</span>
+        </div>
       </div>
 
       {/* 待领取收益 */}
