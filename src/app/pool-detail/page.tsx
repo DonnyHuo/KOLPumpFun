@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useAccount, useBalance as useWagmiBalance } from "wagmi";
+import { useConnection, useBalance as useWagmiBalance } from "wagmi";
 import {
   useReadContract,
   useWriteContract,
@@ -74,7 +74,7 @@ interface MemeOrder {
 
 export default function PoolDetailPage() {
   const router = useRouter();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useConnection();
   const { openConnectModal } = useConnectModal();
   const { lang, currentProject } = useStore();
   const t = lang === "zh" ? zhCN : enUS;
@@ -248,25 +248,28 @@ export default function PoolDetailPage() {
   }, [approveSuccess, refetchAllowance]);
 
   // 交易成功后记录订单
-  const recordTrade = async (params: {
-    pool_id: number;
-    address: string;
-    a_amount: string;
-    b_amount: string;
-    spend_txid: string;
-    order_type: number;
-  }) => {
-    try {
-      await fetch(`${BASE_URL}/kol/meme_trade`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(params),
-      });
-      fetchOrders();
-    } catch (error) {
-      console.error("Failed to record trade:", error);
-    }
-  };
+  const recordTrade = useCallback(
+    async (params: {
+      pool_id: number;
+      address: string;
+      a_amount: string;
+      b_amount: string;
+      spend_txid: string;
+      order_type: number;
+    }) => {
+      try {
+        await fetch(`${BASE_URL}/kol/meme_trade`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(params),
+        });
+        fetchOrders();
+      } catch (error) {
+        console.error("Failed to record trade:", error);
+      }
+    },
+    [fetchOrders]
+  );
 
   // 刷新余额
   const refreshBalances = useCallback(() => {
@@ -297,7 +300,17 @@ export default function PoolDetailPage() {
       // 刷新余额
       refreshBalances();
     }
-  }, [isSwapSuccess, swapHash]);
+  }, [
+    address,
+    amount,
+    isSwapSuccess,
+    poolInfo.exchangeRate,
+    poolInfo.id,
+    recordTrade,
+    refreshBalances,
+    swapHash,
+    t.poolDetail.buySuccess,
+  ]);
 
   // Withdraw 成功后
   useEffect(() => {
@@ -315,7 +328,18 @@ export default function PoolDetailPage() {
       // 刷新余额
       refreshBalances();
     }
-  }, [isWithdrawSuccess, withdrawHash]);
+  }, [
+    address,
+    amount,
+    isWithdrawSuccess,
+    poolInfo.id,
+    rate,
+    recordTrade,
+    refreshBalances,
+    stakeBalance,
+    t.poolDetail.redeemSuccess,
+    withdrawHash,
+  ]);
 
   // 快捷金额按钮
   const changeAmount = (percentage: number) => {
@@ -384,7 +408,7 @@ export default function PoolDetailPage() {
     ) {
       refetchAllowance();
     }
-  }, [activeTab]);
+  }, [activeTab, poolInfo.token, refetchAllowance]);
 
   const tokenBalance = getTokenBalance();
   const numAmount = parseFloat(amount) || 0;

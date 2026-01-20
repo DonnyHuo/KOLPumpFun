@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useAccount, usePublicClient } from "wagmi";
+import { useConnection, usePublicClient } from "wagmi";
 import { formatUnits } from "viem";
 import { useReadContract } from "wagmi";
 import Image from "next/image";
@@ -65,7 +65,7 @@ const LP_CONFIG: Record<string, number[]> = {
 };
 
 export default function LpSwapPage() {
-  const { address } = useAccount();
+  const { address } = useConnection();
   const { lang, theme } = useStore();
   const t = lang === "zh" ? zhCN : enUS;
   const lpSwap = t.lpSwap as Record<string, unknown>;
@@ -402,7 +402,7 @@ export default function LpSwapPage() {
 
       {/* 饼图 */}
       <div className="card mb-6">
-        <div className="h-[280px] [&_.recharts-sector]:outline-none [&_.recharts-pie]:outline-none">
+        <div className="h-70 [&_.recharts-sector]:outline-none [&_.recharts-pie]:outline-none">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -533,7 +533,7 @@ export default function LpSwapPage() {
       {/* 代币选择弹窗 */}
       {showTokenSelect && (
         <div
-          className={`fixed inset-0 bg-black/60 flex items-end justify-center z-[100] ${
+          className={`fixed inset-0 bg-black/60 flex items-end justify-center z-100 ${
             theme === "dark" ? "backdrop-blur-sm" : ""
           }`}
           onClick={() => setShowTokenSelect(false)}

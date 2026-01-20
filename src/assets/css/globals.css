@@ -103,19 +103,22 @@ body {
   opacity: 0.8;
 }
 
-/* 白色模式下隐藏滚动条 */
-:root.light ::-webkit-scrollbar {
+/* 隐藏滚动条 */
+:root.light ::-webkit-scrollbar,
+:root:not(.light) ::-webkit-scrollbar {
   width: 0;
   height: 0;
   display: none;
 }
 
-:root.light * {
+:root.light *,
+:root:not(.light) * {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
 }
 
-:root.light *::-webkit-scrollbar {
+:root.light *::-webkit-scrollbar,
+:root:not(.light) *::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
 }
 

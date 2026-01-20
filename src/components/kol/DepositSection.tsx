@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount } from "wagmi";
+import { useConnection } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { toast } from "sonner";
 import { useBalance, useAllowance, useApprove } from "@/hooks/useERC20";
@@ -16,7 +16,7 @@ interface DepositSectionProps {
 }
 
 export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useConnection();
   const { openConnectModal } = useConnectModal();
   const [amount, setAmount] = useState("");
 
@@ -148,13 +148,13 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
       </div>
 
       {/* 输入框 */}
-      <div className="w-full flex items-center bg-background-card border border-border px-4 h-[50px] rounded-xl focus-within:border-primary transition-colors">
+      <div className="w-full flex items-center bg-background-card border border-border px-4 h-12.5 rounded-xl focus-within:border-primary transition-colors">
         <input
           type="text"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder={placeholderText}
-          className="flex-1 outline-none bg-transparent text-secondary text-sm placeholder:text-text-muted placeholder:text-gray-500"
+          className="flex-1 outline-none bg-transparent text-secondary text-sm placeholder:text-text-muted"
         />
         <button
           onClick={handleMax}

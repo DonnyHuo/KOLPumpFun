@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount } from "wagmi";
+import { useConnection } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { toast } from "sonner";
 import { kolApi, type KolInfo } from "@/lib/api";
@@ -22,7 +22,7 @@ export function KolCertification({
   onSuccess,
   t,
 }: KolCertificationProps) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useConnection();
   const { openConnectModal } = useConnectModal();
   const [loading, setLoading] = useState(false);
   const [twitterUrl, setTwitterUrl] = useState("");
@@ -119,7 +119,7 @@ export function KolCertification({
             ) : (
               <button
                 onClick={openConnectModal}
-                className="bg-[#FFC519] hover:bg-[#FFD54F] text-black font-medium w-full h-[44px] text-sm rounded-xl px-4 transition-colors"
+                className="bg-[#FFC519] hover:bg-[#FFD54F] text-black font-medium w-full h-11 text-sm rounded-xl px-4 transition-colors"
               >
                 {(kol.connectWallet as string) || "連接錢包"}
               </button>

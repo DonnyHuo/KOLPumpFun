@@ -1,4 +1,4 @@
-export default {
+const lan = {
   common: {
     connectWallet: "連接錢包",
     copySuccess: "複製成功",
@@ -450,3 +450,5 @@ export default {
     pool: "啟動池",
   },
 };
+
+export default lan;

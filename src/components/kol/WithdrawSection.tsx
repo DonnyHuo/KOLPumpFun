@@ -61,7 +61,7 @@ export function WithdrawSection({
         <div className="text-sm text-text-secondary">
           {(home.dispositNumber as string) || "質押數量"}
         </div>
-        <div className="bg-background-card border border-border h-[50px] flex items-center justify-between px-4 rounded-xl">
+        <div className="bg-background-card border border-border h-12.5 flex items-center justify-between px-4 rounded-xl">
           <span className="text-xl font-bold text-secondary">
             {activeAmount.toFixed(2)}
           </span>

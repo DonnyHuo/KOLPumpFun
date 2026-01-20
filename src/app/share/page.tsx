@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { kolApi, type ProjectInfo } from "@/lib/api";
@@ -119,7 +118,7 @@ export default function SharePage() {
           className="flex items-center gap-2 bg-background-card border border-border px-4 py-2.5 rounded-xl hover:bg-card-hover transition-colors"
         >
           <span className="text-secondary text-sm">{newData.marketCap}</span>
-          <div className="flex flex-col gap-[2px]">
+          <div className="flex flex-col gap-0.5">
             <div
               className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent"
               style={{
@@ -141,13 +140,13 @@ export default function SharePage() {
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           placeholder={newData.search}
-          className="input flex-1 max-w-[200px] text-sm"
+          className="input flex-1 max-w-50 text-sm"
         />
       </div>
 
       {/* 加载中 */}
       {loading && (
-        <div className="h-[400px] flex items-center justify-center">
+        <div className="h-100 flex items-center justify-center">
           <div className="w-10 h-10 border-2 border-border border-t-primary rounded-full animate-spin" />
         </div>
       )}

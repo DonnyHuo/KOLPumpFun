@@ -38,7 +38,7 @@ export default function RootLayout({
           <Providers>
             <div
               id="app"
-              className="max-w-[500px] mx-auto h-screen relative text-center text-secondary"
+              className="max-w-125 mx-auto h-screen relative text-center text-secondary"
             >
               <main className="h-[calc(100vh-50px-max(env(safe-area-inset-bottom),10px))] overflow-y-auto">
                 {children}

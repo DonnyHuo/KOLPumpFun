@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAccount } from "wagmi";
+import { useConnection } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { toast } from "sonner";
 import { useBalance } from "@/hooks/useERC20";
@@ -23,7 +23,7 @@ interface MyProjectProps {
 }
 
 export default function MyProject({ kolInfo }: MyProjectProps) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useConnection();
   const { openConnectModal } = useConnectModal();
   const { lang } = useStore();
   const t = lang === "zh" ? zhCN : enUS;

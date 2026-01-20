@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount } from "wagmi";
+import { useConnection } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import {
   useReadContract,
@@ -33,7 +33,7 @@ interface PairInfo {
 }
 
 export default function ManagePage() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useConnection();
   const { openConnectModal } = useConnectModal();
   const { lang } = useStore();
   const t = lang === "zh" ? zhCN : enUS;
@@ -228,7 +228,7 @@ export default function ManagePage() {
         fetchPairs();
       }
     }
-  }, [isSuccess, pairsCount, publicClient]);
+  }, [isSuccess, pairsCount, publicClient, t.common.withdrawSuccess]);
 
   // 提取失败处理
   useEffect(() => {
@@ -320,7 +320,7 @@ export default function ManagePage() {
                 disabled={
                   withdrawingId === item.id || isPending || isConfirming
                 }
-                className="btn-primary h-[30px] px-4 text-xs"
+                className="btn-primary h-7.5 px-4 text-xs"
               >
                 {withdrawingId === item.id && (isPending || isConfirming)
                   ? "..."

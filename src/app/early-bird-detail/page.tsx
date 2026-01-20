@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useAccount } from "wagmi";
+import { useConnection } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import Image from "next/image";
 import dayjs from "dayjs";
@@ -41,7 +41,7 @@ function getProjectType(type: string | number, t: typeof zhCN): string {
 
 export default function EarlyBirdDetailPage() {
   const router = useRouter();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useConnection();
   const { openConnectModal } = useConnectModal();
   const { lang, currentProject } = useStore();
   const t = lang === "zh" ? zhCN : enUS;
@@ -125,7 +125,7 @@ export default function EarlyBirdDetailPage() {
   // 初始加载订单
   useEffect(() => {
     fetchOrders();
-  }, [currentProject?.contract_addr, address]);
+  }, [currentProject?.contract_addr, address, fetchOrders]);
 
   // 切换 onlyMe 时重新获取订单
   const handleToggleOnlyMe = () => {
@@ -158,7 +158,18 @@ export default function EarlyBirdDetailPage() {
           toast.error(t.common.failed);
         });
     }
-  }, [isSuccess, hash]);
+  }, [
+    isSuccess,
+    hash,
+    poolInfo.id,
+    poolInfo.contract,
+    address,
+    amount,
+    t.common.success,
+    t.common.failed,
+    fetchOrders,
+    refetchBalance,
+  ]);
 
   // 快捷金额按钮
   const changeAmount = (value: number) => {

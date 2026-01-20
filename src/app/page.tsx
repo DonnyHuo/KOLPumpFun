@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { Globe, Sun, Moon } from "lucide-react";
-import { useAccount, useDisconnect } from "wagmi";
+import { useConnection, useDisconnect } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import Image from "next/image";
 import { useStore } from "@/store/useStore";
@@ -71,7 +71,7 @@ function Skeleton() {
 }
 
 export default function CreatePage() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useConnection();
   const { disconnect } = useDisconnect();
   const { openConnectModal } = useConnectModal();
   const {
@@ -220,9 +220,9 @@ export default function CreatePage() {
             }
           >
             {theme === "dark" ? (
-              <Sun className="w-[18px] h-[18px] text-secondary" />
+              <Sun className="w-4.5 h-4.5 text-secondary" />
             ) : (
-              <Moon className="w-[18px] h-[18px] text-secondary" />
+              <Moon className="w-4.5 h-4.5 text-secondary" />
             )}
           </button>
           {/* 语言切换按钮 */}
@@ -270,7 +270,7 @@ export default function CreatePage() {
 
       {/* Banner Card */}
       <div className="card mt-8 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#FFC519]/10 via-transparent to-[#FB8018]/5" />
+        <div className="absolute inset-0 bg-linear-to-br from-[#FFC519]/10 via-transparent to-[#FB8018]/5" />
         <div className="relative z-10 py-6">
           <div className="text-lg font-bold text-secondary text-center">
             {t.create.bannerTitle}

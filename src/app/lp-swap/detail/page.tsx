@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
-  useAccount,
+  useConnection,
   usePublicClient,
   useWriteContract,
   useWaitForTransactionReceipt,
@@ -53,7 +53,7 @@ interface PairInfo {
 function LpSwapDetailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useConnection();
   const { openConnectModal } = useConnectModal();
   const { lang } = useStore();
   const t = lang === "zh" ? zhCN : enUS;
@@ -451,7 +451,7 @@ function LpSwapDetailContent() {
             </span>
           )}
         </div>
-        <div className="flex items-center justify-between bg-background-secondary rounded-xl h-[52px] px-4 border border-border focus-within:border-primary/50 transition-colors">
+        <div className="flex items-center justify-between bg-background-secondary rounded-xl h-13 px-4 border border-border focus-within:border-primary/50 transition-colors">
           <input
             type="text"
             value={inputValue}
@@ -495,7 +495,7 @@ function LpSwapDetailContent() {
         {!isConnected ? (
           <button
             onClick={openConnectModal}
-            className="btn-primary w-full h-[52px] text-base font-bold"
+            className="btn-primary w-full h-13 text-base font-bold"
           >
             {lang === "zh" ? "連接錢包" : "Connect Wallet"}
           </button>
@@ -503,7 +503,7 @@ function LpSwapDetailContent() {
           <button
             onClick={handleApprove}
             disabled={approveLoading}
-            className="btn-primary w-full h-[52px] text-base font-bold"
+            className="btn-primary w-full h-13 text-base font-bold"
           >
             {approveLoading
               ? `${common.loading}`
@@ -513,7 +513,7 @@ function LpSwapDetailContent() {
           <button
             onClick={handleExchange}
             disabled={exchangeLoading || !inputValue}
-            className="btn-primary w-full h-[52px] text-base font-bold"
+            className="btn-primary w-full h-13 text-base font-bold"
           >
             {exchangeLoading
               ? `${common.loading}`

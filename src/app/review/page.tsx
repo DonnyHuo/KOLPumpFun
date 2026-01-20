@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useAccount } from "wagmi";
+import { useConnection } from "wagmi";
 import { toast } from "sonner";
 import { ExternalLink, X } from "lucide-react";
-import { Header } from "@/components/layout/Header";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   adminApi,
@@ -51,7 +50,7 @@ interface MigrateToken {
 
 export default function ReviewPage() {
   const router = useRouter();
-  const { address } = useAccount();
+  const { address } = useConnection();
   const { lang, setCurrentProject } = useStore();
   const t = lang === "zh" ? zhCN : enUS;
   const review = t.review as Record<string, unknown>;
@@ -110,8 +109,9 @@ export default function ReviewPage() {
     data: transferHash,
     isPending: transferPending,
   } = useWriteContract();
-  const { isLoading: isTransferConfirming, isSuccess: transferSuccess } =
-    useWaitForTransactionReceipt({ hash: transferHash });
+  const { isSuccess: transferSuccess } = useWaitForTransactionReceipt({
+    hash: transferHash,
+  });
 
   // 检查是否管理员
   const isAdmin = address
@@ -203,12 +203,57 @@ export default function ReviewPage() {
     }
   }, [activeTab, isAdmin]);
 
+  // 调用迁移 API
+  const handleMigrateApi = useCallback(async () => {
+    if (!address) return;
+
+    try {
+      const percents = migrateToken.percents.map((p) =>
+        Math.round(parseFloat(p) * 100)
+      );
+      await adminApi.migrateToken({
+        admin_address: address,
+        project_name: migrateToken.project_name,
+        contract_addr: migrateToken.contract_addr,
+        token_name: migrateToken.token_name,
+        token_symbol: migrateToken.token_symbol,
+        total_supply: migrateToken.total_supply,
+        percents,
+      });
+
+      // 与 Vue 项目一致：只要 API 调用成功就显示成功
+      toast.success(t.common.migrateSuccess as string);
+      setMigrateToken({
+        project_name: "",
+        contract_addr: "",
+        token_name: "",
+        token_symbol: "",
+        total_supply: "",
+        percents: ["", "", "", ""],
+      });
+    } catch {
+      toast.error(t.common.migrateFailed as string);
+    } finally {
+      setMigrateLoading(false);
+    }
+  }, [
+    address,
+    migrateToken.contract_addr,
+    migrateToken.percents,
+    migrateToken.project_name,
+    migrateToken.token_name,
+    migrateToken.token_symbol,
+    migrateToken.total_supply,
+    t.common.migrateFailed,
+    t.common.migrateSuccess,
+  ]);
+
   // 监听迁移转账成功
   useEffect(() => {
     if (transferSuccess && migrateLoading) {
       handleMigrateApi();
     }
-  }, [transferSuccess]);
+  }, [handleMigrateApi, migrateLoading, transferSuccess]);
 
   // 审核 KOL
   const handleKolAgree = async (item: KolWaitInfo, agree: boolean) => {
@@ -226,7 +271,7 @@ export default function ReviewPage() {
         );
         fetchKolList();
       }
-    } catch (error) {
+    } catch {
       toast.error(t.common.operationFailed as string);
     } finally {
       setLoading(false);
@@ -253,7 +298,7 @@ export default function ReviewPage() {
         );
         fetchProjectList();
       }
-    } catch (error) {
+    } catch {
       toast.error(t.common.operationFailed as string);
     } finally {
       setLoading(false);
@@ -292,7 +337,7 @@ export default function ReviewPage() {
         );
         fetchClaimList();
       }
-    } catch (error) {
+    } catch {
       toast.error(t.common.operationFailed as string);
     } finally {
       setLoading(false);
@@ -336,7 +381,7 @@ export default function ReviewPage() {
         setShowClaimModal(false);
         fetchClaimList();
       }
-    } catch (error) {
+    } catch {
       toast.error(t.common.operationFailed as string);
     } finally {
       setLoading(false);
@@ -410,41 +455,6 @@ export default function ReviewPage() {
     }
   };
 
-  // 调用迁移 API
-  const handleMigrateApi = async () => {
-    if (!address) return;
-
-    try {
-      const percents = migrateToken.percents.map((p) =>
-        Math.round(parseFloat(p) * 100)
-      );
-      await adminApi.migrateToken({
-        admin_address: address,
-        project_name: migrateToken.project_name,
-        contract_addr: migrateToken.contract_addr,
-        token_name: migrateToken.token_name,
-        token_symbol: migrateToken.token_symbol,
-        total_supply: migrateToken.total_supply,
-        percents,
-      });
-
-      // 与 Vue 项目一致：只要 API 调用成功就显示成功
-      toast.success(t.common.migrateSuccess as string);
-      setMigrateToken({
-        project_name: "",
-        contract_addr: "",
-        token_name: "",
-        token_symbol: "",
-        total_supply: "",
-        percents: ["", "", "", ""],
-      });
-    } catch (error) {
-      toast.error(t.common.migrateFailed as string);
-    } finally {
-      setMigrateLoading(false);
-    }
-  };
-
   // 更新分配比例
   const updatePercent = (index: number, value: string) => {
     const newPercents = [...migrateToken.percents];
@@ -461,7 +471,7 @@ export default function ReviewPage() {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary hover:text-primary-hover flex items-center gap-1 truncate max-w-[150px] transition-colors"
+          className="text-primary hover:text-primary-hover flex items-center gap-1 truncate max-w-37.5 transition-colors"
           title={url}
         >
           {url.length > 30 ? `${url.slice(0, 30)}...` : url}
@@ -469,7 +479,7 @@ export default function ReviewPage() {
         </a>
       );
     }
-    return <span className="truncate max-w-[150px] text-secondary">{url}</span>;
+    return <span className="truncate max-w-37.5 text-secondary">{url}</span>;
   };
 
   if (!isAdmin) {
@@ -494,7 +504,7 @@ export default function ReviewPage() {
             onClick={() => setActiveTab(tab)}
             className={`flex-1 py-2.5 text-sm rounded-lg transition-all ${
               activeTab === tab
-                ? "bg-gradient-to-r from-primary-start to-primary-end text-black font-semibold shadow-md"
+                ? "bg-linear-to-r from-primary-start to-primary-end text-black font-semibold shadow-md"
                 : "text-text-secondary hover:bg-card-hover"
             }`}
           >

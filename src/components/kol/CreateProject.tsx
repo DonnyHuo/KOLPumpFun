@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useAccount } from "wagmi";
+import { useConnection } from "wagmi";
 import { toast } from "sonner";
 import { ChevronDown, Upload, X, Copy, Check, Send } from "lucide-react";
 import { Tip } from "@/components/ui/Tip";
@@ -47,7 +47,7 @@ function PercentBox({
   tooltip?: string;
 }) {
   return (
-    <div className="flex items-center justify-between bg-background-card border border-border h-[48px] px-4 rounded-xl">
+    <div className="flex items-center justify-between bg-background-card border border-border h-12 px-4 rounded-xl">
       <div className="flex items-center gap-1">
         <span className="text-xs text-text-secondary">{label}</span>
         {tooltip && <Tip content={tooltip} />}
@@ -59,7 +59,7 @@ function PercentBox({
             value={value}
             onChange={(e) => onChange?.(e.target.value)}
             placeholder="> 0"
-            className="w-[50px] h-[30px] text-xs text-right bg-background-card border border-border rounded-lg px-2 text-foreground focus:outline-none focus:border-primary"
+            className="w-12.5 h-7.5 text-xs text-right bg-background-card border border-border rounded-lg px-2 text-foreground focus:outline-none focus:border-primary"
           />
           <span className="ml-2 text-text-secondary">%</span>
         </div>
@@ -77,7 +77,7 @@ export function CreateProject({
   kolInfo,
 }: CreateProjectProps) {
   const router = useRouter();
-  const { address } = useAccount();
+  const { address } = useConnection();
   const { accountInfoStatus, setCurrentProject, theme } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -99,7 +99,7 @@ export function CreateProject({
   const [showTokenList, setShowTokenList] = useState(false);
   const [tokenList, setTokenList] = useState<SelectToken[]>([]);
   const [selectedToken, setSelectedToken] = useState<SelectToken | null>(null);
-  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState("");
 
   // 认领项目相关状态
@@ -153,13 +153,7 @@ export function CreateProject({
   const shareProject = (t.shareProject as Record<string, unknown>) || {};
 
   // 认领规则文案
-  const contentDesc = (kol?.contentDesc as string[]) || [
-    "1.原則上，KOL應保持常態透過Twitter、Telegram等社交網絡，或組織線下活動等方式，積極參與某銘文項目的推廣佈道，才能認領成為該項目的社區KOL（項目方）；",
-    "2.提交認領時，SmartBTC.io會多維度測算KOL的質押SOS數量、社交帳戶活躍度、認證推文閱讀點讚轉發數、社交帳戶歷史動態與項目的關聯度、認領地址項目代幣持倉數量等綜合因素，透過演算法自動計算出當前KOL對應的社群空投獎勵分配權重；",
-    "3.一個KOL（對應認證的錢包位址）只能唯一認領一個項目，且認領完成不可更改；",
-    "4.可以隨時撤銷認領，解除收回質押的SOS，一經解除KOL權益即時終止且不可申請複效；",
-    "5.認領完成後，KOL應保持對該計畫的推廣佈道，積極參與社區建設，SmartBTC.io平台演算法不定期根據KOL多維度動態數據調整其空投獎勵分配權益，並對長時間不參與社區建設的KOL暫停或終止分配權益。",
-  ];
+  const contentDesc = kol?.contentDesc as string[];
 
   // 默认代币列表
   const defaultTokens = [
@@ -183,7 +177,6 @@ export function CreateProject({
   useEffect(() => {
     setTokenList(defaultTokens);
     setSelectedToken(defaultTokens[0]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 获取项目列表
@@ -548,14 +541,17 @@ export function CreateProject({
           <div className="flex justify-center mb-6">
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="w-[200px] h-[150px] border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors bg-background-card"
+              className="w-50 h-37.5 border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors bg-background-card"
             >
               {logoPreview ? (
                 <div className="relative w-full h-full">
-                  <img
+                  <Image
                     src={logoPreview}
                     alt="Logo"
+                    fill
+                    sizes="200px"
                     className="w-full h-full object-contain rounded-xl p-2"
+                    unoptimized={!!logoPreview}
                   />
                   <button
                     onClick={(e) => {
@@ -590,7 +586,7 @@ export function CreateProject({
           </div>
 
           {/* 模式选择 */}
-          <div className="h-[44px] bg-background-card border border-border flex items-center rounded-xl p-1 text-xs mb-6">
+          <div className="h-11 bg-background-card border border-border flex items-center rounded-xl p-1 text-xs mb-6">
             {(["joint", "single", "marketMaking"] as KolMode[]).map((mode) => (
               <button
                 key={mode}
@@ -598,7 +594,7 @@ export function CreateProject({
                 disabled={!canSelectMode(mode)}
                 className={`flex-1 h-full flex items-center justify-center cursor-pointer rounded-lg transition-all ${
                   activeMode === mode
-                    ? "bg-gradient-to-r from-primary to-primary-hover text-black font-semibold"
+                    ? "bg-linear-to-r from-primary to-primary-hover text-black font-semibold"
                     : canSelectMode(mode)
                     ? "text-text-secondary hover:text-foreground"
                     : "text-text-muted cursor-not-allowed opacity-40"
@@ -966,7 +962,7 @@ export function CreateProject({
                   <Image
                     src={getTokenIcon("100t").src}
                     alt="project"
-                    className="w-[28px] h-[28px] rounded-full"
+                    className="w-7 h-7 rounded-full"
                     width={28}
                     height={28}
                   />
@@ -991,10 +987,10 @@ export function CreateProject({
                   <span className="text-foreground text-sm">
                     {newData.marketCap || "市值"}
                   </span>
-                  <div className="flex flex-col gap-[2px]">
+                  <div className="flex flex-col gap-0.5">
                     <div
                       className={cn(
-                        "w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[4px]",
+                        "w-0 h-0 border-l border-l-transparent border-r border-r-transparent border-b",
                         sortOrder === "asc"
                           ? "border-b-primary"
                           : "border-b-text-muted"
@@ -1002,7 +998,7 @@ export function CreateProject({
                     />
                     <div
                       className={cn(
-                        "w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px]",
+                        "w-0 h-0 border-l border-l-transparent border-r border-r-transparent border-t",
                         sortOrder === "desc"
                           ? "border-t-primary"
                           : "border-t-text-muted"
@@ -1015,13 +1011,13 @@ export function CreateProject({
                   value={searchValue}
                   onChange={(e) => setSearchValue(e.target.value)}
                   placeholder={newData.search || "搜索"}
-                  className="input flex-1 max-w-[180px] text-sm"
+                  className="input flex-1 max-w-45 text-sm"
                 />
               </div>
 
               {/* 项目列表 */}
               {filteredList.length > 0 ? (
-                <div className="max-h-[500px] overflow-y-auto space-y-3">
+                <div className="max-h-125 overflow-y-auto space-y-3">
                   {filteredList.map((project, index) => {
                     const marketCap =
                       project.total_supply && project.lastPrice
@@ -1219,7 +1215,7 @@ export function CreateProject({
           {/* 认领规则弹窗 */}
           {showClaimModal && selectedProject && (
             <div
-              className={`fixed inset-0 z-[100] flex items-end justify-center bg-black/60 ${
+              className={`fixed inset-0 z-100 flex items-end justify-center bg-black/60 ${
                 theme === "dark" ? "backdrop-blur-sm" : ""
               }`}
               onClick={() => setShowClaimModal(false)}
@@ -1255,9 +1251,9 @@ export function CreateProject({
                         {getTweetText()}
                       </span>
                       {copied ? (
-                        <Check className="w-4 h-4 text-success flex-shrink-0" />
+                        <Check className="w-4 h-4 text-success shrink-0" />
                       ) : (
-                        <Copy className="w-4 h-4 text-text-muted flex-shrink-0 hover:text-primary" />
+                        <Copy className="w-4 h-4 text-text-muted shrink-0 hover:text-primary" />
                       )}
                     </div>
                     <p className="text-text-muted mt-3 text-xs">

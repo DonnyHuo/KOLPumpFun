@@ -188,7 +188,7 @@ export default function BtcSwapPage() {
   );
 
   // 连接 OKX 钱包
-  const connectWallet = async () => {
+  const connectWallet = useCallback(async () => {
     if (typeof window.okxwallet === "undefined") {
       toast.error(btcSwap.installWallet as string);
       window.open("https://www.okx.com/web3", "_blank");
@@ -207,7 +207,12 @@ export default function BtcSwapPage() {
       console.error("Connect wallet failed:", error);
       toast.error(t.common.walletConnectFailed as string);
     }
-  };
+  }, [
+    btcSwap.installWallet,
+    t.common.pleaseConnect,
+    t.common.walletConnectFailed,
+    t.common.walletConnectSuccess,
+  ]);
 
   // 获取代币列表
   useEffect(() => {
@@ -247,7 +252,7 @@ export default function BtcSwapPage() {
     if (typeof window.okxwallet !== "undefined") {
       connectWallet();
     }
-  }, []);
+  }, [connectWallet]);
 
   // 选择链
   const handleSelectChain = (name: string) => {
@@ -498,7 +503,7 @@ export default function BtcSwapPage() {
           disabled={
             !(selectedCoin.amount > 0 && isAddress(toAddress)) || postLoading
           }
-          className="btn-primary w-full mt-6 h-[52px] rounded-2xl"
+          className="btn-primary w-full mt-6 h-13 rounded-2xl"
         >
           {postLoading ? "..." : (btcSwap.submit as string)}
         </button>
