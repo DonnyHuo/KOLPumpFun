@@ -61,38 +61,13 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
   const tokenIdBigInt = tokenId !== undefined ? (tokenId as bigint) : undefined;
 
   // 获取可提取金额（传入当前钱包地址）
-  const {
-    formatted: viewCanWithdrawValue,
-    value: rawCanWithdrawValue,
-    refetch: refetchCanWithdrawValue,
-  } = useCanWithdrawValue(tokenIdBigInt, address);
-
-  // 打印调试信息
-  console.log("=== 待收取收益调试信息 ===");
-  console.log("项目名称:", kolInfo.project_name);
-  console.log("Token ID:", tokenId?.toString());
-  console.log("Token ID (bigint):", tokenIdBigInt?.toString());
-  console.log("待收取收益 (原始值):", rawCanWithdrawValue?.toString());
-  console.log("待收取收益 (格式化):", viewCanWithdrawValue);
-  console.log("========================");
+  const { formatted: viewCanWithdrawValue, refetch: refetchCanWithdrawValue } =
+    useCanWithdrawValue(tokenIdBigInt, address);
 
   // 获取进度
-  const { percentage: crossProgressValue, progress: crossProgressRaw } =
-    useCrossProgress(tokenIdBigInt);
-  const { percentage: lpExProgressValue, progress: lpExProgressRaw } =
-    useLpExProgress(tokenIdBigInt);
-  const { percentage: kolProgressValue, progress: kolProgressRaw } =
-    useKolProgress(tokenIdBigInt);
-
-  // 打印进度调试信息
-  console.log("=== 进度调试信息 ===");
-  console.log("跨鏈進度 (原始值):", crossProgressRaw?.toString());
-  console.log("跨鏈進度 (百分比):", crossProgressValue);
-  console.log("LP兌換發行進度 (原始值):", lpExProgressRaw?.toString());
-  console.log("LP兌換發行進度 (百分比):", lpExProgressValue);
-  console.log("KOL獎勵發行進度 (原始值):", kolProgressRaw?.toString());
-  console.log("KOL獎勵發行進度 (百分比):", kolProgressValue);
-  console.log("==================");
+  const { percentage: crossProgressValue } = useCrossProgress(tokenIdBigInt);
+  const { percentage: lpExProgressValue } = useLpExProgress(tokenIdBigInt);
+  const { percentage: kolProgressValue } = useKolProgress(tokenIdBigInt);
 
   // 提取收益
   const { withdraw, isPending, isConfirming, isSuccess } =

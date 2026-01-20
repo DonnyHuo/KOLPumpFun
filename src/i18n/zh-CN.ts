@@ -313,6 +313,8 @@ const lan = {
     inputMultipleOf100: "請輸入100的倍數",
     expectedAmount: "預計獲得",
     buyToken: "購買代幣",
+    statusOpen: "進行中",
+    statusClosed: "關閉",
     approve: "授權",
     earlyRedeem: "提前贖回",
     buySuccess: "搶購成功",

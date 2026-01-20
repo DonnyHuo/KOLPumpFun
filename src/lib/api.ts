@@ -268,6 +268,7 @@ export interface ProjectInfo {
   mint_process_percent?: string; // 格式: "总量,百分比"
   airdrop_process_percent?: string; // 格式: "总量,百分比"
   coin_mint_token?: string;
+  mint_status?: number;
 }
 
 export interface ProjectWaitInfo {
