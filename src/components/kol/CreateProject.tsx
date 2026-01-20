@@ -1248,9 +1248,9 @@ export function CreateProject({
                                   {shareProject?.fairLaunch as string}
                                 </span>
                                 <span className="text-primary ml-2">
-                                  1
+                                  1{" "}
                                   {project.display_name?.split("-")[0] || "BNB"}{" "}
-                                  = {project.exchange_rate || 0}
+                                  = {project.exchange_rate || 0}{" "}
                                   {project.symbol}
                                 </span>
                               </div>

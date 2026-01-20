@@ -245,8 +245,8 @@ export default function SharePage() {
                       {shareProject.fairLaunch as string}
                     </span>
                     <span className="text-primary ml-2">
-                      1{item.display_name?.split("-")[0] || "BNB"} ={" "}
-                      {item.exchange_rate}
+                      1 {item.display_name?.split("-")[0] || "BNB"} ={" "}
+                      {item.exchange_rate}{" "}
                       {item.symbol}
                     </span>
                   </div>
