@@ -21,8 +21,7 @@ import zhCN from "@/i18n/zh-CN";
 import enUS from "@/i18n/en-US";
 import { goBack1 } from "@/assets/images";
 import tokenShopAbi from "@/constants/abi/tokenShop.json";
-
-const BASE_URL = "https://smartbtc.io/bridge";
+import { kolApi } from "@/lib/api";
 
 // 短地址
 function shortStr(str?: string, start = 6, end = 4): string {
@@ -224,13 +223,8 @@ export default function PoolDetailPage() {
   const fetchOrders = useCallback(async () => {
     if (!address) return;
     try {
-      const res = await fetch(`${BASE_URL}/kol/meme_orders`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address }),
-      });
-      const data = await res.json();
-      setOrders(data?.data || []);
+      const res = await kolApi.getMemeOrders(address);
+      setOrders(res.data || []);
     } catch (error) {
       console.error("Failed to fetch orders:", error);
     }
@@ -258,11 +252,7 @@ export default function PoolDetailPage() {
       order_type: number;
     }) => {
       try {
-        await fetch(`${BASE_URL}/kol/meme_trade`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(params),
-        });
+        await kolApi.memeTrade(params);
         fetchOrders();
       } catch (error) {
         console.error("Failed to record trade:", error);
