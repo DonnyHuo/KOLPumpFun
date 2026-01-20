@@ -10,6 +10,8 @@ import { useStore } from '@/store/useStore';
 import { shortAddress, copyToClipboard } from '@/lib/utils';
 import { getTokenIcon } from '@/assets/images/tokenList';
 
+import Image from 'next/image';
+
 interface CreateProjectProps {
   activeAmount: number;
   onSuccess: () => void;
@@ -772,18 +774,20 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
           {/* 已认领项目展示 */}
           {hasClaimedProject ? (
             <div className="bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl p-5 my-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <img 
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-1">
+                  <Image 
                     src={getTokenIcon('100t').src}
                     alt="project" 
-                    className="w-[36px] h-[36px] rounded-full"
+                    className="w-[28px] h-[28px] rounded-full"
+                    width={28}
+                    height={28}
                   />
-                  <span className="font-semibold text-[var(--foreground)]">
+                  <span className="font-semibold text-[var(--foreground)] text-sm">
                     {kolInfo?.project_name?.split('100T-')[1] || kolInfo?.project_name}
                   </span>
                 </div>
-                <span className="badge-success">
+                <span className="badge-success inline-block w-fit">
                   {getStatusText(kolInfo?.status || 0)}
                 </span>
               </div>
