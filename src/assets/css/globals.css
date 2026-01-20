@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@config "../../../tailwind.config.ts";
+
 
 :root {
   /* Web3 暗色主题配色 */
@@ -101,19 +103,22 @@ body {
   opacity: 0.8;
 }
 
-/* 白色模式下隐藏滚动条 */
-:root.light ::-webkit-scrollbar {
+/* 隐藏滚动条 */
+:root.light ::-webkit-scrollbar,
+:root:not(.light) ::-webkit-scrollbar {
   width: 0;
   height: 0;
   display: none;
 }
 
-:root.light * {
+:root.light *,
+:root:not(.light) * {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
 }
 
-:root.light *::-webkit-scrollbar {
+:root.light *::-webkit-scrollbar,
+:root:not(.light) *::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
 }
 
@@ -135,7 +140,7 @@ body {
 }
 
 .btn-secondary {
-  @apply px-4 py-2 h-[44px] font-medium rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply px-4 py-2 h-11 font-medium rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
   background: var(--background-card);
   color: var(--foreground);
   border: 1px solid var(--border-color);
@@ -147,7 +152,7 @@ body {
 }
 
 .btn-outline {
-  @apply px-4 py-2 h-[44px] font-medium rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply px-4 py-2 h-11 font-medium rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
   background: transparent;
   color: var(--primary);
   border: 1px solid var(--primary);

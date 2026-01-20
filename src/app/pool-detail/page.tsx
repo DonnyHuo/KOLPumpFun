@@ -1,35 +1,39 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAccount, useBalance as useWagmiBalance } from 'wagmi';
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
-import Image from 'next/image';
-import dayjs from 'dayjs';
-import { parseUnits, formatUnits, maxUint256 } from 'viem';
-import { toast } from 'sonner';
-import { useStore } from '@/store/useStore';
-import { useBalance, useAllowance, useApprove } from '@/hooks/useERC20';
-import { CONTRACTS } from '@/constants/contracts';
-import { Progress } from '@/components/ui/Progress';
-import zhCN from '@/i18n/zh-CN';
-import enUS from '@/i18n/en-US';
-import { goBack1 } from '@/assets/images';
-import tokenShopAbi from '@/constants/abi/tokenShop.json';
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useConnection, useBalance as useWagmiBalance } from "wagmi";
+import {
+  useReadContract,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import Image from "next/image";
+import dayjs from "dayjs";
+import { parseUnits, formatUnits, maxUint256 } from "viem";
+import { toast } from "sonner";
+import { useStore } from "@/store/useStore";
+import { useBalance, useAllowance, useApprove } from "@/hooks/useERC20";
+import { CONTRACTS } from "@/constants/contracts";
+import { Progress } from "@/components/ui/Progress";
+import zhCN from "@/i18n/zh-CN";
+import enUS from "@/i18n/en-US";
+import { goBack1 } from "@/assets/images";
+import tokenShopAbi from "@/constants/abi/tokenShop.json";
 
-const BASE_URL = 'https://smartbtc.io/bridge';
+const BASE_URL = "https://smartbtc.io/bridge";
 
 // 短地址
 function shortStr(str?: string, start = 6, end = 4): string {
-  if (!str) return '';
+  if (!str) return "";
   if (str.length <= start + end) return str;
   return `${str.slice(0, start)}...${str.slice(-end)}`;
 }
 
 // 项目类型
 function getProjectType(type: string | number, t: typeof zhCN): string {
-  const typeNum = typeof type === 'string' ? parseInt(type) : type;
+  const typeNum = typeof type === "string" ? parseInt(type) : type;
   switch (typeNum) {
     case 0:
       return t.poolDetail.projectTypes.joint;
@@ -38,7 +42,7 @@ function getProjectType(type: string | number, t: typeof zhCN): string {
     case 2:
       return t.poolDetail.projectTypes.marketMaking;
     default:
-      return '';
+      return "";
   }
 }
 
@@ -52,7 +56,7 @@ function getOrderStatus(status: number, t: typeof zhCN): string {
     case 2:
       return t.poolDetail.statusTypes.completed;
     default:
-      return '';
+      return "";
   }
 }
 
@@ -70,38 +74,39 @@ interface MemeOrder {
 
 export default function PoolDetailPage() {
   const router = useRouter();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useConnection();
   const { openConnectModal } = useConnectModal();
   const { lang, currentProject } = useStore();
-  const t = lang === 'zh' ? zhCN : enUS;
+  const t = lang === "zh" ? zhCN : enUS;
 
   // 从 store 获取池子信息
   // mint_process_percent 格式: "总量,百分比"
-  const processPercent = currentProject?.mint_process_percent?.split(',')[1] || '0';
-  
+  const processPercent =
+    currentProject?.mint_process_percent?.split(",")[1] || "0";
+
   const poolInfo = {
     id: String(currentProject?.mint_pool_id || 0),
-    symbol: currentProject?.symbol || '',
-    logoUrl: currentProject?.logo_url || '',
-    details: currentProject?.details || '',
-    createTime: currentProject?.mint_pool_create_time || '',
+    symbol: currentProject?.symbol || "",
+    logoUrl: currentProject?.logo_url || "",
+    details: currentProject?.details || "",
+    createTime: currentProject?.mint_pool_create_time || "",
     processPercent,
     type: String(currentProject?.project_type || 0),
-    contract: currentProject?.contract_addr || '',
+    contract: currentProject?.contract_addr || "",
     exchangeRate: currentProject?.exchange_rate || 1,
-    token: currentProject?.display_name?.split('-')[0] || 'BNB',
-    coinMintToken: currentProject?.coin_mint_token || '',
+    token: currentProject?.display_name?.split("-")[0] || "BNB",
+    coinMintToken: currentProject?.coin_mint_token || "",
   };
 
   // 如果没有项目信息，返回列表页
   useEffect(() => {
     if (!currentProject) {
-      router.replace('/share');
+      router.replace("/share");
     }
   }, [currentProject, router]);
 
-  const [activeTab, setActiveTab] = useState<'buy' | 'redeem'>('buy');
-  const [amount, setAmount] = useState('');
+  const [activeTab, setActiveTab] = useState<"buy" | "redeem">("buy");
+  const [amount, setAmount] = useState("");
   const [orders, setOrders] = useState<MemeOrder[]>([]);
   const [rate, setRate] = useState(0);
 
@@ -112,7 +117,7 @@ export default function PoolDetailPage() {
 
   // USDT 余额
   const { formatted: usdtBalance, refetch: refetchUsdtBalance } = useBalance(
-    '0x55d398326f99059ff775485246999027b3197955' as `0x${string}`,
+    "0x55d398326f99059ff775485246999027b3197955" as `0x${string}`,
     address as `0x${string}`
   );
 
@@ -124,34 +129,35 @@ export default function PoolDetailPage() {
 
   // 根据 token 类型获取余额
   const getTokenBalance = () => {
-    if (poolInfo.token === 'BNB') {
-      return bnbBalance ? formatUnits(bnbBalance.value, 18) : '0';
-    } else if (poolInfo.token === 'USDT') {
+    if (poolInfo.token === "BNB") {
+      return bnbBalance ? formatUnits(bnbBalance.value, 18) : "0";
+    } else if (poolInfo.token === "USDT") {
       return usdtBalance;
-    } else if (poolInfo.token === 'SOS') {
+    } else if (poolInfo.token === "SOS") {
       return sosBalance;
     }
-    return '0';
+    return "0";
   };
 
   // 获取用户贡献金额
-  const { data: userContribution, refetch: refetchUserContribution } = useReadContract({
-    address: CONTRACTS.TOKEN_SHOP as `0x${string}`,
-    abi: tokenShopAbi,
-    functionName: 'userContributions',
-    args: poolInfo.id ? [BigInt(poolInfo.id), address] : undefined,
-    query: {
-      enabled: !!address && !!poolInfo.id,
-    },
-  });
+  const { data: userContribution, refetch: refetchUserContribution } =
+    useReadContract({
+      address: CONTRACTS.TOKEN_SHOP as `0x${string}`,
+      abi: tokenShopAbi,
+      functionName: "userContributions",
+      args: poolInfo.id ? [BigInt(poolInfo.id), address] : undefined,
+      query: {
+        enabled: !!address && !!poolInfo.id,
+      },
+    });
 
-  const stakeBalance = userContribution 
+  const stakeBalance = userContribution
     ? parseFloat(formatUnits(userContribution as bigint, 18)).toFixed(6)
-    : '0';
+    : "0";
 
   // 授权检查
   const getSpenderToken = () => {
-    if (activeTab === 'buy') {
+    if (activeTab === "buy") {
       return poolInfo.coinMintToken || poolInfo.contract;
     }
     return poolInfo.contract;
@@ -166,23 +172,37 @@ export default function PoolDetailPage() {
   const allowance = allowanceData ? Number(allowanceData.toString()) : 0;
 
   // 授权
-  const { approve, isPending: isApproving, isSuccess: approveSuccess } = useApprove();
+  const {
+    approve,
+    isPending: isApproving,
+    isSuccess: approveSuccess,
+  } = useApprove();
 
   // Swap 交易
-  const { writeContract: writeSwap, data: swapHash, isPending: isSwapping } = useWriteContract();
-  const { isLoading: isSwapConfirming, isSuccess: isSwapSuccess } = useWaitForTransactionReceipt({ hash: swapHash });
+  const {
+    writeContract: writeSwap,
+    data: swapHash,
+    isPending: isSwapping,
+  } = useWriteContract();
+  const { isLoading: isSwapConfirming, isSuccess: isSwapSuccess } =
+    useWaitForTransactionReceipt({ hash: swapHash });
 
   // Withdraw 交易
-  const { writeContract: writeWithdraw, data: withdrawHash, isPending: isWithdrawing } = useWriteContract();
-  const { isLoading: isWithdrawConfirming, isSuccess: isWithdrawSuccess } = useWaitForTransactionReceipt({ hash: withdrawHash });
+  const {
+    writeContract: writeWithdraw,
+    data: withdrawHash,
+    isPending: isWithdrawing,
+  } = useWriteContract();
+  const { isLoading: isWithdrawConfirming, isSuccess: isWithdrawSuccess } =
+    useWaitForTransactionReceipt({ hash: withdrawHash });
 
   // 格式化大数字
   const formatNumber = (num: number): string => {
-    if (isNaN(num) || !isFinite(num)) return '0';
-    if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
-    if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
-    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+    if (isNaN(num) || !isFinite(num)) return "0";
+    if (num >= 1e12) return (num / 1e12).toFixed(2) + "T";
+    if (num >= 1e9) return (num / 1e9).toFixed(2) + "B";
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + "M";
+    if (num >= 1e3) return (num / 1e3).toFixed(2) + "K";
     if (num < 0.000001) return num.toExponential(2);
     return num.toFixed(6);
   };
@@ -190,8 +210,8 @@ export default function PoolDetailPage() {
   // 计算预期获得金额
   const getExpectedAmount = () => {
     const numAmount = parseFloat(amount) || 0;
-    if (numAmount === 0) return '0';
-    if (activeTab === 'buy') {
+    if (numAmount === 0) return "0";
+    if (activeTab === "buy") {
       const result = numAmount * poolInfo.exchangeRate;
       return formatNumber(result);
     } else {
@@ -205,14 +225,14 @@ export default function PoolDetailPage() {
     if (!address) return;
     try {
       const res = await fetch(`${BASE_URL}/kol/meme_orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address }),
       });
       const data = await res.json();
       setOrders(data?.data || []);
     } catch (error) {
-      console.error('Failed to fetch orders:', error);
+      console.error("Failed to fetch orders:", error);
     }
   }, [address]);
 
@@ -228,25 +248,28 @@ export default function PoolDetailPage() {
   }, [approveSuccess, refetchAllowance]);
 
   // 交易成功后记录订单
-  const recordTrade = async (params: {
-    pool_id: number;
-    address: string;
-    a_amount: string;
-    b_amount: string;
-    spend_txid: string;
-    order_type: number;
-  }) => {
-    try {
-      await fetch(`${BASE_URL}/kol/meme_trade`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params),
-      });
-      fetchOrders();
-    } catch (error) {
-      console.error('Failed to record trade:', error);
-    }
-  };
+  const recordTrade = useCallback(
+    async (params: {
+      pool_id: number;
+      address: string;
+      a_amount: string;
+      b_amount: string;
+      spend_txid: string;
+      order_type: number;
+    }) => {
+      try {
+        await fetch(`${BASE_URL}/kol/meme_trade`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(params),
+        });
+        fetchOrders();
+      } catch (error) {
+        console.error("Failed to record trade:", error);
+      }
+    },
+    [fetchOrders]
+  );
 
   // 刷新余额
   const refreshBalances = useCallback(() => {
@@ -254,12 +277,17 @@ export default function PoolDetailPage() {
     refetchUsdtBalance();
     refetchSosBalance();
     refetchUserContribution();
-  }, [refetchBnbBalance, refetchUsdtBalance, refetchSosBalance, refetchUserContribution]);
+  }, [
+    refetchBnbBalance,
+    refetchUsdtBalance,
+    refetchSosBalance,
+    refetchUserContribution,
+  ]);
 
   // Swap 成功后
   useEffect(() => {
     if (isSwapSuccess && swapHash && address) {
-      toast.success(t.poolDetail.buySuccess as string || '抢购成功');
+      toast.success((t.poolDetail.buySuccess as string) || "抢购成功");
       recordTrade({
         pool_id: Number(poolInfo.id),
         address,
@@ -268,16 +296,26 @@ export default function PoolDetailPage() {
         spend_txid: swapHash,
         order_type: 0,
       });
-      setAmount('');
+      setAmount("");
       // 刷新余额
       refreshBalances();
     }
-  }, [isSwapSuccess, swapHash]);
+  }, [
+    address,
+    amount,
+    isSwapSuccess,
+    poolInfo.exchangeRate,
+    poolInfo.id,
+    recordTrade,
+    refreshBalances,
+    swapHash,
+    t.poolDetail.buySuccess,
+  ]);
 
   // Withdraw 成功后
   useEffect(() => {
     if (isWithdrawSuccess && withdrawHash && address) {
-      toast.success(t.poolDetail.redeemSuccess as string || '赎回成功');
+      toast.success((t.poolDetail.redeemSuccess as string) || "赎回成功");
       recordTrade({
         pool_id: Number(poolInfo.id),
         address,
@@ -286,17 +324,28 @@ export default function PoolDetailPage() {
         spend_txid: withdrawHash,
         order_type: 1,
       });
-      setAmount('');
+      setAmount("");
       // 刷新余额
       refreshBalances();
     }
-  }, [isWithdrawSuccess, withdrawHash]);
+  }, [
+    address,
+    amount,
+    isWithdrawSuccess,
+    poolInfo.id,
+    rate,
+    recordTrade,
+    refreshBalances,
+    stakeBalance,
+    t.poolDetail.redeemSuccess,
+    withdrawHash,
+  ]);
 
   // 快捷金额按钮
   const changeAmount = (percentage: number) => {
     setRate(percentage);
     const balance = getTokenBalance();
-    if (activeTab === 'buy') {
+    if (activeTab === "buy") {
       setAmount((parseFloat(balance) * percentage).toString());
     } else {
       const redeemBalance = parseFloat(stakeBalance) * poolInfo.exchangeRate;
@@ -316,12 +365,12 @@ export default function PoolDetailPage() {
   // 购买
   const handleBuy = () => {
     if (!amount || !poolInfo.id) return;
-    
-    if (poolInfo.token === 'BNB') {
+
+    if (poolInfo.token === "BNB") {
       writeSwap({
         address: CONTRACTS.TOKEN_SHOP as `0x${string}`,
         abi: tokenShopAbi,
-        functionName: 'swap',
+        functionName: "swap",
         args: [BigInt(poolInfo.id), parseUnits(amount, 18)],
         value: parseUnits(amount, 18),
       });
@@ -329,7 +378,7 @@ export default function PoolDetailPage() {
       writeSwap({
         address: CONTRACTS.TOKEN_SHOP as `0x${string}`,
         abi: tokenShopAbi,
-        functionName: 'swap',
+        functionName: "swap",
         args: [BigInt(poolInfo.id), parseUnits(amount, 18)],
       });
     }
@@ -338,61 +387,73 @@ export default function PoolDetailPage() {
   // 赎回
   const handleWithdraw = () => {
     if (!amount || !poolInfo.id || !stakeBalance) return;
-    
+
     const withdrawAmount = parseFloat(stakeBalance) * rate;
     writeWithdraw({
       address: CONTRACTS.TOKEN_SHOP as `0x${string}`,
       abi: tokenShopAbi,
-      functionName: 'withdraw',
+      functionName: "withdraw",
       args: [BigInt(poolInfo.id), parseUnits(withdrawAmount.toString(), 18)],
       gas: BigInt(100000),
-      gasPrice: parseUnits('5', 9), // 与 Vue 版本保持一致 (9 decimals = gwei)
+      gasPrice: parseUnits("5", 9), // 与 Vue 版本保持一致 (9 decimals = gwei)
     });
   };
 
   // Tab 切换时清空金额
   useEffect(() => {
-    setAmount('');
-    if ((activeTab === 'buy' && poolInfo.token !== 'BNB') || activeTab === 'redeem') {
+    setAmount("");
+    if (
+      (activeTab === "buy" && poolInfo.token !== "BNB") ||
+      activeTab === "redeem"
+    ) {
       refetchAllowance();
     }
-  }, [activeTab]);
+  }, [activeTab, poolInfo.token, refetchAllowance]);
 
   const tokenBalance = getTokenBalance();
   const numAmount = parseFloat(amount) || 0;
   const numBalance = parseFloat(tokenBalance) || 0;
   const redeemableAmount = parseFloat(stakeBalance) * poolInfo.exchangeRate;
 
-  const isLoading = isSwapping || isSwapConfirming || isWithdrawing || isWithdrawConfirming || isApproving;
-  const needsApproval = (activeTab === 'buy' && poolInfo.token !== 'BNB') || activeTab === 'redeem';
-  const isDisabled = activeTab === 'buy'
-    ? numAmount === 0 || numBalance < numAmount
-    : numAmount === 0 || redeemableAmount < numAmount;
+  const isLoading =
+    isSwapping ||
+    isSwapConfirming ||
+    isWithdrawing ||
+    isWithdrawConfirming ||
+    isApproving;
+  const needsApproval =
+    (activeTab === "buy" && poolInfo.token !== "BNB") || activeTab === "redeem";
+  const isDisabled =
+    activeTab === "buy"
+      ? numAmount === 0 || numBalance < numAmount
+      : numAmount === 0 || redeemableAmount < numAmount;
 
   return (
-    <div className="min-h-full bg-[var(--background)] pb-6">
+    <div className="min-h-full bg-background pb-6">
       {/* Header */}
       <div className="px-4 py-3 flex items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="w-10 h-10 rounded-xl bg-[var(--background-card)] border border-[var(--border-color)] flex items-center justify-center hover:bg-[var(--background-card-hover)] transition-colors"
+          className="w-10 h-10 rounded-xl bg-background-card border border-border flex items-center justify-center hover:bg-card-hover transition-colors"
         >
-          <Image 
-            src={goBack1} 
-            alt="back" 
-            width={20} 
-            height={20} 
+          <Image
+            src={goBack1}
+            alt="back"
+            width={20}
+            height={20}
             className="opacity-80"
-            style={{ filter: 'brightness(0) saturate(100%) invert(var(--icon-invert))' }}
+            style={{
+              filter: "brightness(0) saturate(100%) invert(var(--icon-invert))",
+            }}
           />
         </button>
       </div>
 
       {/* Token Image */}
       <div className="px-4 mt-4">
-        <div className="rounded-2xl overflow-hidden bg-[var(--background-card)] border border-[var(--border-color)]">
+        <div className="rounded-2xl overflow-hidden bg-background-card border border-border">
           <Image
-            src={poolInfo.logoUrl || '/images/default-token.png'}
+            src={poolInfo.logoUrl || "/images/default-token.png"}
             alt={poolInfo.symbol}
             width={500}
             height={300}
@@ -405,25 +466,30 @@ export default function PoolDetailPage() {
       {/* Token Info */}
       <div className="px-4 mt-4 text-left">
         <div className="flex items-center gap-3 mb-3">
-          <span className="text-2xl font-bold text-[var(--foreground)]">{poolInfo.symbol}</span>
-          <span className="bg-[var(--primary)] text-xs text-black rounded-full px-3 py-1 font-medium">
+          <span className="text-2xl font-bold text-secondary">
+            {poolInfo.symbol}
+          </span>
+          <span className="bg-primary text-xs text-black rounded-full px-3 py-1 font-medium">
             {getProjectType(poolInfo.type, t)}
           </span>
         </div>
-        <p className="text-sm text-[var(--text-secondary)] mb-2">{poolInfo.details}</p>
+        <p className="text-sm text-text-secondary mb-2">{poolInfo.details}</p>
         {poolInfo.createTime && (
-          <p className="text-xs text-[var(--text-muted)]">
-            {t.poolDetail.createTime} {dayjs(poolInfo.createTime).format('YYYY-MM-DD HH:mm:ss')}
+          <p className="text-xs text-text-muted">
+            {t.poolDetail.createTime}{" "}
+            {dayjs(poolInfo.createTime).format("YYYY-MM-DD HH:mm:ss")}
           </p>
         )}
 
         {/* Progress */}
         <div className="mt-6">
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-[var(--text-secondary)]">{t.poolDetail.launchProgress}</span>
-            <span className="text-[var(--foreground)] font-bold">
+            <span className="text-text-secondary">
+              {t.poolDetail.launchProgress}
+            </span>
+            <span className="text-secondary font-bold">
               {Number(poolInfo.processPercent) < 0.01
-                ? '<0.01'
+                ? "<0.01"
                 : Number(poolInfo.processPercent).toFixed(4)}
               %
             </span>
@@ -436,14 +502,18 @@ export default function PoolDetailPage() {
       <div className="px-4 mt-6">
         <div className="tab-container">
           <button
-            className={activeTab === 'buy' ? 'tab-item-active' : 'tab-item-inactive'}
-            onClick={() => setActiveTab('buy')}
+            className={
+              activeTab === "buy" ? "tab-item-active" : "tab-item-inactive"
+            }
+            onClick={() => setActiveTab("buy")}
           >
             {t.poolDetail.buy}
           </button>
           <button
-            className={activeTab === 'redeem' ? 'tab-item-active' : 'tab-item-inactive'}
-            onClick={() => setActiveTab('redeem')}
+            className={
+              activeTab === "redeem" ? "tab-item-active" : "tab-item-inactive"
+            }
+            onClick={() => setActiveTab("redeem")}
           >
             {t.poolDetail.redeem}
           </button>
@@ -453,44 +523,52 @@ export default function PoolDetailPage() {
       {/* Trade Section */}
       <div className="px-4 mt-4 space-y-4">
         {/* Exchange Rate / Redeem Note */}
-        {activeTab === 'buy' ? (
+        {activeTab === "buy" ? (
           <div className="card flex items-center justify-between">
-            <span className="text-[var(--text-secondary)] text-sm">{t.poolDetail.equalLaunch}</span>
-            <span className="text-[var(--foreground)] text-sm">
+            <span className="text-text-secondary text-sm">
+              {t.poolDetail.equalLaunch}
+            </span>
+            <span className="text-secondary text-sm">
               1 {poolInfo.token} = {poolInfo.exchangeRate} {poolInfo.symbol}
             </span>
           </div>
         ) : (
           <div className="card text-center">
-            <span className="text-[var(--primary)] text-sm font-medium">{t.poolDetail.redeemNote}</span>
+            <span className="text-primary text-sm font-medium">
+              {t.poolDetail.redeemNote}
+            </span>
           </div>
         )}
 
         {/* Balance & Input */}
         <div>
-          <div className="text-right text-sm text-[var(--text-secondary)] mb-2 px-1">
-            {activeTab === 'buy' ? (
+          <div className="text-right text-sm text-text-secondary mb-2 px-1">
+            {activeTab === "buy" ? (
               <>
-                {t.poolDetail.balance}：{parseFloat(tokenBalance).toFixed(6)} {poolInfo.token}
+                {t.poolDetail.balance}：{parseFloat(tokenBalance).toFixed(6)}{" "}
+                {poolInfo.token}
               </>
             ) : (
               <>
-                {t.poolDetail.redeemAmount}：{redeemableAmount.toFixed(6)} {poolInfo.symbol}
+                {t.poolDetail.redeemAmount}：{redeemableAmount.toFixed(6)}{" "}
+                {poolInfo.symbol}
               </>
             )}
           </div>
           <div className="card flex items-center justify-between gap-4">
-            <span className="text-[var(--text-secondary)] text-sm">{t.poolDetail.payment}</span>
+            <span className="text-text-secondary text-sm">
+              {t.poolDetail.payment}
+            </span>
             <div className="flex flex-1 items-center gap-2">
               <input
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder={t.poolDetail.inputAmount}
-                className="bg-transparent text-right text-[var(--foreground)] w-28 outline-none flex-1"
+                className="bg-transparent text-right text-secondary w-28 outline-none flex-1"
               />
-              <span className="text-[var(--foreground)] font-medium shrink-0">
-                {activeTab === 'buy' ? poolInfo.token : poolInfo.symbol}
+              <span className="text-secondary font-medium shrink-0">
+                {activeTab === "buy" ? poolInfo.token : poolInfo.symbol}
               </span>
             </div>
           </div>
@@ -502,7 +580,7 @@ export default function PoolDetailPage() {
             <button
               key={val}
               onClick={() => changeAmount(val)}
-              className="flex-1 py-3 rounded-xl bg-[var(--background-card)] text-[var(--foreground)] font-bold text-sm hover:bg-[var(--background-card-hover)] transition-colors border border-[var(--border-color)]"
+              className="flex-1 py-3 rounded-xl bg-background-card text-secondary font-bold text-sm hover:bg-card-hover transition-colors border border-border"
             >
               {val === 1 ? t.poolDetail.allIn : `${val * 100}%`}
             </button>
@@ -511,24 +589,21 @@ export default function PoolDetailPage() {
 
         {/* Expected Amount */}
         <div className="card flex items-center justify-between">
-          <span className="text-[var(--text-secondary)] text-sm">{t.poolDetail.expectedAmount}</span>
+          <span className="text-text-secondary text-sm">
+            {t.poolDetail.expectedAmount}
+          </span>
           <div className="flex items-center gap-2">
-            <span className="text-[var(--foreground)]">
-              {getExpectedAmount()}
-            </span>
-            <span className="text-[var(--foreground)] font-medium">
-              {activeTab === 'buy' ? poolInfo.symbol : poolInfo.token}
+            <span className="text-secondary">{getExpectedAmount()}</span>
+            <span className="text-secondary font-medium">
+              {activeTab === "buy" ? poolInfo.symbol : poolInfo.token}
             </span>
           </div>
         </div>
 
         {/* Action Button */}
         {!isConnected ? (
-          <button
-            onClick={openConnectModal}
-            className="btn-primary w-full"
-          >
-            {lang === 'zh' ? '連接錢包' : 'Connect Wallet'}
+          <button onClick={openConnectModal} className="btn-primary w-full">
+            {lang === "zh" ? "連接錢包" : "Connect Wallet"}
           </button>
         ) : needsApproval && allowance === 0 ? (
           <button
@@ -545,7 +620,7 @@ export default function PoolDetailPage() {
               t.poolDetail.approve
             )}
           </button>
-        ) : activeTab === 'buy' ? (
+        ) : activeTab === "buy" ? (
           <button
             onClick={handleBuy}
             disabled={isDisabled || isLoading}
@@ -582,59 +657,86 @@ export default function PoolDetailPage() {
       <div className="px-4 mt-8">
         {orders.length > 0 && (
           <>
-            <div className="text-[var(--foreground)] font-bold mb-4 text-left">{t.poolDetail.myOrders}</div>
+            <div className="text-secondary font-bold mb-4 text-left">
+              {t.poolDetail.myOrders}
+            </div>
             <div className="space-y-4">
               {orders.map((order) => (
-                <div
-                  key={order.order_id}
-                  className="card space-y-3"
-                >
+                <div key={order.order_id} className="card space-y-3">
                   {/* Header */}
                   <div className="flex justify-between items-center">
-                    <span className="text-[var(--foreground)] font-medium">
+                    <span className="text-secondary font-medium">
                       {poolInfo.symbol} / {poolInfo.token}
                     </span>
-                    <span className="text-xs text-[var(--text-secondary)]">
-                      {dayjs(order.created_at).format('YYYY-MM-DD HH:mm:ss')}
+                    <span className="text-xs text-text-secondary">
+                      {dayjs(order.created_at).format("YYYY-MM-DD HH:mm:ss")}
                     </span>
                   </div>
 
                   {/* Details */}
                   <div className="flex justify-between text-sm">
-                    <span className="text-[var(--text-secondary)]">{t.poolDetail.type}</span>
-                    <span className="text-[var(--foreground)]">
-                      {order.order_type ? t.poolDetail.redeem : t.poolDetail.buy}
+                    <span className="text-text-secondary">
+                      {t.poolDetail.type}
+                    </span>
+                    <span className="text-secondary">
+                      {order.order_type
+                        ? t.poolDetail.redeem
+                        : t.poolDetail.buy}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-[var(--text-secondary)]">{t.poolDetail.amount}</span>
-                    <span className="text-[var(--foreground)]">
+                    <span className="text-text-secondary">
+                      {t.poolDetail.amount}
+                    </span>
+                    <span className="text-secondary">
                       {order.order_type
                         ? `${order.a_amount} ${poolInfo.token}`
                         : `${order.b_amount} ${poolInfo.symbol}`}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-[var(--text-secondary)]">{t.poolDetail.price}</span>
-                    <span className="text-[var(--foreground)]">
+                    <span className="text-text-secondary">
+                      {t.poolDetail.price}
+                    </span>
+                    <span className="text-secondary">
                       {order.order_type ? (
-                        <>1 {poolInfo.symbol} ➡️ {(parseFloat(order.a_amount) / parseFloat(order.b_amount)).toFixed(4)} {poolInfo.token}</>
+                        <>
+                          1 {poolInfo.symbol} ➡️{" "}
+                          {(
+                            parseFloat(order.a_amount) /
+                            parseFloat(order.b_amount)
+                          ).toFixed(4)}{" "}
+                          {poolInfo.token}
+                        </>
                       ) : (
-                        <>1 {poolInfo.token} ➡️ {(parseFloat(order.b_amount) / parseFloat(order.a_amount)).toFixed(4)} {poolInfo.symbol}</>
+                        <>
+                          1 {poolInfo.token} ➡️{" "}
+                          {(
+                            parseFloat(order.b_amount) /
+                            parseFloat(order.a_amount)
+                          ).toFixed(4)}{" "}
+                          {poolInfo.symbol}
+                        </>
                       )}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-[var(--text-secondary)]">{t.poolDetail.status}</span>
-                    <span className="text-[var(--success)]">{getOrderStatus(order.order_state, t)}</span>
+                    <span className="text-text-secondary">
+                      {t.poolDetail.status}
+                    </span>
+                    <span className="text-success">
+                      {getOrderStatus(order.order_state, t)}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-[var(--text-secondary)]">{t.poolDetail.orders.txId}</span>
+                    <span className="text-text-secondary">
+                      {t.poolDetail.orders.txId}
+                    </span>
                     <a
                       href={`https://bscscan.com/tx/${order.spend_txid}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[var(--primary)] underline"
+                      className="text-primary underline"
                     >
                       {shortStr(order.spend_txid)}
                     </a>
@@ -648,4 +750,3 @@ export default function PoolDetailPage() {
     </div>
   );
 }
-

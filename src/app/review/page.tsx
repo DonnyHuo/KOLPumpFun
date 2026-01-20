@@ -1,25 +1,43 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAccount } from 'wagmi';
-import { toast } from 'sonner';
-import { ExternalLink, X } from 'lucide-react';
-import { Header } from '@/components/layout/Header';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { adminApi, kolApi, type KolWaitInfo, type ProjectWaitInfo, type BindProjectWaitInfo, type ProjectInfo } from '@/lib/api';
-import { CONTRACTS, ADMIN_ADDRESSES } from '@/constants/contracts';
-import { shortAddress, formatDate, isValidUrl, getBscScanUrl } from '@/lib/utils';
-import { useUserDepositedAmount } from '@/hooks/useDepositContract';
-import { useTokenRatiosIndex, useTokenAirdropKols } from '@/hooks/useKolContract';
-import { useStore } from '@/store/useStore';
-import zhCN from '@/i18n/zh-CN';
-import enUS from '@/i18n/en-US';
-import { parseUnits, isAddress } from 'viem';
-import { usePublicClient, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import erc20Abi from '@/constants/abi/erc20.json';
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useConnection } from "wagmi";
+import { toast } from "sonner";
+import { ExternalLink, X } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import {
+  adminApi,
+  kolApi,
+  type KolWaitInfo,
+  type ProjectWaitInfo,
+  type BindProjectWaitInfo,
+  type ProjectInfo,
+} from "@/lib/api";
+import { CONTRACTS, ADMIN_ADDRESSES } from "@/constants/contracts";
+import {
+  shortAddress,
+  formatDate,
+  isValidUrl,
+  getBscScanUrl,
+} from "@/lib/utils";
+import { useUserDepositedAmount } from "@/hooks/useDepositContract";
+import {
+  useTokenRatiosIndex,
+  useTokenAirdropKols,
+} from "@/hooks/useKolContract";
+import { useStore } from "@/store/useStore";
+import zhCN from "@/i18n/zh-CN";
+import enUS from "@/i18n/en-US";
+import { parseUnits, isAddress } from "viem";
+import {
+  usePublicClient,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
+import erc20Abi from "@/constants/abi/erc20.json";
 
-type Tab = 'kol' | 'project' | 'claim' | 'migrate';
+type Tab = "kol" | "project" | "claim" | "migrate";
 
 interface MigrateToken {
   project_name: string;
@@ -32,14 +50,14 @@ interface MigrateToken {
 
 export default function ReviewPage() {
   const router = useRouter();
-  const { address } = useAccount();
+  const { address } = useConnection();
   const { lang, setCurrentProject } = useStore();
-  const t = lang === 'zh' ? zhCN : enUS;
+  const t = lang === "zh" ? zhCN : enUS;
   const review = t.review as Record<string, unknown>;
   const tabs = review.tabs as Record<string, string>;
   const statusMap = review.statusMap as Record<number, string>;
 
-  const [activeTab, setActiveTab] = useState<Tab>('kol');
+  const [activeTab, setActiveTab] = useState<Tab>("kol");
   const [kolList, setKolList] = useState<KolWaitInfo[]>([]);
   const [projectList, setProjectList] = useState<ProjectWaitInfo[]>([]);
   const [claimList, setClaimList] = useState<BindProjectWaitInfo[]>([]);
@@ -49,22 +67,27 @@ export default function ReviewPage() {
 
   // 认领审核弹窗
   const [showClaimModal, setShowClaimModal] = useState(false);
-  const [selectedClaim, setSelectedClaim] = useState<BindProjectWaitInfo | null>(null);
-  const [percent, setPercent] = useState('');
+  const [selectedClaim, setSelectedClaim] =
+    useState<BindProjectWaitInfo | null>(null);
+  const [percent, setPercent] = useState("");
 
   // 不通过确认弹窗
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
-  const [rejectType, setRejectType] = useState<'kol' | 'project' | 'claim' | null>(null);
-  const [rejectItem, setRejectItem] = useState<KolWaitInfo | ProjectWaitInfo | BindProjectWaitInfo | null>(null);
+  const [rejectType, setRejectType] = useState<
+    "kol" | "project" | "claim" | null
+  >(null);
+  const [rejectItem, setRejectItem] = useState<
+    KolWaitInfo | ProjectWaitInfo | BindProjectWaitInfo | null
+  >(null);
 
   // 迁移表单
   const [migrateToken, setMigrateToken] = useState<MigrateToken>({
-    project_name: '',
-    contract_addr: '',
-    token_name: '',
-    token_symbol: '',
-    total_supply: '',
-    percents: ['', '', '', ''],
+    project_name: "",
+    contract_addr: "",
+    token_name: "",
+    token_symbol: "",
+    total_supply: "",
+    percents: ["", "", "", ""],
   });
   const [migrateLoading, setMigrateLoading] = useState(false);
 
@@ -72,18 +95,30 @@ export default function ReviewPage() {
   const { formatted: userDeposited } = useUserDepositedAmount(
     selectedClaim?.address as `0x${string}`
   );
-  const { data: tokenId } = useTokenRatiosIndex(selectedClaim?.project_name || '');
+  const { data: tokenId } = useTokenRatiosIndex(
+    selectedClaim?.project_name || ""
+  );
   const { percentage: tokenAirdropKols } = useTokenAirdropKols(
     tokenId !== undefined ? BigInt(tokenId as number) : undefined
   );
 
   // 转账（用于迁移）
   const publicClient = usePublicClient();
-  const { writeContract: writeTransfer, data: transferHash, isPending: transferPending } = useWriteContract();
-  const { isLoading: isTransferConfirming, isSuccess: transferSuccess } = useWaitForTransactionReceipt({ hash: transferHash });
+  const {
+    writeContract: writeTransfer,
+    data: transferHash,
+    isPending: transferPending,
+  } = useWriteContract();
+  const { isSuccess: transferSuccess } = useWaitForTransactionReceipt({
+    hash: transferHash,
+  });
 
   // 检查是否管理员
-  const isAdmin = address ? ADMIN_ADDRESSES.includes(address.toLowerCase() as typeof ADMIN_ADDRESSES[number]) : false;
+  const isAdmin = address
+    ? ADMIN_ADDRESSES.includes(
+        address.toLowerCase() as (typeof ADMIN_ADDRESSES)[number]
+      )
+    : false;
 
   // 获取 KOL 列表
   const fetchKolList = async () => {
@@ -92,7 +127,7 @@ export default function ReviewPage() {
       const res = await kolApi.getKolWaitAgreeList();
       setKolList(res.data || []);
     } catch (error) {
-      console.error('Failed to fetch KOL list:', error);
+      console.error("Failed to fetch KOL list:", error);
       setKolList([]);
     } finally {
       setDataLoading(false);
@@ -106,7 +141,7 @@ export default function ReviewPage() {
       const res = await kolApi.getProjectWaitAgreeList();
       setProjectList(res.data || []);
     } catch (error) {
-      console.error('Failed to fetch project list:', error);
+      console.error("Failed to fetch project list:", error);
       setProjectList([]);
     } finally {
       setDataLoading(false);
@@ -124,7 +159,7 @@ export default function ReviewPage() {
       setClaimList(claimRes.data || []);
       setIssuedProjects(issuedRes.data || []);
     } catch (error) {
-      console.error('Failed to fetch claim list:', error);
+      console.error("Failed to fetch claim list:", error);
       setClaimList([]);
       setIssuedProjects([]);
     } finally {
@@ -134,46 +169,91 @@ export default function ReviewPage() {
 
   // 跳转到项目详情
   const goToDetail = (projectName: string) => {
-    const project = issuedProjects.find(p => p.project_name === projectName);
+    const project = issuedProjects.find((p) => p.project_name === projectName);
     if (project) {
       setCurrentProject(project);
       // 根据项目类型跳转到不同页面
       if (project.mint_pool_id) {
-        router.push('/pool-detail');
+        router.push("/pool-detail");
       } else {
-        router.push('/early-bird-detail');
+        router.push("/early-bird-detail");
       }
     } else {
-      toast.error('項目詳情未找到');
+      toast.error("項目詳情未找到");
     }
   };
 
   // 初始加载和 tabs 切换时刷新数据
   useEffect(() => {
     if (!isAdmin) return;
-    
+
     switch (activeTab) {
-      case 'kol':
+      case "kol":
         fetchKolList();
         break;
-      case 'project':
+      case "project":
         fetchProjectList();
         break;
-      case 'claim':
+      case "claim":
         fetchClaimList();
         break;
-      case 'migrate':
+      case "migrate":
         // migrate tab 不需要数据
         break;
     }
   }, [activeTab, isAdmin]);
+
+  // 调用迁移 API
+  const handleMigrateApi = useCallback(async () => {
+    if (!address) return;
+
+    try {
+      const percents = migrateToken.percents.map((p) =>
+        Math.round(parseFloat(p) * 100)
+      );
+      await adminApi.migrateToken({
+        admin_address: address,
+        project_name: migrateToken.project_name,
+        contract_addr: migrateToken.contract_addr,
+        token_name: migrateToken.token_name,
+        token_symbol: migrateToken.token_symbol,
+        total_supply: migrateToken.total_supply,
+        percents,
+      });
+
+      // 与 Vue 项目一致：只要 API 调用成功就显示成功
+      toast.success(t.common.migrateSuccess as string);
+      setMigrateToken({
+        project_name: "",
+        contract_addr: "",
+        token_name: "",
+        token_symbol: "",
+        total_supply: "",
+        percents: ["", "", "", ""],
+      });
+    } catch {
+      toast.error(t.common.migrateFailed as string);
+    } finally {
+      setMigrateLoading(false);
+    }
+  }, [
+    address,
+    migrateToken.contract_addr,
+    migrateToken.percents,
+    migrateToken.project_name,
+    migrateToken.token_name,
+    migrateToken.token_symbol,
+    migrateToken.total_supply,
+    t.common.migrateFailed,
+    t.common.migrateSuccess,
+  ]);
 
   // 监听迁移转账成功
   useEffect(() => {
     if (transferSuccess && migrateLoading) {
       handleMigrateApi();
     }
-  }, [transferSuccess]);
+  }, [handleMigrateApi, migrateLoading, transferSuccess]);
 
   // 审核 KOL
   const handleKolAgree = async (item: KolWaitInfo, agree: boolean) => {
@@ -184,10 +264,14 @@ export default function ReviewPage() {
       if (res.message) {
         toast.error(res.message);
       } else {
-        toast.success(agree ? t.common.reviewPass as string : t.common.reviewReject as string);
+        toast.success(
+          agree
+            ? (t.common.reviewPass as string)
+            : (t.common.reviewReject as string)
+        );
         fetchKolList();
       }
-    } catch (error) {
+    } catch {
       toast.error(t.common.operationFailed as string);
     } finally {
       setLoading(false);
@@ -199,14 +283,22 @@ export default function ReviewPage() {
     if (!address) return;
     setLoading(true);
     try {
-      const res = await adminApi.agreeProject(address, item.project_name, agree);
+      const res = await adminApi.agreeProject(
+        address,
+        item.project_name,
+        agree
+      );
       if (res.message) {
         toast.error(res.message);
       } else {
-        toast.success(agree ? t.common.reviewPass as string : t.common.reviewReject as string);
+        toast.success(
+          agree
+            ? (t.common.reviewPass as string)
+            : (t.common.reviewReject as string)
+        );
         fetchProjectList();
       }
-    } catch (error) {
+    } catch {
       toast.error(t.common.operationFailed as string);
     } finally {
       setLoading(false);
@@ -216,12 +308,15 @@ export default function ReviewPage() {
   // 打开认领审核弹窗
   const handleOpenClaimModal = (item: BindProjectWaitInfo) => {
     setSelectedClaim(item);
-    setPercent('');
+    setPercent("");
     setShowClaimModal(true);
   };
 
   // 审核认领（直接传入 item）
-  const handleClaimAgreeDirect = async (item: BindProjectWaitInfo, agree: boolean) => {
+  const handleClaimAgreeDirect = async (
+    item: BindProjectWaitInfo,
+    agree: boolean
+  ) => {
     if (!address) return;
     setLoading(true);
     try {
@@ -235,10 +330,14 @@ export default function ReviewPage() {
       if (res.message) {
         toast.error(res.message);
       } else {
-        toast.success(agree ? t.common.reviewPass as string : t.common.reviewReject as string);
+        toast.success(
+          agree
+            ? (t.common.reviewPass as string)
+            : (t.common.reviewReject as string)
+        );
         fetchClaimList();
       }
-    } catch (error) {
+    } catch {
       toast.error(t.common.operationFailed as string);
     } finally {
       setLoading(false);
@@ -274,11 +373,15 @@ export default function ReviewPage() {
       if (res.message) {
         toast.error(res.message);
       } else {
-        toast.success(agree ? t.common.reviewPass as string : t.common.reviewReject as string);
+        toast.success(
+          agree
+            ? (t.common.reviewPass as string)
+            : (t.common.reviewReject as string)
+        );
         setShowClaimModal(false);
         fetchClaimList();
       }
-    } catch (error) {
+    } catch {
       toast.error(t.common.operationFailed as string);
     } finally {
       setLoading(false);
@@ -288,17 +391,21 @@ export default function ReviewPage() {
   // 迁移 Token
   const handleMigrate = async () => {
     // 验证表单 - 检查所有必填字段
-    if (!migrateToken.project_name || !migrateToken.contract_addr ||
-        !migrateToken.token_name || !migrateToken.token_symbol ||
-        !migrateToken.total_supply) {
+    if (
+      !migrateToken.project_name ||
+      !migrateToken.contract_addr ||
+      !migrateToken.token_name ||
+      !migrateToken.token_symbol ||
+      !migrateToken.total_supply
+    ) {
       toast.error(t.common.fillRequired as string);
       return;
     }
 
     // 验证 percents 数组 - 每个值都必须存在且大于0
-    const isPercentsValid = migrateToken.percents.every(p => {
+    const isPercentsValid = migrateToken.percents.every((p) => {
       const value = parseFloat(p);
-      return p !== '' && !isNaN(value) && value > 0;
+      return p !== "" && !isNaN(value) && value > 0;
     });
     if (!isPercentsValid) {
       toast.error(t.common.fillAllRatio as string);
@@ -318,11 +425,11 @@ export default function ReviewPage() {
       const decimals = await publicClient?.readContract({
         address: migrateToken.contract_addr as `0x${string}`,
         abi: erc20Abi,
-        functionName: 'decimals',
+        functionName: "decimals",
       });
 
       if (!decimals) {
-        toast.error('無法獲取代幣精度');
+        toast.error("無法獲取代幣精度");
         setMigrateLoading(false);
         return;
       }
@@ -336,48 +443,15 @@ export default function ReviewPage() {
       writeTransfer({
         address: migrateToken.contract_addr as `0x${string}`,
         abi: erc20Abi,
-        functionName: 'transfer',
+        functionName: "transfer",
         args: [CONTRACTS.KOL as `0x${string}`, amount],
         gas: BigInt(100000),
-        gasPrice: parseUnits('5', 9), // 5 gwei
+        gasPrice: parseUnits("5", 9), // 5 gwei
       });
     } catch (error) {
       setMigrateLoading(false);
       toast.error(t.common.transferFailed as string);
-      console.error('Migration error:', error);
-    }
-  };
-
-  // 调用迁移 API
-  const handleMigrateApi = async () => {
-    if (!address) return;
-
-    try {
-      const percents = migrateToken.percents.map(p => Math.round(parseFloat(p) * 100));
-      await adminApi.migrateToken({
-        admin_address: address,
-        project_name: migrateToken.project_name,
-        contract_addr: migrateToken.contract_addr,
-        token_name: migrateToken.token_name,
-        token_symbol: migrateToken.token_symbol,
-        total_supply: migrateToken.total_supply,
-        percents,
-      });
-
-      // 与 Vue 项目一致：只要 API 调用成功就显示成功
-      toast.success(t.common.migrateSuccess as string);
-      setMigrateToken({
-        project_name: '',
-        contract_addr: '',
-        token_name: '',
-        token_symbol: '',
-        total_supply: '',
-        percents: ['', '', '', ''],
-      });
-    } catch (error) {
-      toast.error(t.common.migrateFailed as string);
-    } finally {
-      setMigrateLoading(false);
+      console.error("Migration error:", error);
     }
   };
 
@@ -390,14 +464,14 @@ export default function ReviewPage() {
 
   // 渲染链接
   const renderLink = (url: string | undefined) => {
-    if (!url) return <span className="text-[var(--text-muted)]">--</span>;
+    if (!url) return <span className="text-text-muted">--</span>;
     if (isValidUrl(url)) {
       return (
         <a
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[var(--primary)] hover:text-[var(--primary-hover)] flex items-center gap-1 truncate max-w-[150px] transition-colors"
+          className="text-primary hover:text-primary-hover flex items-center gap-1 truncate max-w-37.5 transition-colors"
           title={url}
         >
           {url.length > 30 ? `${url.slice(0, 30)}...` : url}
@@ -405,31 +479,33 @@ export default function ReviewPage() {
         </a>
       );
     }
-    return <span className="truncate max-w-[150px] text-[var(--foreground)]">{url}</span>;
+    return <span className="truncate max-w-37.5 text-secondary">{url}</span>;
   };
 
   if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center h-[60vh] bg-[var(--background)]">
-        <p className="text-[var(--text-muted)]">無權限訪問</p>
+      <div className="flex items-center justify-center h-[60vh] bg-background">
+        <p className="text-text-muted">無權限訪問</p>
       </div>
     );
   }
 
   return (
-    <div className="px-5 py-6 min-h-screen bg-[var(--background)]">
-      <h1 className="text-xl font-semibold mb-6 text-[var(--foreground)]">{review.title as string}</h1>
+    <div className="px-5 py-6 min-h-screen bg-background">
+      <h1 className="text-xl font-semibold mb-6 text-secondary">
+        {review.title as string}
+      </h1>
 
       {/* Tabs */}
-      <div className="flex bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl p-1 mb-6">
-        {(['kol', 'project', 'claim', 'migrate'] as Tab[]).map((tab) => (
+      <div className="flex bg-background-card border border-border rounded-xl p-1 mb-6">
+        {(["kol", "project", "claim", "migrate"] as Tab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`flex-1 py-2.5 text-sm rounded-lg transition-all ${
               activeTab === tab
-                ? 'bg-gradient-to-r from-[var(--primary-gradient-start)] to-[var(--primary-gradient-end)] text-black font-semibold shadow-md'
-                : 'text-[var(--text-secondary)] hover:bg-[var(--background-card-hover)]'
+                ? "bg-linear-to-r from-primary-start to-primary-end text-black font-semibold shadow-md"
+                : "text-text-secondary hover:bg-card-hover"
             }`}
           >
             {tabs[tab]}
@@ -438,25 +514,29 @@ export default function ReviewPage() {
       </div>
 
       {/* KOL 列表 */}
-      {activeTab === 'kol' && (
+      {activeTab === "kol" && (
         <div className="space-y-4">
           {dataLoading ? (
             <div className="card text-center py-10">
-              <div className="flex items-center justify-center gap-2 text-[var(--text-secondary)]">
-                <span className="w-4 h-4 border-2 border-[var(--text-secondary)] border-t-transparent rounded-full animate-spin" />
+              <div className="flex items-center justify-center gap-2 text-text-secondary">
+                <span className="w-4 h-4 border-2 border-text-secondary border-t-transparent rounded-full animate-spin" />
                 <span>{t.common.loading as string}</span>
               </div>
             </div>
           ) : kolList.length === 0 ? (
-            <div className="card text-center py-10 text-[var(--text-muted)]">暫無數據</div>
+            <div className="card text-center py-10 text-text-muted">
+              暫無數據
+            </div>
           ) : (
             kolList.map((item, index) => (
               <div key={index} className="card">
                 <div className="space-y-6 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">{review.certifyAddress as string}</span>
+                    <span className="text-text-secondary">
+                      {review.certifyAddress as string}
+                    </span>
                     <a
-                      href={getBscScanUrl(item.address, 'address')}
+                      href={getBscScanUrl(item.address, "address")}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[#FFC519] hover:text-[#e6b117] transition-colors"
@@ -465,24 +545,38 @@ export default function ReviewPage() {
                     </a>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">{review.twitterAddress as string}</span>
+                    <span className="text-text-secondary">
+                      {review.twitterAddress as string}
+                    </span>
                     {renderLink(item.twitter_account)}
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">{review.telegramAddress as string}</span>
+                    <span className="text-text-secondary">
+                      {review.telegramAddress as string}
+                    </span>
                     {renderLink(item.tg_account)}
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">{review.binanceSquare as string}</span>
+                    <span className="text-text-secondary">
+                      {review.binanceSquare as string}
+                    </span>
                     {renderLink(item.discord_account)}
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">{review.status as string}</span>
-                    <span className="text-[var(--foreground)]">{statusMap[item.status]}</span>
+                    <span className="text-text-secondary">
+                      {review.status as string}
+                    </span>
+                    <span className="text-secondary">
+                      {statusMap[item.status]}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">{review.createTime as string}</span>
-                    <span className="text-[var(--foreground)]">{formatDate(item.created_at)}</span>
+                    <span className="text-text-secondary">
+                      {review.createTime as string}
+                    </span>
+                    <span className="text-secondary">
+                      {formatDate(item.created_at)}
+                    </span>
                   </div>
                 </div>
                 <div className="flex gap-3 mt-5">
@@ -495,7 +589,7 @@ export default function ReviewPage() {
                   </button>
                   <button
                     onClick={() => {
-                      setRejectType('kol');
+                      setRejectType("kol");
                       setRejectItem(item);
                       setShowRejectConfirm(true);
                     }}
@@ -512,57 +606,87 @@ export default function ReviewPage() {
       )}
 
       {/* 项目列表 */}
-      {activeTab === 'project' && (
+      {activeTab === "project" && (
         <div className="space-y-4">
           {dataLoading ? (
             <div className="card text-center py-10">
-              <div className="flex items-center justify-center gap-2 text-[var(--text-secondary)]">
-                <span className="w-4 h-4 border-2 border-[var(--text-secondary)] border-t-transparent rounded-full animate-spin" />
+              <div className="flex items-center justify-center gap-2 text-text-secondary">
+                <span className="w-4 h-4 border-2 border-text-secondary border-t-transparent rounded-full animate-spin" />
                 <span>{t.common.loading as string}</span>
               </div>
             </div>
           ) : projectList.length === 0 ? (
-            <div className="card text-center py-10 text-[var(--text-muted)]">暫無數據</div>
+            <div className="card text-center py-10 text-text-muted">
+              暫無數據
+            </div>
           ) : (
             projectList.map((item, index) => (
               <div key={index} className="card">
                 <div className="space-y-6 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">{review.tokenName as string}</span>
-                    <span className="text-[var(--foreground)]">{item.name}</span>
+                    <span className="text-text-secondary">
+                      {review.tokenName as string}
+                    </span>
+                    <span className="text-secondary">{item.name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">{review.tokenSymbol as string}</span>
-                    <span className="text-[var(--foreground)]">{item.symbol}</span>
+                    <span className="text-text-secondary">
+                      {review.tokenSymbol as string}
+                    </span>
+                    <span className="text-secondary">{item.symbol}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">{review.totalSupply as string}</span>
-                    <span className="text-[var(--foreground)]">{item.total_supply}</span>
+                    <span className="text-text-secondary">
+                      {review.totalSupply as string}
+                    </span>
+                    <span className="text-secondary">{item.total_supply}</span>
                   </div>
-                  <div className="mt-4 pt-4 border-t border-[var(--border-color)]">
-                    <p className="text-[var(--text-secondary)] mb-3">{review.distribution as string}</p>
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <p className="text-text-secondary mb-3">
+                      {review.distribution as string}
+                    </p>
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="flex justify-between bg-[var(--background-card-hover)] p-2.5 rounded-lg border border-[var(--border-color)]">
-                        <span className="text-[var(--text-secondary)]">{review.crossChain as string}</span>
-                        <span className="text-[var(--foreground)]">{item.cross_percent / 100}%</span>
+                      <div className="flex justify-between bg-card-hover p-2.5 rounded-lg border border-border">
+                        <span className="text-text-secondary">
+                          {review.crossChain as string}
+                        </span>
+                        <span className="text-secondary">
+                          {item.cross_percent / 100}%
+                        </span>
                       </div>
-                      <div className="flex justify-between bg-[var(--background-card-hover)] p-2.5 rounded-lg border border-[var(--border-color)]">
-                        <span className="text-[var(--text-secondary)]">{review.liquidityIssue as string}</span>
-                        <span className="text-[var(--foreground)]">{item.le_percent / 100}%</span>
+                      <div className="flex justify-between bg-card-hover p-2.5 rounded-lg border border-border">
+                        <span className="text-text-secondary">
+                          {review.liquidityIssue as string}
+                        </span>
+                        <span className="text-secondary">
+                          {item.le_percent / 100}%
+                        </span>
                       </div>
-                      <div className="flex justify-between bg-[var(--background-card-hover)] p-2.5 rounded-lg border border-[var(--border-color)]">
-                        <span className="text-[var(--text-secondary)]">{review.launchPool as string}</span>
-                        <span className="text-[var(--foreground)]">{item.lm_percent / 100}%</span>
+                      <div className="flex justify-between bg-card-hover p-2.5 rounded-lg border border-border">
+                        <span className="text-text-secondary">
+                          {review.launchPool as string}
+                        </span>
+                        <span className="text-secondary">
+                          {item.lm_percent / 100}%
+                        </span>
                       </div>
-                      <div className="flex justify-between bg-[var(--background-card-hover)] p-2.5 rounded-lg border border-[var(--border-color)]">
-                        <span className="text-[var(--text-secondary)]">{review.communityAirdrop as string}</span>
-                        <span className="text-[var(--foreground)]">{item.kol_percent / 100}%</span>
+                      <div className="flex justify-between bg-card-hover p-2.5 rounded-lg border border-border">
+                        <span className="text-text-secondary">
+                          {review.communityAirdrop as string}
+                        </span>
+                        <span className="text-secondary">
+                          {item.kol_percent / 100}%
+                        </span>
                       </div>
                     </div>
                   </div>
                   <div className="flex justify-between pt-2">
-                    <span className="text-[var(--text-secondary)]">{review.createTime as string}</span>
-                    <span className="text-[var(--foreground)]">{formatDate(item.created_at)}</span>
+                    <span className="text-text-secondary">
+                      {review.createTime as string}
+                    </span>
+                    <span className="text-secondary">
+                      {formatDate(item.created_at)}
+                    </span>
                   </div>
                 </div>
                 <div className="flex gap-3 mt-5">
@@ -575,7 +699,7 @@ export default function ReviewPage() {
                   </button>
                   <button
                     onClick={() => {
-                      setRejectType('project');
+                      setRejectType("project");
                       setRejectItem(item);
                       setShowRejectConfirm(true);
                     }}
@@ -592,24 +716,28 @@ export default function ReviewPage() {
       )}
 
       {/* 认领列表 */}
-      {activeTab === 'claim' && (
+      {activeTab === "claim" && (
         <div className="space-y-4">
           {dataLoading ? (
             <div className="card text-center py-10">
-              <div className="flex items-center justify-center gap-2 text-[var(--text-secondary)]">
-                <span className="w-4 h-4 border-2 border-[var(--text-secondary)] border-t-transparent rounded-full animate-spin" />
+              <div className="flex items-center justify-center gap-2 text-text-secondary">
+                <span className="w-4 h-4 border-2 border-text-secondary border-t-transparent rounded-full animate-spin" />
                 <span>{t.common.loading as string}</span>
               </div>
             </div>
           ) : claimList.length === 0 ? (
-            <div className="card text-center py-10 text-[var(--text-muted)]">暫無數據</div>
+            <div className="card text-center py-10 text-text-muted">
+              暫無數據
+            </div>
           ) : (
             claimList.map((item, index) => (
               <div key={index} className="card">
                 <div className="space-y-6 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">{review.tokenName as string}</span>
-                    <button 
+                    <span className="text-gray-400">
+                      {review.tokenName as string}
+                    </span>
+                    <button
                       onClick={() => goToDetail(item.project_name)}
                       className="text-[#FFC519] hover:text-[#e6b117] transition-colors underline"
                     >
@@ -617,9 +745,11 @@ export default function ReviewPage() {
                     </button>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">{review.claimAddress as string}</span>
+                    <span className="text-text-secondary">
+                      {review.claimAddress as string}
+                    </span>
                     <a
-                      href={getBscScanUrl(item.address, 'address')}
+                      href={getBscScanUrl(item.address, "address")}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[#FFC519] hover:text-[#e6b117] transition-colors"
@@ -628,15 +758,21 @@ export default function ReviewPage() {
                     </a>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">{review.twitterAddress as string}</span>
+                    <span className="text-text-secondary">
+                      {review.twitterAddress as string}
+                    </span>
                     {renderLink(item.twitter_account)}
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">{review.telegramAddress as string}</span>
+                    <span className="text-text-secondary">
+                      {review.telegramAddress as string}
+                    </span>
                     {renderLink(item.tg_account)}
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">{review.binanceSquare as string}</span>
+                    <span className="text-text-secondary">
+                      {review.binanceSquare as string}
+                    </span>
                     {item.discord_account ? (
                       <a
                         href={item.discord_account}
@@ -649,12 +785,16 @@ export default function ReviewPage() {
                         <ExternalLink className="w-3 h-3 shrink-0" />
                       </a>
                     ) : (
-                      <span className="text-[var(--text-muted)]">--</span>
+                      <span className="text-text-muted">--</span>
                     )}
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">{review.createTime as string}</span>
-                    <span className="text-[var(--foreground)]">{formatDate(item.created_at)}</span>
+                    <span className="text-text-secondary">
+                      {review.createTime as string}
+                    </span>
+                    <span className="text-secondary">
+                      {formatDate(item.created_at)}
+                    </span>
                   </div>
                 </div>
                 <div className="flex gap-3 mt-5">
@@ -667,7 +807,7 @@ export default function ReviewPage() {
                   </button>
                   <button
                     onClick={() => {
-                      setRejectType('claim');
+                      setRejectType("claim");
                       setRejectItem(item);
                       setShowRejectConfirm(true);
                     }}
@@ -684,62 +824,101 @@ export default function ReviewPage() {
       )}
 
       {/* 迁移 */}
-      {activeTab === 'migrate' && (
+      {activeTab === "migrate" && (
         <div className="card">
           <div className="space-y-4">
             <div>
-              <label className="text-sm mb-2 block text-[var(--text-secondary)] text-left">{review.projectName as string}</label>
+              <label className="text-sm mb-2 block text-text-secondary text-left">
+                {review.projectName as string}
+              </label>
               <input
                 type="text"
                 value={migrateToken.project_name}
-                onChange={(e) => setMigrateToken({ ...migrateToken, project_name: e.target.value })}
+                onChange={(e) =>
+                  setMigrateToken({
+                    ...migrateToken,
+                    project_name: e.target.value,
+                  })
+                }
                 className="input"
                 placeholder="100T-XXX"
               />
             </div>
             <div>
-              <label className="text-sm mb-2 block text-gray-300 text-left">{review.contractAddress as string}</label>
+              <label className="text-sm mb-2 block text-gray-300 text-left">
+                {review.contractAddress as string}
+              </label>
               <input
                 type="text"
                 value={migrateToken.contract_addr}
-                onChange={(e) => setMigrateToken({ ...migrateToken, contract_addr: e.target.value })}
+                onChange={(e) =>
+                  setMigrateToken({
+                    ...migrateToken,
+                    contract_addr: e.target.value,
+                  })
+                }
                 className="input"
                 placeholder="0x..."
               />
             </div>
             <div>
-              <label className="text-sm mb-2 block text-gray-300 text-left">{review.tokenName as string}</label>
+              <label className="text-sm mb-2 block text-gray-300 text-left">
+                {review.tokenName as string}
+              </label>
               <input
                 type="text"
                 value={migrateToken.token_name}
-                onChange={(e) => setMigrateToken({ ...migrateToken, token_name: e.target.value })}
+                onChange={(e) =>
+                  setMigrateToken({
+                    ...migrateToken,
+                    token_name: e.target.value,
+                  })
+                }
                 className="input"
               />
             </div>
             <div>
-              <label className="text-sm mb-2 block text-gray-300 text-left">{review.tokenSymbol as string}</label>
+              <label className="text-sm mb-2 block text-gray-300 text-left">
+                {review.tokenSymbol as string}
+              </label>
               <input
                 type="text"
                 value={migrateToken.token_symbol}
-                onChange={(e) => setMigrateToken({ ...migrateToken, token_symbol: e.target.value })}
+                onChange={(e) =>
+                  setMigrateToken({
+                    ...migrateToken,
+                    token_symbol: e.target.value,
+                  })
+                }
                 className="input"
               />
             </div>
             <div>
-              <label className="text-sm mb-2 block text-gray-300 text-left">{review.totalSupply as string}</label>
+              <label className="text-sm mb-2 block text-gray-300 text-left">
+                {review.totalSupply as string}
+              </label>
               <input
                 type="text"
                 value={migrateToken.total_supply}
-                onChange={(e) => setMigrateToken({ ...migrateToken, total_supply: e.target.value })}
+                onChange={(e) =>
+                  setMigrateToken({
+                    ...migrateToken,
+                    total_supply: e.target.value,
+                  })
+                }
                 className="input"
               />
             </div>
 
-            <div className="pt-5 border-t border-[var(--border-color)]">
-              <p className="text-sm font-medium mb-4 text-[var(--foreground)] text-left">{review.distribution as string}</p>
+            <div className="pt-5 border-t border-border">
+              <p className="text-sm font-medium mb-4 text-secondary text-left">
+                {review.distribution as string}
+              </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-[var(--text-secondary)] mb-2 block text-left">{review.crossChain as string}</label>
+                  <label className="text-xs text-text-secondary mb-2 block text-left">
+                    {review.crossChain as string}
+                  </label>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
@@ -747,11 +926,13 @@ export default function ReviewPage() {
                       onChange={(e) => updatePercent(0, e.target.value)}
                       className="input text-sm"
                     />
-                    <span className="text-[var(--text-secondary)]">%</span>
+                    <span className="text-text-secondary">%</span>
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-[var(--text-secondary)] mb-2 block text-left">{review.liquidityIssue as string}</label>
+                  <label className="text-xs text-text-secondary mb-2 block text-left">
+                    {review.liquidityIssue as string}
+                  </label>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
@@ -759,11 +940,13 @@ export default function ReviewPage() {
                       onChange={(e) => updatePercent(1, e.target.value)}
                       className="input text-sm"
                     />
-                    <span className="text-[var(--text-secondary)]">%</span>
+                    <span className="text-text-secondary">%</span>
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-[var(--text-secondary)] mb-2 block text-left">{review.launchPool as string}</label>
+                  <label className="text-xs text-text-secondary mb-2 block text-left">
+                    {review.launchPool as string}
+                  </label>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
@@ -771,11 +954,13 @@ export default function ReviewPage() {
                       onChange={(e) => updatePercent(2, e.target.value)}
                       className="input text-sm"
                     />
-                    <span className="text-[var(--text-secondary)]">%</span>
+                    <span className="text-text-secondary">%</span>
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-[var(--text-secondary)] mb-2 block text-left">{review.kolReward as string}</label>
+                  <label className="text-xs text-text-secondary mb-2 block text-left">
+                    {review.kolReward as string}
+                  </label>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
@@ -783,7 +968,7 @@ export default function ReviewPage() {
                       onChange={(e) => updatePercent(3, e.target.value)}
                       className="input text-sm"
                     />
-                    <span className="text-[var(--text-secondary)]">%</span>
+                    <span className="text-text-secondary">%</span>
                   </div>
                 </div>
               </div>
@@ -794,7 +979,9 @@ export default function ReviewPage() {
               disabled={migrateLoading || transferPending}
               className="btn-primary w-full mt-5"
             >
-              {migrateLoading || transferPending ? '...' : review.migrateToken as string}
+              {migrateLoading || transferPending
+                ? "..."
+                : (review.migrateToken as string)}
             </button>
           </div>
         </div>
@@ -803,12 +990,14 @@ export default function ReviewPage() {
       {/* 认领审核弹窗 */}
       {showClaimModal && selectedClaim && (
         <div className="fixed inset-0 bg-black/60 flex items-end justify-center z-100">
-          <div className="bg-[var(--background-card)] rounded-t-3xl w-full max-w-md p-6 animate-slide-up border-t border-[var(--border-color)]">
+          <div className="bg-background-card rounded-t-3xl w-full max-w-md p-6 animate-slide-up border-t border-border">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-semibold text-[var(--foreground)]">審核認領項目</h3>
-              <button 
+              <h3 className="text-lg font-semibold text-secondary">
+                審核認領項目
+              </h3>
+              <button
                 onClick={() => setShowClaimModal(false)}
-                className="text-[var(--text-secondary)] hover:text-[var(--foreground)] transition-colors"
+                className="text-text-secondary hover:text-secondary transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -816,15 +1005,23 @@ export default function ReviewPage() {
 
             <div className="space-y-4 text-sm">
               <div className="flex justify-between">
-                <span className="text-[var(--text-secondary)]">{review.stakeAmount as string}</span>
-                <span className="text-[var(--foreground)]">{parseFloat(userDeposited).toFixed(2)} SOS</span>
+                <span className="text-text-secondary">
+                  {review.stakeAmount as string}
+                </span>
+                <span className="text-secondary">
+                  {parseFloat(userDeposited).toFixed(2)} SOS
+                </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[var(--text-secondary)]">{review.currentWeight as string}</span>
-                <span className="text-[var(--foreground)]">{tokenAirdropKols} / 100</span>
+                <span className="text-text-secondary">
+                  {review.currentWeight as string}
+                </span>
+                <span className="text-secondary">{tokenAirdropKols} / 100</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[var(--text-secondary)]">{review.allocationRatio as string}</span>
+                <span className="text-text-secondary">
+                  {review.allocationRatio as string}
+                </span>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
@@ -833,7 +1030,7 @@ export default function ReviewPage() {
                     className="input w-20 text-sm text-center"
                     placeholder="0"
                   />
-                  <span className="text-[var(--text-secondary)]">%</span>
+                  <span className="text-text-secondary">%</span>
                 </div>
               </div>
             </div>
@@ -843,7 +1040,7 @@ export default function ReviewPage() {
               disabled={loading}
               className="btn-primary w-full mt-6"
             >
-              {loading ? '...' : review.approve as string}
+              {loading ? "..." : (review.approve as string)}
             </button>
           </div>
         </div>
@@ -852,26 +1049,33 @@ export default function ReviewPage() {
       {/* 不通过确认弹窗 */}
       <ConfirmDialog
         open={showRejectConfirm}
-        title={lang === 'zh' ? '確認不通過' : 'Confirm Reject'}
-        message={lang === 'zh' ? '確定要審核不通過嗎？' : 'Are you sure you want to reject this review?'}
-        confirmText={t.common.confirm as string || '確認'}
-        cancelText={t.common.cancel as string || '取消'}
+        title={lang === "zh" ? "確認不通過" : "Confirm Reject"}
+        message={
+          lang === "zh"
+            ? "確定要審核不通過嗎？"
+            : "Are you sure you want to reject this review?"
+        }
+        confirmText={(t.common.confirm as string) || "確認"}
+        cancelText={(t.common.cancel as string) || "取消"}
         loading={loading}
         onConfirm={async () => {
           if (!rejectItem || !rejectType) return;
-          
+
           // 先关闭弹窗
           setShowRejectConfirm(false);
-          
+
           // 根据类型执行相应的不通过操作
-          if (rejectType === 'kol') {
+          if (rejectType === "kol") {
             await handleKolAgree(rejectItem as KolWaitInfo, false);
-          } else if (rejectType === 'project') {
+          } else if (rejectType === "project") {
             await handleProjectAgree(rejectItem as ProjectWaitInfo, false);
-          } else if (rejectType === 'claim') {
-            await handleClaimAgreeDirect(rejectItem as BindProjectWaitInfo, false);
+          } else if (rejectType === "claim") {
+            await handleClaimAgreeDirect(
+              rejectItem as BindProjectWaitInfo,
+              false
+            );
           }
-          
+
           // 清理状态
           setRejectType(null);
           setRejectItem(null);

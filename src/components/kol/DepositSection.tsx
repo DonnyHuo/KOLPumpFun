@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { toast } from 'sonner';
-import { useBalance, useAllowance, useApprove } from '@/hooks/useERC20';
-import { useDeposit,  } from '@/hooks/useDepositContract';
-import { CONTRACTS } from '@/constants/contracts';
-import type { KolInfo } from '@/lib/api';
+import { useState, useEffect } from "react";
+import { useConnection } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { toast } from "sonner";
+import { useBalance, useAllowance, useApprove } from "@/hooks/useERC20";
+import { useDeposit } from "@/hooks/useDepositContract";
+import { CONTRACTS } from "@/constants/contracts";
+import type { KolInfo } from "@/lib/api";
 
 interface DepositSectionProps {
   kolInfo: KolInfo | null;
@@ -16,9 +16,9 @@ interface DepositSectionProps {
 }
 
 export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useConnection();
   const { openConnectModal } = useConnectModal();
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState("");
 
   const kol = t.kol as Record<string, unknown>;
   const deposit = t.deposit as Record<string, unknown>;
@@ -41,9 +41,9 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
   // 三个质押范围（与 Vue 项目一致）
   const kolTypes = deposit.kolTypes as Record<string, string>;
   const stakeRanges = [
-    { name: kolTypes?.joint || '聯合KOL', value: 100 },
-    { name: kolTypes?.single || '單一KOL', value: 10000 },
-    { name: (home?.claimProject as string) || '銘文做市', value: 1000 },
+    { name: kolTypes?.joint || "聯合KOL", value: 100 },
+    { name: kolTypes?.single || "單一KOL", value: 10000 },
+    { name: (home?.claimProject as string) || "銘文做市", value: 1000 },
   ];
 
   // 获取授权额度
@@ -56,9 +56,9 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
   const hasAllowance = allowance ? Number(allowance) > 0 : false;
 
   // 授权
-  const { 
-    approve, 
-    isPending: isApproving, 
+  const {
+    approve,
+    isPending: isApproving,
     isConfirming: isApproveConfirming,
     isSuccess: isApproveSuccess,
   } = useApprove();
@@ -74,7 +74,7 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
   // 授权成功后刷新授权状态
   useEffect(() => {
     if (isApproveSuccess) {
-      toast.success(deposit.approveSuccess as string || '授權成功');
+      toast.success((deposit.approveSuccess as string) || "授權成功");
       refetchAllowance();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -83,8 +83,8 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
   // 质押成功后清空输入并刷新数据
   useEffect(() => {
     if (isDepositSuccess) {
-      toast.success('質押成功');
-      setAmount('');
+      toast.success("質押成功");
+      setAmount("");
       onSuccess();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -92,10 +92,7 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
 
   // 授权操作
   const handleApprove = () => {
-    approve(
-      CONTRACTS.SOS as `0x${string}`,
-      CONTRACTS.PLEDGE as `0x${string}`
-    );
+    approve(CONTRACTS.SOS as `0x${string}`, CONTRACTS.PLEDGE as `0x${string}`);
   };
 
   // 质押操作
@@ -110,13 +107,16 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
 
     // 检查最低金额
     if (amountNum < minDeposit) {
-      toast.error(tips?.[4]?.replace('{minDeposit}', minDeposit.toString()) || `最低質押 ${minDeposit} SOS`);
+      toast.error(
+        tips?.[4]?.replace("{minDeposit}", minDeposit.toString()) ||
+          `最低質押 ${minDeposit} SOS`
+      );
       return;
     }
 
     // 检查余额
     if (amountNum > parseFloat(sosBalance)) {
-      toast.error(t.noBalance as string || '餘額不足');
+      toast.error((t.noBalance as string) || "餘額不足");
       return;
     }
 
@@ -128,33 +128,37 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
     setAmount(sosBalance);
   };
 
-  const isLoading = isApproving || isApproveConfirming || isDepositing || isDepositConfirming;
+  const isLoading =
+    isApproving || isApproveConfirming || isDepositing || isDepositConfirming;
 
   // 获取翻译
   const inputPlaceholder = kol.inputPlaceholder as Record<string, string>;
-  const placeholderText = inputPlaceholder?.stakeAmount 
-    || `${kol.inputNumber} ≥ ${minDeposit} SOS`;
+  const placeholderText =
+    inputPlaceholder?.stakeAmount || `${kol.inputNumber} ≥ ${minDeposit} SOS`;
 
   return (
     <div>
       {/* 余额显示 */}
       <div className="flex items-center justify-between text-sm mb-3">
-        <span className="text-[var(--text-secondary)]">{kol.balance as string}</span>
-        <span className="text-[var(--foreground)] font-semibold">{parseFloat(sosBalance || '0').toFixed(0)} <span className="text-[var(--primary)]">SOS</span></span>
+        <span className="text-text-secondary">{kol.balance as string}</span>
+        <span className="text-secondary font-semibold">
+          {parseFloat(sosBalance || "0").toFixed(0)}{" "}
+          <span className="text-primary">SOS</span>
+        </span>
       </div>
 
       {/* 输入框 */}
-      <div className="w-full flex items-center bg-[var(--background-card)] border border-[var(--border-color)] px-4 h-[50px] rounded-xl focus-within:border-[var(--primary)] transition-colors">
+      <div className="w-full flex items-center bg-background-card border border-border px-4 h-12.5 rounded-xl focus-within:border-primary transition-colors">
         <input
           type="text"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder={placeholderText}
-          className="flex-1 outline-none bg-transparent text-[var(--foreground)] text-sm placeholder:text-[var(--text-muted)] placeholder:text-gray-500"
+          className="flex-1 outline-none bg-transparent text-secondary text-sm placeholder:text-text-muted"
         />
         <button
           onClick={handleMax}
-          className="bg-[var(--primary)]/20 text-[var(--primary)] text-xs font-semibold px-4 py-2 rounded-lg hover:bg-[var(--primary)]/30 transition-colors"
+          className="bg-primary/20 text-primary text-xs font-semibold px-4 py-2 rounded-lg hover:bg-primary/30 transition-colors"
         >
           {kol.max as string}
         </button>
@@ -165,10 +169,12 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
         {stakeRanges.map((range, index) => (
           <div
             key={index}
-            className="bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl p-3 text-center"
+            className="bg-background-card border border-border rounded-xl p-3 text-center"
           >
-            <div className="text-xs text-[var(--text-secondary)] mb-1">{range.name}</div>
-            <div className="text-sm font-semibold text-[var(--primary)]"><span className="text-xs">≥</span> {range.value} SOS</div>
+            <div className="text-xs text-text-secondary mb-1">{range.name}</div>
+            <div className="text-sm font-semibold text-primary">
+              <span className="text-xs">≥</span> {range.value} SOS
+            </div>
           </div>
         ))}
       </div>
@@ -180,11 +186,8 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
 
       {/* 按钮 */}
       {!isConnected ? (
-        <button
-          onClick={openConnectModal}
-          className="btn-primary w-full mt-5"
-        >
-          {kol.connectWallet as string || '連接錢包'}
+        <button onClick={openConnectModal} className="btn-primary w-full mt-5">
+          {(kol.connectWallet as string) || "連接錢包"}
         </button>
       ) : !hasAllowance ? (
         <button
@@ -192,10 +195,9 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
           disabled={isLoading}
           className="btn-primary w-full mt-5"
         >
-          {isApproving || isApproveConfirming 
-            ? (common.loading as string) 
-            : (kol.goApprove as string)
-          }
+          {isApproving || isApproveConfirming
+            ? (common.loading as string)
+            : (kol.goApprove as string)}
         </button>
       ) : (
         <button
@@ -203,13 +205,11 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
           disabled={isLoading || !amount}
           className="btn-primary w-full mt-5"
         >
-          {isDepositing || isDepositConfirming 
-            ? (common.loading as string) 
-            : (kol.deposit as string)
-          }
+          {isDepositing || isDepositConfirming
+            ? (common.loading as string)
+            : (kol.deposit as string)}
         </button>
       )}
     </div>
   );
 }
-

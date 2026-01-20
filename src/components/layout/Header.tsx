@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { ChevronLeft } from 'lucide-react';
-import { logo } from '@/assets/images';
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { ChevronLeft } from "lucide-react";
+import { logo } from "@/assets/images";
 
 interface HeaderProps {
   title?: string;
@@ -18,7 +18,12 @@ interface HeaderProps {
  * - 可选返回按钮
  * - 可自定义右侧内容
  */
-export function Header({ title, showBack = false, showLogo = false, rightContent }: HeaderProps) {
+export function Header({
+  title,
+  showBack = false,
+  showLogo = false,
+  rightContent,
+}: HeaderProps) {
   const router = useRouter();
 
   const goBack = () => {
@@ -26,13 +31,13 @@ export function Header({ title, showBack = false, showLogo = false, rightContent
   };
 
   return (
-    <header className="h-[50px] flex items-center justify-center bg-white px-5 font-medium text-base relative">
+    <header className="h-12.5 flex items-center justify-center bg-white px-5 font-medium text-base relative">
       {showBack && (
         <button onClick={goBack} className="absolute left-4 p-1">
           <ChevronLeft className="w-5 h-5 text-gray-600" />
         </button>
       )}
-      
+
       {showLogo ? (
         <Image
           src={logo}
@@ -44,12 +49,8 @@ export function Header({ title, showBack = false, showLogo = false, rightContent
       ) : (
         <span>{title}</span>
       )}
-      
-      {rightContent && (
-        <div className="absolute right-4">
-          {rightContent}
-        </div>
-      )}
+
+      {rightContent && <div className="absolute right-4">{rightContent}</div>}
     </header>
   );
 }

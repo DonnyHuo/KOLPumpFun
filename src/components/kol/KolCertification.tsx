@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { toast } from 'sonner';
-import { kolApi, type KolInfo } from '@/lib/api';
-import { Copy, ExternalLink } from 'lucide-react';
-import { shortAddress, copyToClipboard } from '@/lib/utils';
+import { useState, useEffect } from "react";
+import { useConnection } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { toast } from "sonner";
+import { kolApi, type KolInfo } from "@/lib/api";
+import { Copy, ExternalLink } from "lucide-react";
+import { shortAddress, copyToClipboard } from "@/lib/utils";
 
 interface KolCertificationProps {
   kolInfo: KolInfo | null;
@@ -15,14 +15,18 @@ interface KolCertificationProps {
 }
 
 // 官推链接
-const OFFICIAL_TWITTER_URL = 'https://x.com/SmartBTCdao';
+const OFFICIAL_TWITTER_URL = "https://x.com/SmartBTCdao";
 
-export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProps) {
-  const { address, isConnected } = useAccount();
+export function KolCertification({
+  kolInfo,
+  onSuccess,
+  t,
+}: KolCertificationProps) {
+  const { address, isConnected } = useConnection();
   const { openConnectModal } = useConnectModal();
   const [loading, setLoading] = useState(false);
-  const [twitterUrl, setTwitterUrl] = useState('');
-  const [telegramUrl, setTelegramUrl] = useState('');
+  const [twitterUrl, setTwitterUrl] = useState("");
+  const [telegramUrl, setTelegramUrl] = useState("");
   // 官推链接
   const officialTwitterUrl = OFFICIAL_TWITTER_URL;
 
@@ -33,8 +37,8 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
   // 同步 kolInfo 数据
   useEffect(() => {
     if (kolInfo) {
-      setTwitterUrl(kolInfo.twitter_account || '');
-      setTelegramUrl(kolInfo.tg_account || '');
+      setTwitterUrl(kolInfo.twitter_account || "");
+      setTelegramUrl(kolInfo.tg_account || "");
     }
   }, [kolInfo]);
 
@@ -45,7 +49,7 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
     if (address) {
       const success = await copyToClipboard(address);
       if (success) {
-        toast.success(common.copySuccess as string || '複製成功');
+        toast.success((common.copySuccess as string) || "複製成功");
       }
     }
   };
@@ -54,9 +58,9 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
 
   const handleSubmit = async () => {
     if (!address) return;
-    
+
     if (!twitterUrl) {
-      toast.error(tips?.[1] || 'Please enter a valid X address');
+      toast.error(tips?.[1] || "Please enter a valid X address");
       return;
     }
 
@@ -70,10 +74,10 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
       });
 
       // 与 Vue 项目一致：只要请求成功就显示成功提示
-      toast.success(tips?.[5] || '已提交認證申請');
-        onSuccess();
+      toast.success(tips?.[5] || "已提交認證申請");
+      onSuccess();
     } catch (error) {
-      toast.error((common.failed as string) || 'Failed');
+      toast.error((common.failed as string) || "Failed");
       console.error(error);
     } finally {
       setLoading(false);
@@ -81,8 +85,9 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
   };
 
   // 输入框样式 - 适配主题
-  const inputClass = "bg-[var(--background-card)] border border-[var(--border-color)] w-full h-[44px] text-sm rounded-xl px-4 text-[var(--foreground)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] transition-colors disabled:bg-[var(--background-card)]/50 disabled:text-[var(--text-muted)]";
-  
+  const inputClass =
+    "bg-background-card border border-border w-full h-[44px] text-sm rounded-xl px-4 text-secondary placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors disabled:bg-background-card/50 disabled:text-text-muted";
+
   return (
     <div className="text-sm">
       {/* 表单 - 两列布局 */}
@@ -90,22 +95,23 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
         {/* 钱包地址 */}
         <div className="flex flex-col gap-2 text-left w-full">
           <span className="text-text-secondary">
-            <span className="text-red-500 pr-0.5">*</span>{kol.revenueAddress as string}
+            <span className="text-red-500 pr-0.5">*</span>
+            {kol.revenueAddress as string}
           </span>
           <div className="relative">
             {isConnected ? (
               <>
-            <input
-              disabled
-              type="text"
-              value={address ? shortAddress(address) : '--'}
-              className={inputClass}
-            />
-            {address && (
-              <button
-                onClick={handleCopyAddress}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
-              >
+                <input
+                  disabled
+                  type="text"
+                  value={address ? shortAddress(address) : "--"}
+                  className={inputClass}
+                />
+                {address && (
+                  <button
+                    onClick={handleCopyAddress}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                  >
                     <Copy className="w-4 h-4 text-text-muted hover:text-primary transition-colors" />
                   </button>
                 )}
@@ -113,9 +119,9 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
             ) : (
               <button
                 onClick={openConnectModal}
-                className="bg-[#FFC519] hover:bg-[#FFD54F] text-black font-medium w-full h-[44px] text-sm rounded-xl px-4 transition-colors"
+                className="bg-[#FFC519] hover:bg-[#FFD54F] text-black font-medium w-full h-11 text-sm rounded-xl px-4 transition-colors"
               >
-                {kol.connectWallet as string || '連接錢包'}
+                {(kol.connectWallet as string) || "連接錢包"}
               </button>
             )}
           </div>
@@ -124,13 +130,14 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
         {/* Twitter */}
         <div className="flex flex-col gap-2 text-left w-full">
           <span className="text-text-secondary">
-            <span className="text-red-500 pr-0.5">*</span>{kol.twitterAddress as string}
+            <span className="text-red-500 pr-0.5">*</span>
+            {kol.twitterAddress as string}
           </span>
           <input
             type="text"
             value={twitterUrl}
             onChange={(e) => setTwitterUrl(e.target.value)}
-            placeholder={inputPlaceholder?.twitter || 'https://x.com/xxx'}
+            placeholder={inputPlaceholder?.twitter || "https://x.com/xxx"}
             disabled={hasSubmitted}
             className={inputClass}
           />
@@ -140,12 +147,14 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
       <div className="flex items-start justify-between mt-4 gap-4 text-xs">
         {/* Telegram */}
         <div className="flex flex-col gap-2 text-left w-full">
-          <span className="text-text-secondary">{kol.telegramAddress as string}</span>
+          <span className="text-text-secondary">
+            {kol.telegramAddress as string}
+          </span>
           <input
             type="text"
             value={telegramUrl}
             onChange={(e) => setTelegramUrl(e.target.value)}
-            placeholder={inputPlaceholder?.telegram || 'https://t.me/xxx'}
+            placeholder={inputPlaceholder?.telegram || "https://t.me/xxx"}
             disabled={hasSubmitted}
             className={inputClass}
           />
@@ -153,7 +162,9 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
 
         {/* 关注官推 */}
         <div className="flex flex-col gap-2 text-left w-full">
-          <span className="text-text-secondary">{kol.binanceSquare as string}</span>
+          <span className="text-text-secondary">
+            {kol.binanceSquare as string}
+          </span>
           <a
             href={officialTwitterUrl}
             target="_blank"
@@ -186,4 +197,3 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
     </div>
   );
 }
-
