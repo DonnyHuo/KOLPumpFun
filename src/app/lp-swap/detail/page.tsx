@@ -29,6 +29,7 @@ import zhCN from "@/i18n/zh-CN";
 import enUS from "@/i18n/en-US";
 import { getTokenIcon } from "@/assets/images/tokenList";
 import { ArrowLeft, Copy } from "lucide-react";
+import ConfirmButton from "@/components/ui/ConfirmButton";
 
 // Loading 组件
 function LoadingFallback() {
@@ -500,25 +501,23 @@ function LpSwapDetailContent() {
             {lang === "zh" ? "連接錢包" : "Connect Wallet"}
           </button>
         ) : needApprove ? (
-          <button
+          <ConfirmButton
             onClick={handleApprove}
             disabled={approveLoading}
             className="btn-primary w-full h-13 text-base font-bold"
+            loading={approveLoading}
           >
-            {approveLoading
-              ? `${common.loading}`
-              : (poolDetail.approve as string)}
-          </button>
+            {poolDetail.approve as string}
+          </ConfirmButton>
         ) : (
-          <button
+          <ConfirmButton
             onClick={handleExchange}
             disabled={exchangeLoading || !inputValue}
             className="btn-primary w-full h-13 text-base font-bold"
+            loading={exchangeLoading}
           >
-            {exchangeLoading
-              ? `${common.loading}`
-              : (poolDetail.stake as string)}
-          </button>
+            {poolDetail.stake as string}
+          </ConfirmButton>
         )}
       </div>
 

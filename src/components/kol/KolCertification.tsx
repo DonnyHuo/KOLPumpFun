@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { kolApi, type KolInfo } from "@/lib/api";
 import { Copy, ExternalLink } from "lucide-react";
 import { shortAddress, copyToClipboard } from "@/lib/utils";
+import ConfirmButton from "../ui/ConfirmButton";
 
 interface KolCertificationProps {
   kolInfo: KolInfo | null;
@@ -192,15 +193,14 @@ export function KolCertification({
       {/* 提交按钮 - 只有未提交过认证时显示 */}
       {!hasSubmitted && (
         <div className="mt-6">
-          <button
+          <ConfirmButton
             onClick={handleSubmit}
             disabled={certifyMutation.isPending || !twitterUrl}
             className="btn-primary w-full"
+            loading={certifyMutation.isPending}
           >
-            {certifyMutation.isPending
-              ? (common.loading as string)
-              : (kol.submit as string)}
-          </button>
+            {(kol.submit as string)}
+          </ConfirmButton>
         </div>
       )}
     </div>

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useQuitKol, useTokenRatiosIndex } from "@/hooks/useKolContract";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { KolInfo } from "@/lib/api";
+import ConfirmButton from "../ui/ConfirmButton";
 
 interface WithdrawSectionProps {
   kolInfo: KolInfo | null;
@@ -73,15 +74,14 @@ export function WithdrawSection({
         </div>
 
         {/* 解除质押按钮 */}
-        <button
+        <ConfirmButton
           onClick={() => setShowConfirm(true)}
           disabled={!(activeAmount > 0) || isLoading}
           className="btn-primary w-full mt-2"
+          loading={isLoading}
         >
-          {isLoading
-            ? (common.loading as string) || "加載中..."
-            : (home.liftDisposit as string) || "解除質押"}
-        </button>
+          {(home.liftDisposit as string)}
+        </ConfirmButton>
       </div>
 
       {/* 确认弹窗 */}
