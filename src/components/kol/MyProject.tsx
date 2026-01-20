@@ -112,10 +112,12 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
       <div className="flex items-center justify-between py-3 bg-background-card rounded-xl">
         <span className="text-text-secondary text-sm">{reserveInfo?.name}</span>
         <div className="flex items-center gap-1">
-          <span className="font-bold text-secondary">
+          <span className="font-medium text-secondary">
             {parseFloat(reserveBalance).toFixed(2)}
           </span>
-          <span className="text-primary font-bold">{reserveInfo?.symbol}</span>
+          <span className="text-primary font-medium">
+            {reserveInfo?.symbol}
+          </span>
         </div>
       </div>
 
