@@ -251,7 +251,7 @@ export default function EarlyBirdDetailPage() {
           <span className="text-2xl font-bold text-secondary">
             {poolInfo.symbol}
           </span>
-          <span className="bg-primary text-xs text-black rounded-full px-3 py-1 font-medium">
+          <span className="bg-primary/10 border border-primary text-xs text-primary rounded-full px-3 py-1 font-medium">
             {getProjectType(poolInfo.type, t)}
           </span>
           <span
