@@ -579,93 +579,93 @@ export default function BtcSwapPage() {
 
         {/* Social Links */}
         <SocialLinks className="mt-10 pb-8" />
+      </div>
 
-        {/* Chain Selection Modal */}
-        {showChainModal && (
+      {/* Chain Selection Modal */}
+      {showChainModal && (
+        <div
+          className="fixed inset-0 bg-black/60 flex items-end z-9999"
+          onClick={() => setShowChainModal(false)}
+        >
           <div
-            className="fixed inset-0 bg-black/60 flex items-end z-100"
-            onClick={() => setShowChainModal(false)}
+            className="bg-background-card w-full rounded-t-3xl border-t border-border animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div
-              className="bg-background-card w-full rounded-t-3xl border-t border-border animate-slide-up"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="w-12 h-1 bg-text-muted rounded-full mx-auto mt-4" />
-              <div className="text-center py-4 font-semibold text-secondary text-lg">
-                {btcSwap.select as string}
-              </div>
-              <div className="max-h-[60vh] overflow-y-auto px-2 pb-6">
-                {tokenList.map((token) => (
+            <div className="w-12 h-1 bg-text-muted rounded-full mx-auto mt-4" />
+            <div className="text-center py-4 font-semibold text-secondary text-lg">
+              {btcSwap.select as string}
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto px-2 pb-6">
+              {tokenList.map((token) => (
+                <button
+                  key={token.name}
+                  onClick={() => handleSelectChain(token.name)}
+                  className={`w-full px-4 py-4 flex items-center gap-3 rounded-xl transition-all ${
+                    selectedChain === token.name
+                      ? "bg-primary/10 text-primary border border-primary/30"
+                      : "text-secondary hover:bg-card-hover"
+                  }`}
+                >
+                  <Image
+                    src={getTokenIcon(token.name)}
+                    alt={token.name}
+                    width={32}
+                    height={32}
+                    className="rounded-full"
+                  />
+                  <span className="font-medium">{token.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Coin Selection Modal */}
+      {showCoinModal && (
+        <div
+          className="fixed inset-0 bg-black/60 flex items-end z-9999"
+          onClick={() => setShowCoinModal(false)}
+        >
+          <div
+            className="bg-background-card w-full rounded-t-3xl border-t border-border animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-1 bg-text-muted rounded-full mx-auto mt-4" />
+            <div className="text-center py-4 font-semibold text-secondary text-lg">
+              {btcSwap.select as string}
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto px-2 pb-6">
+              {coinList.length > 0 ? (
+                coinList.map((coin, index) => (
                   <button
-                    key={token.name}
-                    onClick={() => handleSelectChain(token.name)}
-                    className={`w-full px-4 py-4 flex items-center gap-3 rounded-xl transition-all ${
-                      selectedChain === token.name
+                    key={index}
+                    onClick={() => handleSelectCoin(coin)}
+                    className={`w-full px-4 py-4 flex items-center justify-between rounded-xl transition-all ${
+                      selectedCoin.inscriptionNumber ===
+                      coin.inscriptionNumber
                         ? "bg-primary/10 text-primary border border-primary/30"
                         : "text-secondary hover:bg-card-hover"
                     }`}
                   >
-                    <Image
-                      src={getTokenIcon(token.name)}
-                      alt={token.name}
-                      width={32}
-                      height={32}
-                      className="rounded-full"
-                    />
-                    <span className="font-medium">{token.name}</span>
+                    <span className="font-medium">
+                      {coin.tokenName}#{coin.inscriptionNumber}
+                    </span>
+                    <span className="text-text-secondary">{coin.amount}</span>
                   </button>
-                ))}
-              </div>
+                ))
+              ) : (
+                <div className="py-12 text-center text-text-muted text-sm">
+                  {(btcSwap.tips as string)?.replace(
+                    "{selectedChain}",
+                    selectedChain
+                  ) || `暫無${selectedChain}餘額`}
+                </div>
+              )}
             </div>
           </div>
-        )}
-
-        {/* Coin Selection Modal */}
-        {showCoinModal && (
-          <div
-            className="fixed inset-0 bg-black/60 flex items-end z-100"
-            onClick={() => setShowCoinModal(false)}
-          >
-            <div
-              className="bg-background-card w-full rounded-t-3xl border-t border-border animate-slide-up"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="w-12 h-1 bg-text-muted rounded-full mx-auto mt-4" />
-              <div className="text-center py-4 font-semibold text-secondary text-lg">
-                {btcSwap.select as string}
-              </div>
-              <div className="max-h-[60vh] overflow-y-auto px-2 pb-6">
-                {coinList.length > 0 ? (
-                  coinList.map((coin, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSelectCoin(coin)}
-                      className={`w-full px-4 py-4 flex items-center justify-between rounded-xl transition-all ${
-                        selectedCoin.inscriptionNumber ===
-                        coin.inscriptionNumber
-                          ? "bg-primary/10 text-primary border border-primary/30"
-                          : "text-secondary hover:bg-card-hover"
-                      }`}
-                    >
-                      <span className="font-medium">
-                        {coin.tokenName}#{coin.inscriptionNumber}
-                      </span>
-                      <span className="text-text-secondary">{coin.amount}</span>
-                    </button>
-                  ))
-                ) : (
-                  <div className="py-12 text-center text-text-muted text-sm">
-                    {(btcSwap.tips as string)?.replace(
-                      "{selectedChain}",
-                      selectedChain
-                    ) || `暫無${selectedChain}餘額`}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
