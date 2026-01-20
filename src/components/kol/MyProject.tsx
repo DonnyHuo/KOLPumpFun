@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useConnection } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useBalance } from "@/hooks/useERC20";
 import {
@@ -29,7 +30,25 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
   const t = lang === "zh" ? zhCN : enUS;
   const home = t.home as Record<string, unknown>;
 
-  const [reserveInfo, setReserveInfo] = useState<ProjectInfo | null>(null);
+  const { data: issuedProjects = [] } = useQuery<ProjectInfo[]>({
+    queryKey: ["projectIssuedList"],
+    queryFn: async () => {
+      const res = await kolApi.getProjectIssuedList();
+      return res.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
+  });
+
+  const reserveInfo = useMemo<ProjectInfo | null>(() => {
+    if (!kolInfo.project_name) return null;
+    return (
+      issuedProjects.find((p) => p.project_name === kolInfo.project_name) ||
+      null
+    );
+  }, [issuedProjects, kolInfo.project_name]);
 
   // 获取项目 Token ID
   const { data: tokenId } = useTokenRatiosIndex(kolInfo.project_name || "");
@@ -78,29 +97,6 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
   // 提取收益
   const { withdraw, isPending, isConfirming, isSuccess } =
     useWithdrawKolAirdrop();
-
-  // 获取已发行项目列表
-  useEffect(() => {
-    const fetchProjectInfo = async () => {
-      try {
-        const res = await kolApi.getProjectIssuedList();
-        if (res.data?.length > 0) {
-          const project = res.data.find(
-            (p) => p.project_name === kolInfo.project_name
-          );
-          if (project) {
-            setReserveInfo(project);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch project info:", error);
-      }
-    };
-
-    if (kolInfo.project_name) {
-      fetchProjectInfo();
-    }
-  }, [kolInfo.project_name]);
 
   // 监听提取成功
   useEffect(() => {

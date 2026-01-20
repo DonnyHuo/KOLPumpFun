@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Globe, Sun, Moon } from "lucide-react";
 import { useConnection, useDisconnect } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
@@ -88,6 +88,7 @@ export default function CreatePage() {
 
   const [loading, setLoading] = useState(true);
   const [kolInfo, setKolInfo] = useState<KolInfo | null>(null);
+  const fetchingKolInfoRef = useRef(false);
 
   // 获取质押金额
   const { formatted: depositedAmount, refetch: refetchDeposit } =
@@ -118,8 +119,9 @@ export default function CreatePage() {
   };
 
   // 获取 KOL 信息
-  const fetchKolInfo = async () => {
-    if (!address) return;
+  const fetchKolInfo = useCallback(async () => {
+    if (!address || fetchingKolInfoRef.current) return;
+    fetchingKolInfoRef.current = true;
     try {
       const res = await kolApi.queryKol(address);
       setKolInfo(res.data);
@@ -127,8 +129,10 @@ export default function CreatePage() {
     } catch (error) {
       console.error("Failed to fetch KOL info:", error);
       setKolInfo(null);
+    } finally {
+      fetchingKolInfoRef.current = false;
     }
-  };
+  }, [address, setAccountInfoStatus]);
 
   // 初始化数据
   useEffect(() => {
@@ -160,9 +164,9 @@ export default function CreatePage() {
   }, [depositedAmount, setActiveAmount]);
 
   // 刷新数据
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     await Promise.all([fetchKolInfo(), refetchDeposit()]);
-  };
+  }, [fetchKolInfo, refetchDeposit]);
 
   // 判断各步骤完成状态
   // KOL认证：只要提交过认证就算完成（与 Vue 项目一致）
