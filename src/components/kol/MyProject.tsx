@@ -137,15 +137,15 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
           <span className="text-[var(--primary)] text-[10px]">{reserveInfo?.symbol}</span>
         </div>
         {isConnected ? (
-          <button
-            onClick={handleWithdraw}
-            disabled={
-              isPending ||
-              isConfirming ||
-              parseFloat(viewCanWithdrawValue) === 0
-            }
+        <button
+          onClick={handleWithdraw}
+          disabled={
+            isPending ||
+            isConfirming ||
+            parseFloat(viewCanWithdrawValue) === 0
+          }
             className="btn-primary text-sm px-5 py-2"
-          >
+        >
             {isPending || isConfirming ? `${home.receiveBenefits}...` : home.receiveBenefits as string}
           </button>
         ) : (
@@ -154,31 +154,31 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
             className="btn-primary text-sm px-5 py-2"
           >
             {lang === 'zh' ? '連接錢包' : 'Connect Wallet'}
-          </button>
+        </button>
         )}
       </div>
 
       {/* 进度信息 */}
       <div className="bg-[var(--background-card)] rounded-xl py-4 space-y-3">
-        {/* 跨链进度 */}
+      {/* 跨链进度 */}
         <div className="flex items-center justify-between">
           <span className="text-[var(--text-secondary)] text-sm">{home.crossChainProgress as string}</span>
           <span className="font-medium text-[var(--foreground)]">{crossProgressValue} %</span>
-        </div>
+      </div>
 
-        {/* LP 进度 */}
+      {/* LP 进度 */}
         <div className="flex items-center justify-between">
           <span className="text-[var(--text-secondary)] text-sm">{home.LpProgress as string}</span>
           <span className="font-medium text-[var(--foreground)]">{lpExProgressValue} %</span>
-        </div>
+      </div>
 
-        {/* KOL 进度 */}
-        {showKolProgress && (
+      {/* KOL 进度 */}
+      {showKolProgress && (
           <div className="flex items-center justify-between">
             <span className="text-[var(--text-secondary)] text-sm">{home.KOLProgress as string}</span>
             <span className="font-medium text-[var(--foreground)]">{kolProgressValue} %</span>
-          </div>
-        )}
+        </div>
+      )}
       </div>
 
       {/* 进度说明 */}

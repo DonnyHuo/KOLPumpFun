@@ -82,8 +82,8 @@ export default function ManagePage() {
 
       try {
         // 循环获取每个 pair 的信息
-        for (let i = 0; i < count; i++) {
-          try {
+      for (let i = 0; i < count; i++) {
+        try {
             // 获取 pair 信息
             const pairData = await publicClient.readContract({
               address: CONTRACTS.LP_EXCHANGE as `0x${string}`,
@@ -103,7 +103,7 @@ export default function ManagePage() {
             });
 
             const pairInfo: PairInfo = {
-              id: i,
+                id: i,
               pairName,
               disPlayName,
               lpToken,
@@ -119,7 +119,7 @@ export default function ManagePage() {
             console.error(`Failed to fetch pair ${i}:`, err);
           }
         }
-      } catch (err) {
+        } catch (err) {
         console.error('Failed to fetch pairs:', err);
       }
 

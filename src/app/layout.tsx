@@ -35,14 +35,14 @@ export default function RootLayout({
     <html lang="zh-CN" suppressHydrationWarning>
       <body className={`${poppins.variable} font-sans antialiased`}>
         <ThemeProvider>
-          <Providers>
+        <Providers>
             <div id="app" className="max-w-[500px] mx-auto h-screen relative text-center text-[var(--foreground)]">
-              <main className="h-[calc(100vh-50px-max(env(safe-area-inset-bottom),10px))] overflow-y-auto">
-                {children}
-              </main>
-              <Footer />
-            </div>
-          </Providers>
+            <main className="h-[calc(100vh-50px-max(env(safe-area-inset-bottom),10px))] overflow-y-auto">
+              {children}
+            </main>
+            <Footer />
+          </div>
+        </Providers>
         </ThemeProvider>
       </body>
     </html>

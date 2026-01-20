@@ -71,7 +71,7 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
 
       // 与 Vue 项目一致：只要请求成功就显示成功提示
       toast.success(tips?.[5] || '已提交認證申請');
-      onSuccess();
+        onSuccess();
     } catch (error) {
       toast.error((common.failed as string) || 'Failed');
       console.error(error);
@@ -95,17 +95,17 @@ export function KolCertification({ kolInfo, onSuccess, t }: KolCertificationProp
           <div className="relative">
             {isConnected ? (
               <>
-                <input
-                  disabled
-                  type="text"
-                  value={address ? shortAddress(address) : '--'}
-                  className={inputClass}
-                />
-                {address && (
-                  <button
-                    onClick={handleCopyAddress}
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
-                  >
+            <input
+              disabled
+              type="text"
+              value={address ? shortAddress(address) : '--'}
+              className={inputClass}
+            />
+            {address && (
+              <button
+                onClick={handleCopyAddress}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+              >
                     <Copy className="w-4 h-4 text-text-muted hover:text-primary transition-colors" />
                   </button>
                 )}

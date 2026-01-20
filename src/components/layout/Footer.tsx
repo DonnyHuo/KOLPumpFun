@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { toast } from 'sonner';
 import { useStore } from '@/store/useStore';
 import zhCN from '@/i18n/zh-CN';
 import enUS from '@/i18n/en-US';

@@ -234,9 +234,9 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
       });
 
       // 与 Vue 项目一致：只要请求成功就显示成功提示
-      toast.success(kol?.claimSuccess as string || '認領成功');
-      setShowClaimModal(false);
-      onSuccess();
+        toast.success(kol?.claimSuccess as string || '認領成功');
+        setShowClaimModal(false);
+        onSuccess();
     } catch (error) {
       toast.error('認領失敗');
       console.error(error);
@@ -253,6 +253,11 @@ export function CreateProject({ activeAmount, onSuccess, t, kolInfo }: CreatePro
 
   // 切换模式
   const handleModeChange = (mode: KolMode) => {
+    // 铭文做市商模式暂未开放
+    if (mode === 'marketMaking') {
+      toast.info(common?.notOpenYet as string || '暫未開放');
+      return;
+    }
     if (canSelectMode(mode)) {
       setActiveMode(mode);
     }

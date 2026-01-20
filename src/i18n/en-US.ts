@@ -46,6 +46,7 @@ export default {
     search: 'Search',
     marketCap: 'Market Cap',
     viewDetails: 'View Details',
+    notOpenYet: 'Not Open Yet',
   },
   home: {
     title: ['BRC20 Launchpad', 'Inscription Liquidity Platform'],
