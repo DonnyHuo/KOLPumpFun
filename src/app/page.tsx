@@ -150,7 +150,7 @@ export default function CreatePage() {
     };
 
     initData();
-  }, [address, isConnected]);
+  }, [address, fetchKolInfo, isConnected]);
 
   // 更新质押金额到 store
   useEffect(() => {

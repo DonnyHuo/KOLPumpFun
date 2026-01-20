@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useConnection } from "wagmi";
 import { toast } from "sonner";
@@ -156,28 +156,30 @@ export function CreateProject({
   const contentDesc = kol?.contentDesc as string[];
 
   // 默认代币列表
-  const defaultTokens = [
-    {
-      mint_base_token: "BNB",
-      mint_base_token_addr: "0x55d398326f99059ff775485246999027b3197955",
-      exchange_rate: 9000000,
-    },
-    {
-      mint_base_token: "USDT",
-      mint_base_token_addr: "0x55d398326f99059ff775485246999027b3197955",
-      exchange_rate: 10000,
-    },
-    {
-      mint_base_token: "BTCB",
-      mint_base_token_addr: "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c",
-      exchange_rate: 900000000,
-    },
-  ];
+  const defaultTokens = useMemo(() => {
+    return [
+      {
+        mint_base_token: "BNB",
+        mint_base_token_addr: "0x55d398326f99059ff775485246999027b3197955",
+        exchange_rate: 9000000,
+      },
+      {
+        mint_base_token: "USDT",
+        mint_base_token_addr: "0x55d398326f99059ff775485246999027b3197955",
+        exchange_rate: 10000,
+      },
+      {
+        mint_base_token: "BTCB",
+        mint_base_token_addr: "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c",
+        exchange_rate: 900000000,
+      },
+    ];
+  }, []);
 
   useEffect(() => {
     setTokenList(defaultTokens);
     setSelectedToken(defaultTokens[0]);
-  }, []);
+  }, [defaultTokens]);
 
   // 获取项目列表
   useEffect(() => {
@@ -249,7 +251,7 @@ export function CreateProject({
   // 点击项目
   const handleClickProject = (project: ProjectInfo) => {
     if (activeAmount <= 0) {
-      toast.error((kol?.deposit as string) || "請先質押SOS");
+      toast.error((kol?.pleaseStakeSOS as string) || "請先質押SOS");
       return;
     }
     setSelectedProject(project);
