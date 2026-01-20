@@ -208,7 +208,7 @@ export function CreateProject({
     setSelectedToken(defaultTokens[0]);
   }, [defaultTokens]);
 
-  const { data: issuedProjects = [] } = useQuery<ProjectInfo[]>({
+  const { data: issuedProjectsData } = useQuery<ProjectInfo[]>({
     queryKey: ["projectIssuedList"],
     queryFn: async () => {
       const res = await kolApi.getProjectIssuedList();
@@ -219,6 +219,10 @@ export function CreateProject({
     refetchOnReconnect: false,
     refetchOnMount: false,
   });
+  const issuedProjects = useMemo(
+    () => issuedProjectsData ?? [],
+    [issuedProjectsData]
+  );
 
   useEffect(() => {
     setProjectList(issuedProjects);
