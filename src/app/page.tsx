@@ -5,6 +5,7 @@ import { Globe, Sun, Moon } from "lucide-react";
 import { useConnection, useDisconnect } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import Image from "next/image";
+import { useQuery } from "@tanstack/react-query";
 import { useStore } from "@/store/useStore";
 import { useUserDepositedAmount } from "@/hooks/useDepositContract";
 import { kolApi, type KolInfo } from "@/lib/api";
@@ -86,9 +87,7 @@ export default function CreatePage() {
   } = useStore();
   const t = lang === "zh" ? zhCN : enUS;
 
-  const [loading, setLoading] = useState(true);
-  const [kolInfo, setKolInfo] = useState<KolInfo | null>(null);
-  const fetchingKolInfoRef = useRef(false);
+  const langMenuRef = useRef<HTMLDivElement>(null);
 
   // 获取质押金额
   const { formatted: depositedAmount, refetch: refetchDeposit } =
@@ -96,7 +95,25 @@ export default function CreatePage() {
 
   // 语言选择下拉菜单
   const [showLangMenu, setShowLangMenu] = useState(false);
-  const langMenuRef = useRef<HTMLDivElement>(null);
+
+  const {
+    data: kolInfoData,
+    isLoading: kolLoading,
+    refetch: refetchKolInfo,
+  } = useQuery<KolInfo | null>({
+    queryKey: ["kolInfo", address],
+    queryFn: async () => {
+      if (!address) return null;
+      try {
+        const res = await kolApi.queryKol(address);
+        return res.data || null;
+      } catch {
+        return null;
+      }
+    },
+    enabled: Boolean(isConnected && address),
+  });
+  const kolInfo = kolInfoData ?? null;
 
   // 点击外部关闭下拉菜单
   useEffect(() => {
@@ -118,43 +135,11 @@ export default function CreatePage() {
     setShowLangMenu(false);
   };
 
-  // 获取 KOL 信息
-  const fetchKolInfo = useCallback(async () => {
-    if (!address || fetchingKolInfoRef.current) return;
-    fetchingKolInfoRef.current = true;
-    try {
-      const res = await kolApi.queryKol(address);
-      setKolInfo(res.data);
-      setAccountInfoStatus(res.data?.status ?? 0);
-    } catch (error) {
-      console.error("Failed to fetch KOL info:", error);
-      setKolInfo(null);
-    } finally {
-      fetchingKolInfoRef.current = false;
-    }
-  }, [address, setAccountInfoStatus]);
-
-  // 初始化数据
   useEffect(() => {
-    if (!isConnected || !address) {
-      setLoading(false);
-      return;
+    if (kolInfo) {
+      setAccountInfoStatus(kolInfo.status ?? 0);
     }
-
-    const initData = async () => {
-      setLoading(true);
-      try {
-        await Promise.all([
-          fetchKolInfo(),
-          new Promise((resolve) => setTimeout(resolve, 1500)),
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initData();
-  }, [address, fetchKolInfo, isConnected]);
+  }, [kolInfo, setAccountInfoStatus]);
 
   // 更新质押金额到 store
   useEffect(() => {
@@ -165,8 +150,8 @@ export default function CreatePage() {
 
   // 刷新数据
   const refreshData = useCallback(async () => {
-    await Promise.all([fetchKolInfo(), refetchDeposit()]);
-  }, [fetchKolInfo, refetchDeposit]);
+    await Promise.all([refetchKolInfo(), refetchDeposit()]);
+  }, [refetchKolInfo, refetchDeposit]);
 
   // 判断各步骤完成状态
   // KOL认证：只要提交过认证就算完成（与 Vue 项目一致）
@@ -294,7 +279,7 @@ export default function CreatePage() {
       </div>
 
       {/* Main Content */}
-      {loading ? (
+      {isConnected && kolLoading ? (
         <Skeleton />
       ) : (
         <div className="mt-8 space-y-8">

@@ -113,8 +113,7 @@ export function Providers({ children }: ProvidersProps) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000, // 1 分钟
-            refetchOnWindowFocus: false,
+            staleTime: 10 * 1000, // 10s
           },
         },
       })

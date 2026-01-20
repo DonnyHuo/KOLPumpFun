@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useConnection } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { kolApi, type KolInfo } from "@/lib/api";
 import { Copy, ExternalLink } from "lucide-react";
 import { shortAddress, copyToClipboard } from "@/lib/utils";
@@ -24,9 +25,9 @@ export function KolCertification({
 }: KolCertificationProps) {
   const { address, isConnected } = useConnection();
   const { openConnectModal } = useConnectModal();
-  const [loading, setLoading] = useState(false);
   const [twitterUrl, setTwitterUrl] = useState("");
   const [telegramUrl, setTelegramUrl] = useState("");
+  const queryClient = useQueryClient();
   // 官推链接
   const officialTwitterUrl = OFFICIAL_TWITTER_URL;
 
@@ -34,16 +35,14 @@ export function KolCertification({
   const common = t.common as Record<string, unknown>;
   const inputPlaceholder = kol.inputPlaceholder as Record<string, string>;
 
-  // 同步 kolInfo 数据
-  useEffect(() => {
-    if (kolInfo) {
-      setTwitterUrl(kolInfo.twitter_account || "");
-      setTelegramUrl(kolInfo.tg_account || "");
-    }
-  }, [kolInfo]);
-
   // 是否已提交过认证（只要有 kolInfo 数据就表示已提交）
   const hasSubmitted = !!kolInfo;
+  const displayTwitterUrl = hasSubmitted
+    ? kolInfo?.twitter_account || ""
+    : twitterUrl;
+  const displayTelegramUrl = hasSubmitted
+    ? kolInfo?.tg_account || ""
+    : telegramUrl;
 
   const handleCopyAddress = async () => {
     if (address) {
@@ -64,9 +63,8 @@ export function KolCertification({
       return;
     }
 
-    setLoading(true);
     try {
-      await kolApi.certify({
+      await certifyMutation.mutateAsync({
         address,
         twitter_account: twitterUrl,
         tg_account: telegramUrl || undefined,
@@ -79,10 +77,21 @@ export function KolCertification({
     } catch (error) {
       toast.error((common.failed as string) || "Failed");
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
+  const certifyMutation = useMutation({
+    mutationFn: (data: {
+      address: string;
+      twitter_account: string;
+      tg_account?: string;
+      discord_account?: string;
+    }) => kolApi.certify(data),
+    onSuccess: () => {
+      if (address) {
+        queryClient.invalidateQueries({ queryKey: ["kolInfo", address] });
+      }
+    },
+  });
 
   // 输入框样式 - 适配主题
   const inputClass =
@@ -135,7 +144,7 @@ export function KolCertification({
           </span>
           <input
             type="text"
-            value={twitterUrl}
+            value={displayTwitterUrl}
             onChange={(e) => setTwitterUrl(e.target.value)}
             placeholder={inputPlaceholder?.twitter || "https://x.com/xxx"}
             disabled={hasSubmitted}
@@ -152,7 +161,7 @@ export function KolCertification({
           </span>
           <input
             type="text"
-            value={telegramUrl}
+            value={displayTelegramUrl}
             onChange={(e) => setTelegramUrl(e.target.value)}
             placeholder={inputPlaceholder?.telegram || "https://t.me/xxx"}
             disabled={hasSubmitted}
@@ -187,10 +196,12 @@ export function KolCertification({
         <div className="mt-6">
           <button
             onClick={handleSubmit}
-            disabled={loading || !twitterUrl}
+            disabled={certifyMutation.isPending || !twitterUrl}
             className="btn-primary w-full"
           >
-            {loading ? (common.loading as string) : (kol.submit as string)}
+            {certifyMutation.isPending
+              ? (common.loading as string)
+              : (kol.submit as string)}
           </button>
         </div>
       )}

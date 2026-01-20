@@ -13,6 +13,7 @@ import Image from "next/image";
 import dayjs from "dayjs";
 import { parseUnits, formatUnits, maxUint256 } from "viem";
 import { toast } from "sonner";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useStore } from "@/store/useStore";
 import { useBalance, useAllowance, useApprove } from "@/hooks/useERC20";
 import { CONTRACTS } from "@/constants/contracts";
@@ -106,7 +107,6 @@ export default function PoolDetailPage() {
 
   const [activeTab, setActiveTab] = useState<"buy" | "redeem">("buy");
   const [amount, setAmount] = useState("");
-  const [orders, setOrders] = useState<MemeOrder[]>([]);
   const [rate, setRate] = useState(0);
 
   // 原生 BNB 余额
@@ -219,20 +219,21 @@ export default function PoolDetailPage() {
     }
   };
 
-  // 获取订单列表
-  const fetchOrders = useCallback(async () => {
-    if (!address) return;
-    try {
-      const res = await kolApi.getMemeOrders(address);
-      setOrders(res.data || []);
-    } catch (error) {
-      console.error("Failed to fetch orders:", error);
-    }
-  }, [address]);
-
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+  const {
+    data: ordersData,
+    isLoading: ordersLoading,
+    refetch: refetchOrders,
+  } = useQuery<{ data: MemeOrder[] }>({
+    queryKey: ["memeOrders", address],
+    queryFn: async () => {
+      if (!address) {
+        return { data: [] };
+      }
+      return kolApi.getMemeOrders(address);
+    },
+    enabled: Boolean(address),
+  });
+  const orders = ordersData?.data || [];
 
   // 授权成功后刷新
   useEffect(() => {
@@ -241,25 +242,19 @@ export default function PoolDetailPage() {
     }
   }, [approveSuccess, refetchAllowance]);
 
-  // 交易成功后记录订单
-  const recordTrade = useCallback(
-    async (params: {
+  const recordTradeMutation = useMutation({
+    mutationFn: (params: {
       pool_id: number;
       address: string;
       a_amount: string;
       b_amount: string;
       spend_txid: string;
       order_type: number;
-    }) => {
-      try {
-        await kolApi.memeTrade(params);
-        fetchOrders();
-      } catch (error) {
-        console.error("Failed to record trade:", error);
-      }
+    }) => kolApi.memeTrade(params),
+    onSuccess: () => {
+      refetchOrders();
     },
-    [fetchOrders]
-  );
+  });
 
   // 刷新余额
   const refreshBalances = useCallback(() => {
@@ -278,7 +273,7 @@ export default function PoolDetailPage() {
   useEffect(() => {
     if (isSwapSuccess && swapHash && address) {
       toast.success((t.poolDetail.buySuccess as string) || "抢购成功");
-      recordTrade({
+      recordTradeMutation.mutate({
         pool_id: Number(poolInfo.id),
         address,
         a_amount: amount,
@@ -296,7 +291,7 @@ export default function PoolDetailPage() {
     isSwapSuccess,
     poolInfo.exchangeRate,
     poolInfo.id,
-    recordTrade,
+    recordTradeMutation,
     refreshBalances,
     swapHash,
     t.poolDetail.buySuccess,
@@ -306,7 +301,7 @@ export default function PoolDetailPage() {
   useEffect(() => {
     if (isWithdrawSuccess && withdrawHash && address) {
       toast.success((t.poolDetail.redeemSuccess as string) || "赎回成功");
-      recordTrade({
+      recordTradeMutation.mutate({
         pool_id: Number(poolInfo.id),
         address,
         a_amount: String(parseFloat(stakeBalance) * rate * 0.96),
@@ -324,7 +319,7 @@ export default function PoolDetailPage() {
     isWithdrawSuccess,
     poolInfo.id,
     rate,
-    recordTrade,
+    recordTradeMutation,
     refreshBalances,
     stakeBalance,
     t.poolDetail.redeemSuccess,
@@ -645,7 +640,12 @@ export default function PoolDetailPage() {
 
       {/* Orders Section */}
       <div className="px-4 mt-8">
-        {orders.length > 0 && (
+        {ordersLoading && (
+          <div className="h-75 flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-border border-t-primary rounded-full animate-spin" />
+          </div>
+        )}
+        {!ordersLoading && orders.length > 0 && (
           <>
             <div className="text-secondary font-bold mb-4 text-left">
               {t.poolDetail.myOrders}

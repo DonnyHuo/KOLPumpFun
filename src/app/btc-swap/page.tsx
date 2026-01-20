@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import Image from "next/image";
 import { ChevronDown, RefreshCw, Copy } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { SocialLinks } from "@/components/common/SocialLinks";
 import { shortAddress, copyToClipboard } from "@/lib/utils";
 import { isAddress } from "viem";
@@ -24,10 +25,6 @@ interface BridgeRecord {
   order_state: number;
   amount?: string;
   symbol?: string;
-}
-
-interface TokenInfo {
-  name: string;
 }
 
 interface CoinInfo {
@@ -72,17 +69,10 @@ export default function BtcSwapPage() {
   // BTC 钱包状态
   const [btcAddress, setBtcAddress] = useState("");
   const [toAddress, setToAddress] = useState("");
-  const [recordList, setRecordList] = useState<BridgeRecord[]>([]);
-  const [tokenList, setTokenList] = useState<TokenInfo[]>([]);
   const [selectedChain, setSelectedChain] = useState("");
-  const [coinList, setCoinList] = useState<CoinInfo[]>([]);
-  const [selectedCoin, setSelectedCoin] = useState<CoinInfo>({
-    tokenName: btcSwap.select as string,
-    amount: 0,
-  });
+  const [selectedCoinId, setSelectedCoinId] = useState("");
   const [showChainModal, setShowChainModal] = useState(false);
   const [showCoinModal, setShowCoinModal] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [postLoading, setPostLoading] = useState(false);
 
   // 复制地址
@@ -109,76 +99,36 @@ export default function BtcSwapPage() {
     return statusTexts[status] || statusTexts[4];
   };
 
-  // 获取跨链记录
-  const fetchRecordList = useCallback(async () => {
-    if (!btcAddress) return;
-    setLoading(true);
-    try {
-      const res = await brc20Api.getBridgeRecord(btcAddress);
-      setRecordList(res.data || []);
-    } catch (error) {
-      console.error("Failed to fetch records:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [btcAddress]);
-
-  // 获取 BRC20 余额 - 通过 OKX 钱包的 getInscriptions 方法
-  const getBTCBalance = useCallback(
-    async (tokenName: string) => {
-      if (!btcAddress || !tokenName || typeof window.okxwallet === "undefined")
-        return;
-
-      try {
-        // 尝试通过 OKX 钱包获取铭文
-        const inscriptions = await window.okxwallet.bitcoin.getInscriptions();
-
-        if (Array.isArray(inscriptions) && inscriptions.length > 0) {
-          // 定义铭文类型
-          type Inscription = {
-            tick?: string;
-            ticker?: string;
-            contentType?: string;
-            inscriptionId?: string;
-            inscriptionNumber?: string;
-            amount?: string;
-          };
-
-          // 过滤出当前选择的代币的铭文
-          const filteredInscriptions = (inscriptions as Inscription[]).filter(
-            (item) => {
-              const tick = item.tick || item.ticker || "";
-              return tick.toLowerCase() === tokenName.toLowerCase();
-            }
-          );
-
-          const tokenListData = filteredInscriptions.map((item) => ({
-            tokenName: item.tick || item.ticker || tokenName,
-            inscriptionId: item.inscriptionId || "",
-            inscriptionNumber: item.inscriptionNumber || "",
-            amount: parseFloat(item.amount || "0"),
-          }));
-
-          setCoinList(tokenListData);
-          if (tokenListData.length > 0) {
-            setSelectedCoin(tokenListData[0]);
-          } else {
-            setCoinList([]);
-            setSelectedCoin({ tokenName: btcSwap.select as string, amount: 0 });
-          }
-        } else {
-          setCoinList([]);
-          setSelectedCoin({ tokenName: btcSwap.select as string, amount: 0 });
-        }
-      } catch (error) {
-        console.error("Failed to fetch BTC balance:", error);
-        // 如果获取失败，清空列表
-        setCoinList([]);
-        setSelectedCoin({ tokenName: btcSwap.select as string, amount: 0 });
+  const { data: btcAccounts = [] } = useQuery<string[]>({
+    queryKey: ["btcAccounts"],
+    queryFn: async () => {
+      if (typeof window.okxwallet === "undefined") {
+        return [];
       }
+      return window.okxwallet.bitcoin.getAccounts();
     },
-    [btcAddress, btcSwap.select]
-  );
+    enabled: typeof window !== "undefined",
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
+  });
+  const resolvedBtcAddress = btcAddress || btcAccounts[0] || "";
+
+  const {
+    data: recordData,
+    isFetching: recordFetching,
+    refetch: refetchRecords,
+  } = useQuery<{ data: BridgeRecord[] }>({
+    queryKey: ["bridgeRecord", resolvedBtcAddress],
+    queryFn: async () => {
+      if (!resolvedBtcAddress) {
+        return { data: [] };
+      }
+      return brc20Api.getBridgeRecord(resolvedBtcAddress);
+    },
+    enabled: Boolean(resolvedBtcAddress),
+  });
+  const recordList = recordData?.data || [];
 
   // 连接 OKX 钱包
   const connectWallet = useCallback(async () => {
@@ -199,46 +149,65 @@ export default function BtcSwapPage() {
     }
   }, [btcSwap.installWallet, t.common.walletConnectFailed]);
 
-  // 获取代币列表
-  useEffect(() => {
-    const fetchTokenList = async () => {
-      try {
-        const res = await brc20Api.getTokenList();
-        if (res.data) {
-          const tokens = res.data.map((item) => ({
-            name: item.symbol,
-          }));
-          setTokenList(tokens);
-          if (tokens.length > 0) {
-            setSelectedChain(tokens[0].name);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch token list:", error);
+  const { data: tokenListData } = useQuery<{ data: { symbol: string }[] }>({
+    queryKey: ["brc20TokenList"],
+    queryFn: () => brc20Api.getTokenList(),
+  });
+  const tokenList =
+    tokenListData?.data?.map((item) => ({ name: item.symbol })) || [];
+  const resolvedChain = selectedChain || tokenList[0]?.name || "";
+
+  const { data: coinList = [] } = useQuery<CoinInfo[]>({
+    queryKey: ["btcInscriptions", resolvedBtcAddress, resolvedChain],
+    queryFn: async () => {
+      if (
+        !resolvedBtcAddress ||
+        !resolvedChain ||
+        typeof window.okxwallet === "undefined"
+      ) {
+        return [];
       }
-    };
 
-    fetchTokenList();
-  }, []);
+      try {
+        const inscriptions = await window.okxwallet.bitcoin.getInscriptions();
+        if (!Array.isArray(inscriptions) || inscriptions.length === 0) {
+          return [];
+        }
 
-  // 当钱包连接后获取跨链记录
-  useEffect(() => {
-    if (!btcAddress) return;
-    fetchRecordList();
-  }, [btcAddress, fetchRecordList]);
+        type Inscription = {
+          tick?: string;
+          ticker?: string;
+          contentType?: string;
+          inscriptionId?: string;
+          inscriptionNumber?: string;
+          amount?: string;
+        };
 
-  // 当钱包连接且选中代币后获取余额
-  useEffect(() => {
-    if (!btcAddress || !selectedChain) return;
-    getBTCBalance(selectedChain);
-  }, [btcAddress, selectedChain, getBTCBalance]);
+        const filteredInscriptions = (inscriptions as Inscription[]).filter(
+          (item) => {
+            const tick = item.tick || item.ticker || "";
+            return tick.toLowerCase() === resolvedChain.toLowerCase();
+          }
+        );
 
-  // 检查钱包
-  useEffect(() => {
-    if (typeof window.okxwallet !== "undefined") {
-      connectWallet();
-    }
-  }, [connectWallet]);
+        return filteredInscriptions.map((item) => ({
+          tokenName: item.tick || item.ticker || resolvedChain,
+          inscriptionId: item.inscriptionId || "",
+          inscriptionNumber: item.inscriptionNumber || "",
+          amount: parseFloat(item.amount || "0"),
+        }));
+      } catch (error) {
+        console.error("Failed to fetch BTC balance:", error);
+        return [];
+      }
+    },
+    enabled: Boolean(resolvedBtcAddress) && Boolean(resolvedChain),
+  });
+
+  const selectedCoin = coinList.find(
+    (item) => item.inscriptionId === selectedCoinId
+  ) ||
+    coinList[0] || { tokenName: btcSwap.select as string, amount: 0 };
 
   // 选择链
   const handleSelectChain = (name: string) => {
@@ -248,7 +217,7 @@ export default function BtcSwapPage() {
 
   // 选择币种
   const handleSelectCoin = (coin: CoinInfo) => {
-    setSelectedCoin(coin);
+    setSelectedCoinId(coin.inscriptionId || coin.tokenName);
     setShowCoinModal(false);
   };
 
@@ -295,11 +264,20 @@ export default function BtcSwapPage() {
   };
 
   // 通知后端服务
+  const bridgeMutation = useMutation({
+    mutationFn: (data: {
+      symbol: string;
+      from_net_address: string;
+      to_net_address: string;
+      amount: number;
+      brc20_txid: string;
+    }) => brc20Api.bridge(data),
+  });
   const noticeService = async (txid: string) => {
     try {
-      const res = await brc20Api.bridge({
-        symbol: selectedChain,
-        from_net_address: btcAddress,
+      const res = await bridgeMutation.mutateAsync({
+        symbol: resolvedChain,
+        from_net_address: resolvedBtcAddress,
         to_net_address: toAddress,
         amount: selectedCoin.amount,
         brc20_txid: txid,
@@ -308,7 +286,7 @@ export default function BtcSwapPage() {
       if (res.data?.order_id) {
         setPostLoading(false);
         toast.success(t.common.submitSuccess as string);
-        fetchRecordList();
+        refetchRecords();
       } else {
         // 重试
         setTimeout(() => noticeService(txid), 2000);
@@ -335,13 +313,13 @@ export default function BtcSwapPage() {
             />
             <span className="font-bold text-secondary">KOLPumpFun</span>
           </div>
-          {btcAddress ? (
+          {resolvedBtcAddress ? (
             <div
               className="flex items-center gap-2 px-3 py-2 bg-background-card border border-border rounded-xl cursor-pointer hover:border-primary/30 transition-colors"
-              onClick={() => handleCopy(btcAddress)}
+              onClick={() => handleCopy(resolvedBtcAddress)}
             >
               <span className="text-sm text-secondary">
-                {shortAddress(btcAddress)}
+                {shortAddress(resolvedBtcAddress)}
               </span>
               <Copy className="w-3.5 h-3.5 text-text-secondary" />
             </div>
@@ -497,13 +475,13 @@ export default function BtcSwapPage() {
                 {btcSwap.history as string}
               </span>
               <button
-                onClick={fetchRecordList}
-                disabled={loading}
+                onClick={() => refetchRecords()}
+                disabled={recordFetching}
                 className="w-10 h-10 flex items-center justify-center bg-background-card border border-border rounded-xl hover:border-primary/30 transition-colors"
               >
                 <RefreshCw
                   className={`w-4 h-4 text-text-secondary ${
-                    loading ? "animate-spin" : ""
+                    recordFetching ? "animate-spin" : ""
                   }`}
                 />
               </button>

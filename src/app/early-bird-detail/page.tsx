@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useConnection } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
@@ -8,6 +8,7 @@ import Image from "next/image";
 import dayjs from "dayjs";
 import { parseUnits } from "viem";
 import { toast } from "sonner";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useStore } from "@/store/useStore";
 import { useBalance, useTransfer } from "@/hooks/useERC20";
 import { kolApi, type PrivateFundOrder } from "@/lib/api";
@@ -72,7 +73,6 @@ export default function EarlyBirdDetailPage() {
   }, [currentProject, router]);
 
   const [amount, setAmount] = useState("");
-  const [orders, setOrders] = useState<PrivateFundOrder[]>([]);
   const [buyLoading, setBuyLoading] = useState(false);
   const [onlyMe, setOnlyMe] = useState(false);
 
@@ -90,73 +90,58 @@ export default function EarlyBirdDetailPage() {
     hash,
   } = useTransfer();
 
-  // 获取订单列表
-  const fetchOrders = useCallback(
-    async (filterOnlyMe?: boolean) => {
-      const contractAddr = currentProject?.contract_addr;
-      if (!contractAddr) return;
-
-      // 使用传入的参数或当前状态
-      const shouldFilterOnlyMe =
-        filterOnlyMe !== undefined ? filterOnlyMe : onlyMe;
-
-      // 构建请求参数
-      const userAddress = shouldFilterOnlyMe ? address : undefined;
-
-      console.log("fetchOrders params:", {
-        contractAddr,
-        shouldFilterOnlyMe,
-        userAddress,
-      });
-
-      try {
-        const res = await kolApi.getProjectPrivateFundList(
-          contractAddr,
-          userAddress
-        );
-        setOrders(res.data || []);
-      } catch (error) {
-        console.error("Failed to fetch orders:", error);
+  const contractAddr = currentProject?.contract_addr;
+  const userAddress = onlyMe ? address : undefined;
+  const {
+    data: ordersData,
+    isLoading: ordersLoading,
+    refetch: refetchOrders,
+  } = useQuery<{ data: PrivateFundOrder[] }>({
+    queryKey: ["projectPrivateFundList", contractAddr, onlyMe, address],
+    queryFn: async () => {
+      if (!contractAddr) {
+        return { data: [] };
       }
+      return kolApi.getProjectPrivateFundList(contractAddr, userAddress);
     },
-    [currentProject?.contract_addr, onlyMe, address]
-  );
-
-  // 初始加载订单
-  useEffect(() => {
-    fetchOrders();
-  }, [currentProject?.contract_addr, address, fetchOrders]);
+    enabled: Boolean(contractAddr) && (!onlyMe || Boolean(address)),
+  });
+  const orders = ordersData?.data || [];
+  const recordOrderMutation = useMutation({
+    mutationFn: (data: {
+      pool_id: number;
+      address: string;
+      token: string;
+      spent_amount: string;
+      spend_txid: string;
+    }) => kolApi.projectPrivateFund(data),
+    onSuccess: () => {
+      toast.success(t.common.success);
+      refetchOrders();
+      refetchBalance();
+      setAmount("");
+    },
+    onError: () => {
+      toast.error(t.common.failed);
+    },
+  });
 
   // 切换 onlyMe 时重新获取订单
   const handleToggleOnlyMe = () => {
-    const newValue = !onlyMe;
-    setOnlyMe(newValue);
-    // 直接使用新值调用，避免状态更新延迟问题
-    fetchOrders(newValue);
+    setOnlyMe((prev) => !prev);
   };
 
   // 交易成功后刷新
   useEffect(() => {
     if (isSuccess && hash) {
       // 记录订单
-      kolApi
-        .projectPrivateFund({
-          pool_id: Number(poolInfo.id),
-          address: address || "",
-          token: poolInfo.contract,
-          spent_amount: String(parseFloat(amount) * 10 ** 18),
-          spend_txid: hash,
-        })
-        .then(() => {
-          toast.success(t.common.success);
-          fetchOrders();
-          refetchBalance();
-          setAmount("");
-        })
-        .catch((err) => {
-          console.error("Failed to record order:", err);
-          toast.error(t.common.failed);
-        });
+      recordOrderMutation.mutate({
+        pool_id: Number(poolInfo.id),
+        address: address || "",
+        token: poolInfo.contract,
+        spent_amount: String(parseFloat(amount) * 10 ** 18),
+        spend_txid: hash,
+      });
     }
   }, [
     isSuccess,
@@ -167,8 +152,9 @@ export default function EarlyBirdDetailPage() {
     amount,
     t.common.success,
     t.common.failed,
-    fetchOrders,
+    refetchOrders,
     refetchBalance,
+    recordOrderMutation,
   ]);
 
   // 快捷金额按钮
@@ -383,7 +369,11 @@ export default function EarlyBirdDetailPage() {
           )}
         </div>
 
-        {orders.length === 0 ? (
+        {ordersLoading ? (
+          <div className="h-75 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FFC519]"></div>
+          </div>
+        ) : orders.length === 0 ? (
           <div className="empty-state py-12">
             <span className="text-4xl mb-4">📭</span>
             <p>{t.common.noData}</p>

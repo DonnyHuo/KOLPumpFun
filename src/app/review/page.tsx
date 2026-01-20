@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useConnection } from "wagmi";
 import { toast } from "sonner";
 import { ExternalLink, X } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   adminApi,
@@ -58,12 +59,7 @@ export default function ReviewPage() {
   const statusMap = review.statusMap as Record<number, string>;
 
   const [activeTab, setActiveTab] = useState<Tab>("kol");
-  const [kolList, setKolList] = useState<KolWaitInfo[]>([]);
-  const [projectList, setProjectList] = useState<ProjectWaitInfo[]>([]);
-  const [claimList, setClaimList] = useState<BindProjectWaitInfo[]>([]);
-  const [issuedProjects, setIssuedProjects] = useState<ProjectInfo[]>([]);
   const [loading, setLoading] = useState(false);
-  const [dataLoading, setDataLoading] = useState(false);
 
   // 认领审核弹窗
   const [showClaimModal, setShowClaimModal] = useState(false);
@@ -120,52 +116,63 @@ export default function ReviewPage() {
       )
     : false;
 
-  // 获取 KOL 列表
-  const fetchKolList = async () => {
-    setDataLoading(true);
-    try {
-      const res = await kolApi.getKolWaitAgreeList();
-      setKolList(res.data || []);
-    } catch (error) {
-      console.error("Failed to fetch KOL list:", error);
-      setKolList([]);
-    } finally {
-      setDataLoading(false);
-    }
-  };
+  const {
+    data: kolListData,
+    isLoading: kolLoading,
+    isFetching: kolFetching,
+    refetch: refetchKolList,
+  } = useQuery<{ data: KolWaitInfo[] }>({
+    queryKey: ["kolWaitAgreeList"],
+    queryFn: () => kolApi.getKolWaitAgreeList(),
+    enabled: isAdmin && activeTab === "kol",
+  });
+  const kolList = kolListData?.data || [];
 
-  // 获取项目列表
-  const fetchProjectList = async () => {
-    setDataLoading(true);
-    try {
-      const res = await kolApi.getProjectWaitAgreeList();
-      setProjectList(res.data || []);
-    } catch (error) {
-      console.error("Failed to fetch project list:", error);
-      setProjectList([]);
-    } finally {
-      setDataLoading(false);
-    }
-  };
+  const {
+    data: projectListData,
+    isLoading: projectLoading,
+    isFetching: projectFetching,
+    refetch: refetchProjectList,
+  } = useQuery<{ data: ProjectWaitInfo[] }>({
+    queryKey: ["projectWaitAgreeList"],
+    queryFn: () => kolApi.getProjectWaitAgreeList(),
+    enabled: isAdmin && activeTab === "project",
+  });
+  const projectList = projectListData?.data || [];
 
-  // 获取认领列表
-  const fetchClaimList = async () => {
-    setDataLoading(true);
-    try {
+  const {
+    data: claimData,
+    isLoading: claimLoading,
+    isFetching: claimFetching,
+    refetch: refetchClaimList,
+  } = useQuery<{
+    claimList: BindProjectWaitInfo[];
+    issuedProjects: ProjectInfo[];
+  }>({
+    queryKey: ["bindProjectWaitList"],
+    queryFn: async () => {
       const [claimRes, issuedRes] = await Promise.all([
         kolApi.getBindProjectWaitList(),
         kolApi.getProjectIssuedList(),
       ]);
-      setClaimList(claimRes.data || []);
-      setIssuedProjects(issuedRes.data || []);
-    } catch (error) {
-      console.error("Failed to fetch claim list:", error);
-      setClaimList([]);
-      setIssuedProjects([]);
-    } finally {
-      setDataLoading(false);
-    }
-  };
+      return {
+        claimList: claimRes.data || [],
+        issuedProjects: issuedRes.data || [],
+      };
+    },
+    enabled: isAdmin && activeTab === "claim",
+  });
+  const claimList = claimData?.claimList || [];
+  const issuedProjects = claimData?.issuedProjects || [];
+
+  const dataLoading =
+    activeTab === "kol"
+      ? kolLoading || kolFetching
+      : activeTab === "project"
+      ? projectLoading || projectFetching
+      : activeTab === "claim"
+      ? claimLoading || claimFetching
+      : false;
 
   // 跳转到项目详情
   const goToDetail = (projectName: string) => {
@@ -183,45 +190,22 @@ export default function ReviewPage() {
     }
   };
 
-  // 初始加载和 tabs 切换时刷新数据
-  useEffect(() => {
-    if (!isAdmin) return;
-
-    switch (activeTab) {
-      case "kol":
-        fetchKolList();
-        break;
-      case "project":
-        fetchProjectList();
-        break;
-      case "claim":
-        fetchClaimList();
-        break;
-      case "migrate":
-        // migrate tab 不需要数据
-        break;
-    }
-  }, [activeTab, isAdmin]);
-
-  // 调用迁移 API
-  const handleMigrateApi = useCallback(async () => {
-    if (!address) return;
-
-    try {
-      const percents = migrateToken.percents.map((p) =>
-        Math.round(parseFloat(p) * 100)
-      );
-      await adminApi.migrateToken({
-        admin_address: address,
-        project_name: migrateToken.project_name,
-        contract_addr: migrateToken.contract_addr,
-        token_name: migrateToken.token_name,
-        token_symbol: migrateToken.token_symbol,
-        total_supply: migrateToken.total_supply,
-        percents,
-      });
-
-      // 与 Vue 项目一致：只要 API 调用成功就显示成功
+  const migrateMutation = useMutation({
+    mutationFn: (payload: {
+      adminAddress: string;
+      token: MigrateToken;
+      percents: number[];
+    }) =>
+      adminApi.migrateToken({
+        admin_address: payload.adminAddress,
+        project_name: payload.token.project_name,
+        contract_addr: payload.token.contract_addr,
+        token_name: payload.token.token_name,
+        token_symbol: payload.token.token_symbol,
+        total_supply: payload.token.total_supply,
+        percents: payload.percents,
+      }),
+    onSuccess: () => {
       toast.success(t.common.migrateSuccess as string);
       setMigrateToken({
         project_name: "",
@@ -231,29 +215,28 @@ export default function ReviewPage() {
         total_supply: "",
         percents: ["", "", "", ""],
       });
-    } catch {
+    },
+    onError: () => {
       toast.error(t.common.migrateFailed as string);
-    } finally {
+    },
+    onSettled: () => {
       setMigrateLoading(false);
-    }
-  }, [
-    address,
-    migrateToken.contract_addr,
-    migrateToken.percents,
-    migrateToken.project_name,
-    migrateToken.token_name,
-    migrateToken.token_symbol,
-    migrateToken.total_supply,
-    t.common.migrateFailed,
-    t.common.migrateSuccess,
-  ]);
+    },
+  });
 
   // 监听迁移转账成功
   useEffect(() => {
-    if (transferSuccess && migrateLoading) {
-      handleMigrateApi();
+    if (transferSuccess && migrateLoading && address) {
+      const percents = migrateToken.percents.map((p) =>
+        Math.round(parseFloat(p) * 100)
+      );
+      migrateMutation.mutate({
+        adminAddress: address,
+        token: migrateToken,
+        percents,
+      });
     }
-  }, [handleMigrateApi, migrateLoading, transferSuccess]);
+  }, [address, migrateMutation, migrateLoading, migrateToken, transferSuccess]);
 
   // 审核 KOL
   const handleKolAgree = async (item: KolWaitInfo, agree: boolean) => {
@@ -269,7 +252,7 @@ export default function ReviewPage() {
             ? (t.common.reviewPass as string)
             : (t.common.reviewReject as string)
         );
-        fetchKolList();
+        refetchKolList();
       }
     } catch {
       toast.error(t.common.operationFailed as string);
@@ -296,7 +279,7 @@ export default function ReviewPage() {
             ? (t.common.reviewPass as string)
             : (t.common.reviewReject as string)
         );
-        fetchProjectList();
+        refetchProjectList();
       }
     } catch {
       toast.error(t.common.operationFailed as string);
@@ -335,7 +318,7 @@ export default function ReviewPage() {
             ? (t.common.reviewPass as string)
             : (t.common.reviewReject as string)
         );
-        fetchClaimList();
+        refetchClaimList();
       }
     } catch {
       toast.error(t.common.operationFailed as string);
@@ -379,7 +362,7 @@ export default function ReviewPage() {
             : (t.common.reviewReject as string)
         );
         setShowClaimModal(false);
-        fetchClaimList();
+        refetchClaimList();
       }
     } catch {
       toast.error(t.common.operationFailed as string);

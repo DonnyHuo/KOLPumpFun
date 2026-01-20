@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { kolApi, type ProjectInfo } from "@/lib/api";
 import { copyToClipboard } from "@/lib/utils";
 import { useStore } from "@/store/useStore";
@@ -18,9 +19,6 @@ export default function SharePage() {
   const newData = t.newData as Record<string, string>;
   const shareProject = t.shareProject as Record<string, unknown>;
 
-  const [loading, setLoading] = useState(true);
-  const [projectList, setProjectList] = useState<ProjectInfo[]>([]);
-  const [searchList, setSearchList] = useState<ProjectInfo[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [sort, setSort] = useState<"asc" | "desc">("desc");
 
@@ -38,37 +36,30 @@ export default function SharePage() {
     router.push("/early-bird-detail");
   };
 
-  // 获取项目列表
-  useEffect(() => {
-    const fetchProjects = async () => {
-      setLoading(true);
-      try {
-        const res = await kolApi.getProjectIssuedList();
-        if (res.data?.length > 0) {
-          setProjectList(res.data);
-          setSearchList(res.data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch projects:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { data: projectList = [], isLoading } = useQuery<ProjectInfo[]>({
+    queryKey: ["projectIssuedList"],
+    queryFn: async () => {
+      const res = await kolApi.getProjectIssuedList();
+      return res.data || [];
+    },
+  });
 
-    fetchProjects();
-  }, []);
-
-  // 搜索过滤
-  useEffect(() => {
+  const searchList = useMemo(() => {
+    let list = [...projectList];
     if (searchValue) {
-      const filtered = projectList.filter((item) =>
+      list = list.filter((item) =>
         item.symbol.toLowerCase().includes(searchValue.toLowerCase())
       );
-      setSearchList(filtered);
-    } else {
-      setSearchList(projectList);
     }
-  }, [searchValue, projectList]);
+
+    list.sort((a, b) => {
+      const marketCapA = Number(a.total_supply) * Number(a.lastPrice || 0);
+      const marketCapB = Number(b.total_supply) * Number(b.lastPrice || 0);
+      return sort === "asc" ? marketCapA - marketCapB : marketCapB - marketCapA;
+    });
+
+    return list;
+  }, [projectList, searchValue, sort]);
 
   // 复制地址
   const handleCopy = async (address: string) => {
@@ -82,15 +73,6 @@ export default function SharePage() {
   const handleSort = () => {
     const newSort = sort === "desc" ? "asc" : "desc";
     setSort(newSort);
-
-    const sorted = [...searchList].sort((a, b) => {
-      const marketCapA = Number(a.total_supply) * Number(a.lastPrice || 0);
-      const marketCapB = Number(b.total_supply) * Number(b.lastPrice || 0);
-      return newSort === "asc"
-        ? marketCapA - marketCapB
-        : marketCapB - marketCapA;
-    });
-    setSearchList(sorted);
   };
 
   // 获取项目类型文字
@@ -145,14 +127,14 @@ export default function SharePage() {
       </div>
 
       {/* 加载中 */}
-      {loading && (
+      {isLoading && (
         <div className="h-100 flex items-center justify-center">
           <div className="w-10 h-10 border-2 border-border border-t-primary rounded-full animate-spin" />
         </div>
       )}
 
       {/* 项目列表 */}
-      {!loading && searchList.length > 0 && (
+      {!isLoading && searchList.length > 0 && (
         <div className="space-y-4">
           {searchList.map((item, index) => (
             <div
@@ -310,8 +292,8 @@ export default function SharePage() {
       )}
 
       {/* 无数据 */}
-      {!loading && searchList.length === 0 && (
-        <div className="h-[400px] flex flex-col items-center justify-center">
+      {!isLoading && searchList.length === 0 && (
+        <div className="h-100 flex flex-col items-center justify-center">
           <div className="w-16 h-16 rounded-full bg-background-card flex items-center justify-center mb-4">
             <span className="text-2xl">📭</span>
           </div>
