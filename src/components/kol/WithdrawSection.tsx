@@ -28,8 +28,6 @@ export function WithdrawSection({
   // 获取项目 tokenId
   const { data: tokenId } = useTokenRatiosIndex(kolInfo?.project_name || "");
 
-  console.log("tokenId", tokenId);
-
   // 退出 KOL
   const {
     quitKol,
@@ -76,7 +74,7 @@ export function WithdrawSection({
         {/* 解除质押按钮 */}
         <ConfirmButton
           onClick={() => setShowConfirm(true)}
-          disabled={!(activeAmount > 0) || isLoading}
+          disabled={!(activeAmount > 0) || isLoading || !tokenId}
           className="btn-primary w-full mt-2"
           loading={isLoading}
         >
