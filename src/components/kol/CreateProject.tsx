@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useConnection } from "wagmi";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ChevronDown, Upload, X, Copy, Check, Send } from "lucide-react";
 import { Tip } from "@/components/ui/Tip";
@@ -181,21 +182,22 @@ export function CreateProject({
     setSelectedToken(defaultTokens[0]);
   }, [defaultTokens]);
 
-  // 获取项目列表
+  const { data: issuedProjects = [] } = useQuery<ProjectInfo[]>({
+    queryKey: ["projectIssuedList"],
+    queryFn: async () => {
+      const res = await kolApi.getProjectIssuedList();
+      return res.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
+  });
+
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const res = await kolApi.getProjectIssuedList();
-        if (res.data) {
-          setProjectList(res.data);
-          setFilteredList(res.data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch projects:", error);
-      }
-    };
-    fetchProjects();
-  }, []);
+    setProjectList(issuedProjects);
+    setFilteredList(issuedProjects);
+  }, [issuedProjects]);
 
   // 搜索过滤
   useEffect(() => {
