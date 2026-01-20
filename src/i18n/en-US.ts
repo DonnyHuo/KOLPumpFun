@@ -95,6 +95,7 @@ const lan = {
     approve: "Approve",
     goApprove: "Approve",
     deposit: "Stake",
+    pleaseStakeSOS: "Please stake SOS first",
     withdraw: "Withdraw",
     max: "Max",
     inputNumber: "Enter stake amount",
