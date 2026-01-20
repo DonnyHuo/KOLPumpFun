@@ -13,6 +13,7 @@ import { shortAddress, copyToClipboard, cn } from "@/lib/utils";
 import { getTokenIcon } from "@/assets/images/tokenList";
 
 import Image from "next/image";
+import ConfirmButton from "../ui/ConfirmButton";
 
 interface CreateProjectProps {
   activeAmount: number;
@@ -1050,15 +1051,14 @@ export function CreateProject({
 
               {/* 提交按钮 */}
               <div className="w-full text-center my-6">
-                <button
+                <ConfirmButton
                   onClick={handleSubmit}
                   disabled={loading}
                   className="btn-primary w-full"
+                  loading={loading}
                 >
-                  {loading
-                    ? (common?.loading as string)
-                    : (home?.createProject as string)}
-                </button>
+                  {(home?.createProject as string)}
+                </ConfirmButton>
               </div>
 
               {/* 底部提示 */}
@@ -1386,15 +1386,14 @@ export function CreateProject({
                     </label>
 
                     {/* 认领按钮 */}
-                    <button
+                    <ConfirmButton
                       onClick={handleClaim}
                       disabled={!claimChecked || claimLoading}
                       className="btn-primary w-full shrink-0"
+                      loading={claimLoading}
                     >
-                      {claimLoading
-                        ? (common?.loading as string)
-                        : (kol?.claim as string)}
-                    </button>
+                      {(kol?.claim as string)}
+                    </ConfirmButton>
                   </div>
                 </div>
               )}
