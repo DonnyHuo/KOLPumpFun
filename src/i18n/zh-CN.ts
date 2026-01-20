@@ -180,6 +180,15 @@ const lan = {
     },
     notCertified: "請先完成KOL認證",
     uploadLogo: "請上傳項目Logo",
+    logoSizeLimit: "圖片大小不能超過 5MB",
+    logoUploading: "圖片上傳中",
+    logoUploadFailed: "圖片上傳失敗",
+    percentPlaceholder: "大於 0",
+    logoAlt: "項目Logo",
+    projectAlt: "項目",
+    fillLpKolRatio: "請填寫LP添加和KOL獎勵比例",
+    uploadFormat: "PNG-JPEG-WEBP-GIF",
+    uploadMaxSize: "最大 5MB",
     twitterTip:
       "創建項目時請同步關注官方推特@kolpump_fun，並轉發官推置頂推文，這關乎您的KOL指數和代幣分配。",
     // 表单标签

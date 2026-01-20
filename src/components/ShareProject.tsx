@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
 import { ChevronUp, ChevronDown, Send } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { kolApi, type ProjectInfo } from "@/lib/api";
 import { copyToClipboard } from "@/lib/utils";
 import { useStore } from "@/store/useStore";
@@ -39,29 +40,18 @@ export default function ShareProject({
   const t = lang === "zh" ? zhCN : enUS;
   const newData = t.newData as Record<string, string>;
 
-  const [projectList, setProjectList] = useState<ExtendedProjectInfo[]>([]);
   const [searchValue, setSearchValue] = useState("");
-  const [loading, setLoading] = useState(false);
   const [sort, setSort] = useState<"asc" | "desc">("desc");
 
-  // 获取项目列表
-  useEffect(() => {
-    const fetchProjects = async () => {
-      setLoading(true);
-      try {
+  const { data: projectList = [], isLoading } = useQuery<ExtendedProjectInfo[]>(
+    {
+      queryKey: ["projectIssuedList"],
+      queryFn: async () => {
         const res = await kolApi.getProjectIssuedList();
-        if (res.data?.length > 0) {
-          setProjectList(res.data as ExtendedProjectInfo[]);
-        }
-      } catch (error) {
-        console.error("Failed to fetch projects:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProjects();
-  }, []);
+        return (res.data || []) as ExtendedProjectInfo[];
+      },
+    }
+  );
 
   // 搜索和排序后的列表
   const filteredList = useMemo(() => {
@@ -144,14 +134,14 @@ export default function ShareProject({
       </div>
 
       {/* Loading */}
-      {loading && (
+      {isLoading && (
         <div className="h-75 flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FFC519]"></div>
         </div>
       )}
 
       {/* 项目列表 */}
-      {!loading && filteredList.length > 0 && (
+      {!isLoading && filteredList.length > 0 && (
         <div className="divide-y divide-gray-100">
           {filteredList.map((item, index) => (
             <div key={index} className="py-4">
@@ -267,7 +257,7 @@ export default function ShareProject({
       )}
 
       {/* 无数据 */}
-      {!loading && filteredList.length === 0 && (
+      {!isLoading && filteredList.length === 0 && (
         <div className="h-75 flex items-center justify-center text-gray-400">
           {lang === "zh" ? "暫無數據" : "No Data"}
         </div>

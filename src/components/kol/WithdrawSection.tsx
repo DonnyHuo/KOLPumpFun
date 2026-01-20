@@ -27,6 +27,8 @@ export function WithdrawSection({
   // 获取项目 tokenId
   const { data: tokenId } = useTokenRatiosIndex(kolInfo?.project_name || "");
 
+  console.log("tokenId", tokenId);
+
   // 退出 KOL
   const {
     quitKol,
@@ -45,10 +47,6 @@ export function WithdrawSection({
   }, [isQuitSuccess, onSuccess]);
 
   const handleQuitKol = () => {
-    if (!tokenId) {
-      toast.error("無法獲取項目信息");
-      return;
-    }
     quitKol(Number(tokenId));
   };
 

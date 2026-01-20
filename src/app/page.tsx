@@ -5,6 +5,7 @@ import { Globe, Sun, Moon } from "lucide-react";
 import { useConnection, useDisconnect } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import Image from "next/image";
+import { useQuery } from "@tanstack/react-query";
 import { useStore } from "@/store/useStore";
 import { useUserDepositedAmount } from "@/hooks/useDepositContract";
 import { kolApi, type KolInfo } from "@/lib/api";
@@ -72,7 +73,7 @@ function Skeleton() {
 
 export default function CreatePage() {
   const { address, isConnected } = useConnection();
-  const { disconnect } = useDisconnect();
+  const disconnect = useDisconnect();
   const { openConnectModal } = useConnectModal();
   const {
     lang,
@@ -86,9 +87,7 @@ export default function CreatePage() {
   } = useStore();
   const t = lang === "zh" ? zhCN : enUS;
 
-  const [loading, setLoading] = useState(true);
-  const [kolInfo, setKolInfo] = useState<KolInfo | null>(null);
-  const fetchingKolInfoRef = useRef(false);
+  const langMenuRef = useRef<HTMLDivElement>(null);
 
   // 获取质押金额
   const { formatted: depositedAmount, refetch: refetchDeposit } =
@@ -96,7 +95,25 @@ export default function CreatePage() {
 
   // 语言选择下拉菜单
   const [showLangMenu, setShowLangMenu] = useState(false);
-  const langMenuRef = useRef<HTMLDivElement>(null);
+
+  const {
+    data: kolInfoData,
+    isLoading: kolLoading,
+    refetch: refetchKolInfo,
+  } = useQuery<KolInfo | null>({
+    queryKey: ["kolInfo", address],
+    queryFn: async () => {
+      if (!address) return null;
+      try {
+        const res = await kolApi.queryKol(address);
+        return res.data || null;
+      } catch {
+        return null;
+      }
+    },
+    enabled: Boolean(isConnected && address),
+  });
+  const kolInfo = kolInfoData ?? null;
 
   // 点击外部关闭下拉菜单
   useEffect(() => {
@@ -118,43 +135,11 @@ export default function CreatePage() {
     setShowLangMenu(false);
   };
 
-  // 获取 KOL 信息
-  const fetchKolInfo = useCallback(async () => {
-    if (!address || fetchingKolInfoRef.current) return;
-    fetchingKolInfoRef.current = true;
-    try {
-      const res = await kolApi.queryKol(address);
-      setKolInfo(res.data);
-      setAccountInfoStatus(res.data?.status ?? 0);
-    } catch (error) {
-      console.error("Failed to fetch KOL info:", error);
-      setKolInfo(null);
-    } finally {
-      fetchingKolInfoRef.current = false;
-    }
-  }, [address, setAccountInfoStatus]);
-
-  // 初始化数据
   useEffect(() => {
-    if (!isConnected || !address) {
-      setLoading(false);
-      return;
+    if (kolInfo) {
+      setAccountInfoStatus(kolInfo.status ?? 0);
     }
-
-    const initData = async () => {
-      setLoading(true);
-      try {
-        await Promise.all([
-          fetchKolInfo(),
-          new Promise((resolve) => setTimeout(resolve, 1500)),
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initData();
-  }, [address, fetchKolInfo, isConnected]);
+  }, [kolInfo, setAccountInfoStatus]);
 
   // 更新质押金额到 store
   useEffect(() => {
@@ -165,8 +150,8 @@ export default function CreatePage() {
 
   // 刷新数据
   const refreshData = useCallback(async () => {
-    await Promise.all([fetchKolInfo(), refetchDeposit()]);
-  }, [fetchKolInfo, refetchDeposit]);
+    await Promise.all([refetchKolInfo(), refetchDeposit()]);
+  }, [refetchKolInfo, refetchDeposit]);
 
   // 判断各步骤完成状态
   // KOL认证：只要提交过认证就算完成（与 Vue 项目一致）
@@ -192,7 +177,7 @@ export default function CreatePage() {
           {/* 钱包连接/断开按钮 */}
           {isConnected ? (
             <button
-              onClick={() => disconnect()}
+              onClick={() => disconnect.mutate()}
               className="h-9 px-3 bg-background-card border border-primary rounded-xl flex items-center gap-2 hover:bg-card-hover hover:border-red-500/50 transition-all group"
               title={lang === "zh" ? "點擊斷開連接" : "Click to disconnect"}
             >
@@ -204,7 +189,7 @@ export default function CreatePage() {
           ) : (
             <button
               onClick={openConnectModal}
-              className="h-[36px] w-[36px] bg-background-card border border-border rounded-xl flex items-center justify-center hover:bg-card-hover hover:border-primary/30 transition-all"
+              className="h-9 w-9 bg-background-card border border-border rounded-xl flex items-center justify-center hover:bg-card-hover hover:border-primary/30 transition-all"
             >
               <Image src={wallet} alt="wallet" width={18} height={18} />
             </button>
@@ -212,7 +197,7 @@ export default function CreatePage() {
           {/* 主题切换按钮 */}
           <button
             onClick={toggleTheme}
-            className="h-[36px] w-[36px] bg-background-card border border-border rounded-xl flex items-center justify-center hover:bg-card-hover hover:border-hover transition-all"
+            className="h-9 w-9 bg-background-card border border-border rounded-xl flex items-center justify-center hover:bg-card-hover hover:border-hover transition-all"
             title={
               theme === "dark"
                 ? lang === "zh"
@@ -233,12 +218,12 @@ export default function CreatePage() {
           <div className="relative" ref={langMenuRef}>
             <button
               onClick={() => setShowLangMenu(!showLangMenu)}
-              className="h-[36px] w-[36px] bg-background-card border border-border rounded-xl flex items-center justify-center hover:bg-card-hover hover:border-hover transition-all"
+              className="h-9 w-9 bg-background-card border border-border rounded-xl flex items-center justify-center hover:bg-card-hover hover:border-hover transition-all"
             >
-              <Globe className="w-[18px] h-[18px] text-secondary" />
+              <Globe className="w-4.5 h-4.5 text-secondary" />
             </button>
             {showLangMenu && (
-              <div className="absolute right-0 top-[42px] bg-background-card border border-border rounded-xl overflow-hidden z-50 min-w-[120px]">
+              <div className="absolute right-0 top-10.5 bg-background-card border border-border rounded-xl overflow-hidden z-50 min-w-30">
                 <button
                   onClick={() => handleSelectLang("zh")}
                   className={`w-full px-4 py-2.5 text-sm text-left hover:bg-card-hover transition-colors ${
@@ -294,7 +279,7 @@ export default function CreatePage() {
       </div>
 
       {/* Main Content */}
-      {loading ? (
+      {isConnected && kolLoading ? (
         <Skeleton />
       ) : (
         <div className="mt-8 space-y-8">

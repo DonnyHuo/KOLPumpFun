@@ -99,7 +99,7 @@ export const kolApi = {
     request<{ data: SelectToken[] }>("/kol/mint_token_list"),
 
   // 创建新项目
-  createProject: (data: CreateProjectParams) =>
+  createProject: (data: Record<string, unknown>) =>
     request<{ message: string }>("/kol/new_project", {
       method: "POST",
       body: JSON.stringify(data),
@@ -320,7 +320,7 @@ export interface PrivateFundParams {
 export interface SelectToken {
   mint_base_token: string;
   mint_base_token_addr: string;
-  exchange_rate: number;
+  exchange_rate: string;
 }
 
 export interface CreateProjectParams {
