@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
-import Image from 'next/image';
-import { ChevronDown, RefreshCw, Copy } from 'lucide-react';
-import { SocialLinks } from '@/components/common/SocialLinks';
-import { shortAddress, copyToClipboard } from '@/lib/utils';
-import { isAddress } from 'viem';
-import { useStore } from '@/store/useStore';
-import zhCN from '@/i18n/zh-CN';
-import enUS from '@/i18n/en-US';
-import { homeBg, homeBg2, swapDown, logo } from '@/assets/images';
-import { getTokenIcon } from '@/assets/images/tokenList';
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+import Image from "next/image";
+import { ChevronDown, RefreshCw, Copy } from "lucide-react";
+import { SocialLinks } from "@/components/common/SocialLinks";
+import { shortAddress, copyToClipboard } from "@/lib/utils";
+import { isAddress } from "viem";
+import { useStore } from "@/store/useStore";
+import zhCN from "@/i18n/zh-CN";
+import enUS from "@/i18n/en-US";
+import { homeBg, homeBg2, swapDown, logo } from "@/assets/images";
+import { getTokenIcon } from "@/assets/images/tokenList";
 
 interface BridgeRecord {
   brc20_txid?: string;
@@ -47,9 +47,16 @@ declare global {
       bitcoin: {
         requestAccounts: () => Promise<string[]>;
         getAccounts: () => Promise<string[]>;
-        getBalance: () => Promise<{ confirmed: number; unconfirmed: number; total: number }>;
+        getBalance: () => Promise<{
+          confirmed: number;
+          unconfirmed: number;
+          total: number;
+        }>;
         getInscriptions: () => Promise<unknown[]>;
-        sendInscription: (address: string, inscriptionId: string) => Promise<string>;
+        sendInscription: (
+          address: string,
+          inscriptionId: string
+        ) => Promise<string>;
       };
     };
   }
@@ -57,16 +64,16 @@ declare global {
 
 export default function BtcSwapPage() {
   const { lang } = useStore();
-  const t = lang === 'zh' ? zhCN : enUS;
+  const t = lang === "zh" ? zhCN : enUS;
   const btcSwap = t.btcSwap as Record<string, unknown>;
   const home = t.home as Record<string, unknown>;
 
   // BTC 钱包状态
-  const [btcAddress, setBtcAddress] = useState('');
-  const [toAddress, setToAddress] = useState('');
+  const [btcAddress, setBtcAddress] = useState("");
+  const [toAddress, setToAddress] = useState("");
   const [recordList, setRecordList] = useState<BridgeRecord[]>([]);
   const [tokenList, setTokenList] = useState<TokenInfo[]>([]);
-  const [selectedChain, setSelectedChain] = useState('');
+  const [selectedChain, setSelectedChain] = useState("");
   const [coinList, setCoinList] = useState<CoinInfo[]>([]);
   const [selectedCoin, setSelectedCoin] = useState<CoinInfo>({
     tokenName: btcSwap.select as string,
@@ -106,76 +113,85 @@ export default function BtcSwapPage() {
     if (!btcAddress) return;
     setLoading(true);
     try {
-      const res = await fetch('https://smartbtc.io/bridge/brc20/bridge_record', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address: btcAddress }),
-      });
+      const res = await fetch(
+        "https://smartbtc.io/bridge/brc20/bridge_record",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address: btcAddress }),
+        }
+      );
       const data = await res.json();
       setRecordList(data.data || []);
     } catch (error) {
-      console.error('Failed to fetch records:', error);
+      console.error("Failed to fetch records:", error);
     } finally {
       setLoading(false);
     }
   }, [btcAddress]);
 
   // 获取 BRC20 余额 - 通过 OKX 钱包的 getInscriptions 方法
-  const getBTCBalance = useCallback(async (tokenName: string) => {
-    if (!btcAddress || !tokenName || typeof window.okxwallet === 'undefined') return;
-    
-    try {
-      // 尝试通过 OKX 钱包获取铭文
-      const inscriptions = await window.okxwallet.bitcoin.getInscriptions();
-      
-      if (Array.isArray(inscriptions) && inscriptions.length > 0) {
-        // 定义铭文类型
-        type Inscription = {
-          tick?: string;
-          ticker?: string;
-          contentType?: string;
-          inscriptionId?: string;
-          inscriptionNumber?: string;
-          amount?: string;
-        };
-        
-        // 过滤出当前选择的代币的铭文
-        const filteredInscriptions = (inscriptions as Inscription[]).filter((item) => {
-          const tick = item.tick || item.ticker || '';
-          return tick.toLowerCase() === tokenName.toLowerCase();
-        });
-        
-        const tokenListData = filteredInscriptions.map((item) => ({
-          tokenName: item.tick || item.ticker || tokenName,
-          inscriptionId: item.inscriptionId || '',
-          inscriptionNumber: item.inscriptionNumber || '',
-          amount: parseFloat(item.amount || '0'),
-        }));
-        
-        setCoinList(tokenListData);
-        if (tokenListData.length > 0) {
-          setSelectedCoin(tokenListData[0]);
+  const getBTCBalance = useCallback(
+    async (tokenName: string) => {
+      if (!btcAddress || !tokenName || typeof window.okxwallet === "undefined")
+        return;
+
+      try {
+        // 尝试通过 OKX 钱包获取铭文
+        const inscriptions = await window.okxwallet.bitcoin.getInscriptions();
+
+        if (Array.isArray(inscriptions) && inscriptions.length > 0) {
+          // 定义铭文类型
+          type Inscription = {
+            tick?: string;
+            ticker?: string;
+            contentType?: string;
+            inscriptionId?: string;
+            inscriptionNumber?: string;
+            amount?: string;
+          };
+
+          // 过滤出当前选择的代币的铭文
+          const filteredInscriptions = (inscriptions as Inscription[]).filter(
+            (item) => {
+              const tick = item.tick || item.ticker || "";
+              return tick.toLowerCase() === tokenName.toLowerCase();
+            }
+          );
+
+          const tokenListData = filteredInscriptions.map((item) => ({
+            tokenName: item.tick || item.ticker || tokenName,
+            inscriptionId: item.inscriptionId || "",
+            inscriptionNumber: item.inscriptionNumber || "",
+            amount: parseFloat(item.amount || "0"),
+          }));
+
+          setCoinList(tokenListData);
+          if (tokenListData.length > 0) {
+            setSelectedCoin(tokenListData[0]);
+          } else {
+            setCoinList([]);
+            setSelectedCoin({ tokenName: btcSwap.select as string, amount: 0 });
+          }
         } else {
           setCoinList([]);
           setSelectedCoin({ tokenName: btcSwap.select as string, amount: 0 });
         }
-      } else {
+      } catch (error) {
+        console.error("Failed to fetch BTC balance:", error);
+        // 如果获取失败，清空列表
         setCoinList([]);
         setSelectedCoin({ tokenName: btcSwap.select as string, amount: 0 });
       }
-    } catch (error) {
-      console.error('Failed to fetch BTC balance:', error);
-      // 如果获取失败，清空列表
-      setCoinList([]);
-      setSelectedCoin({ tokenName: btcSwap.select as string, amount: 0 });
-    }
-  }, [btcAddress, btcSwap.select]);
+    },
+    [btcAddress, btcSwap.select]
+  );
 
   // 连接 OKX 钱包
   const connectWallet = async () => {
-    if (typeof window.okxwallet === 'undefined') {
+    if (typeof window.okxwallet === "undefined") {
       toast.error(btcSwap.installWallet as string);
-      window.open('https://www.okx.com/web3', '_blank');
+      window.open("https://www.okx.com/web3", "_blank");
       return;
     }
 
@@ -188,7 +204,7 @@ export default function BtcSwapPage() {
         toast.error(t.common.pleaseConnect as string);
       }
     } catch (error) {
-      console.error('Connect wallet failed:', error);
+      console.error("Connect wallet failed:", error);
       toast.error(t.common.walletConnectFailed as string);
     }
   };
@@ -197,7 +213,7 @@ export default function BtcSwapPage() {
   useEffect(() => {
     const fetchTokenList = async () => {
       try {
-        const res = await fetch('https://smartbtc.io/bridge/brc20/token_list');
+        const res = await fetch("https://smartbtc.io/bridge/brc20/token_list");
         const data = await res.json();
         if (data.data) {
           const tokens = data.data.map((item: { symbol: string }) => ({
@@ -209,7 +225,7 @@ export default function BtcSwapPage() {
           }
         }
       } catch (error) {
-        console.error('Failed to fetch token list:', error);
+        console.error("Failed to fetch token list:", error);
       }
     };
 
@@ -228,7 +244,7 @@ export default function BtcSwapPage() {
 
   // 检查钱包
   useEffect(() => {
-    if (typeof window.okxwallet !== 'undefined') {
+    if (typeof window.okxwallet !== "undefined") {
       connectWallet();
     }
   }, []);
@@ -249,11 +265,16 @@ export default function BtcSwapPage() {
   // 提交跨链
   const handleSubmit = async () => {
     if (selectedCoin.amount <= 0) {
-      toast.error((btcSwap.desc as string[])?.[0] || t.common.pleaseSelectToken as string);
+      toast.error(
+        (btcSwap.desc as string[])?.[0] ||
+          (t.common.pleaseSelectToken as string)
+      );
       return;
     }
     if (!isAddress(toAddress)) {
-      toast.error((btcSwap.desc as string[])?.[1] || t.common.fillRequired as string);
+      toast.error(
+        (btcSwap.desc as string[])?.[1] || (t.common.fillRequired as string)
+      );
       return;
     }
     if (!selectedCoin.inscriptionId) {
@@ -263,20 +284,21 @@ export default function BtcSwapPage() {
 
     try {
       setPostLoading(true);
-      
+
       // 固定的接收地址
-      const receiverAddress = 'bc1pec6jqs5v0xzrjamdq3g5w2u3z4sls96x0yquypt4gf4vgpt9zmqq05y7r9';
-      
+      const receiverAddress =
+        "bc1pec6jqs5v0xzrjamdq3g5w2u3z4sls96x0yquypt4gf4vgpt9zmqq05y7r9";
+
       // 发送铭文
       const txid = await window.okxwallet!.bitcoin.sendInscription(
         receiverAddress,
         selectedCoin.inscriptionId
       );
-      
+
       // 通知后端
       await noticeService(txid);
     } catch (error) {
-      console.error('Submit failed:', error);
+      console.error("Submit failed:", error);
       setPostLoading(false);
       toast.error(t.common.submitFailed as string);
     }
@@ -285,9 +307,9 @@ export default function BtcSwapPage() {
   // 通知后端服务
   const noticeService = async (txid: string) => {
     try {
-      const res = await fetch('https://smartbtc.io/bridge/brc20/bridge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("https://smartbtc.io/bridge/brc20/bridge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           symbol: selectedChain,
           from_net_address: btcAddress,
@@ -297,7 +319,7 @@ export default function BtcSwapPage() {
         }),
       });
       const data = await res.json();
-      
+
       if (data.data?.order_id) {
         setPostLoading(false);
         toast.success(t.common.submitSuccess as string);
@@ -308,25 +330,33 @@ export default function BtcSwapPage() {
       }
     } catch (error) {
       setPostLoading(false);
-      console.error('Notice service failed:', error);
+      console.error("Notice service failed:", error);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] bg-grid pb-24">
+    <div className="min-h-screen bg-background bg-grid pb-24">
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-4">
         <div className="flex items-center gap-2">
-          <Image src={logo} alt="Logo" width={36} height={36} className="rounded-full" />
-          <span className="font-bold text-[var(--foreground)]">KOLPumpFun</span>
+          <Image
+            src={logo}
+            alt="Logo"
+            width={36}
+            height={36}
+            className="rounded-full"
+          />
+          <span className="font-bold text-secondary">KOLPumpFun</span>
         </div>
         {btcAddress ? (
-          <div 
-            className="flex items-center gap-2 px-3 py-2 bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl cursor-pointer hover:border-[var(--primary)]/30 transition-colors"
+          <div
+            className="flex items-center gap-2 px-3 py-2 bg-background-card border border-border rounded-xl cursor-pointer hover:border-primary/30 transition-colors"
             onClick={() => handleCopy(btcAddress)}
           >
-            <span className="text-sm text-[var(--foreground)]">{shortAddress(btcAddress)}</span>
-            <Copy className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
+            <span className="text-sm text-secondary">
+              {shortAddress(btcAddress)}
+            </span>
+            <Copy className="w-3.5 h-3.5 text-text-secondary" />
           </div>
         ) : (
           <button
@@ -339,18 +369,19 @@ export default function BtcSwapPage() {
       </div>
 
       {/* Hero Section */}
-      <div 
+      <div
         className="px-5 py-8 text-center relative overflow-hidden"
         style={{
           backgroundImage: `url(${homeBg2.src})`,
-          backgroundSize: '100%',
-          backgroundRepeat: 'no-repeat',
+          backgroundSize: "100%",
+          backgroundRepeat: "no-repeat",
         }}
       >
         <div className="absolute inset-0 bg-gradient-radial opacity-50" />
         <div className="relative z-10">
           <h1 className="text-xl font-bold gradient-text leading-relaxed">
-            {(home.title as string[])[0]}<br />
+            {(home.title as string[])[0]}
+            <br />
             {(home.title as string[])[1]}
           </h1>
           <Image
@@ -368,15 +399,19 @@ export default function BtcSwapPage() {
         {/* Title */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
-            <span className="font-semibold text-lg text-[var(--foreground)]">{btcSwap.swap as string}</span>
-            <span className="text-xs text-[var(--text-secondary)] bg-[var(--background-card)] border border-[var(--border-color)] px-2 py-1 rounded-lg">BTC → BSC</span>
+            <span className="font-semibold text-lg text-secondary">
+              {btcSwap.swap as string}
+            </span>
+            <span className="text-xs text-text-secondary bg-background-card border border-border px-2 py-1 rounded-lg">
+              BTC → BSC
+            </span>
           </div>
           <button
             onClick={() => setShowChainModal(true)}
-            className="flex items-center gap-2 px-3 py-2 bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl text-sm text-[var(--foreground)] hover:border-[var(--primary)]/30 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-background-card border border-border rounded-xl text-sm text-secondary hover:border-primary/30 transition-colors"
           >
             <span>{selectedChain || (btcSwap.select as string)}</span>
-            <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" />
+            <ChevronDown className="w-4 h-4 text-text-secondary" />
           </button>
         </div>
 
@@ -386,56 +421,70 @@ export default function BtcSwapPage() {
           <div className="card">
             <div className="flex justify-between items-start">
               <div className="flex-1 text-left">
-                <p className="text-sm text-[var(--text-secondary)] mb-3">{btcSwap.send as string}</p>
+                <p className="text-sm text-text-secondary mb-3">
+                  {btcSwap.send as string}
+                </p>
                 <input
                   type="text"
                   value={selectedCoin.amount || 0}
                   disabled
-                  className="w-full bg-transparent text-2xl font-bold text-[var(--foreground)] outline-none mb-4"
+                  className="w-full bg-transparent text-2xl font-bold text-secondary outline-none mb-4"
                 />
                 <a
                   href="https://www.okx.com/zh-hans/web3/marketplace/inscription/ordinals/token/SOS"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors"
+                  className="text-sm text-primary hover:text-primary-hover transition-colors"
                 >
                   {btcSwap.buy as string} →
                 </a>
               </div>
               <button
                 onClick={() => setShowCoinModal(true)}
-                className="flex items-center gap-2 bg-[var(--background-card)] border border-[var(--border-color)] px-3 py-2 rounded-xl text-sm text-[var(--foreground)] hover:border-[var(--primary)]/30 transition-colors"
+                className="flex items-center gap-2 bg-background-card border border-border px-3 py-2 rounded-xl text-sm text-secondary hover:border-primary/30 transition-colors"
               >
                 <span>
                   {selectedCoin.tokenName}
-                  {selectedCoin.inscriptionNumber && `#${selectedCoin.inscriptionNumber}`}
+                  {selectedCoin.inscriptionNumber &&
+                    `#${selectedCoin.inscriptionNumber}`}
                 </span>
-                <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" />
+                <ChevronDown className="w-4 h-4 text-text-secondary" />
               </button>
             </div>
           </div>
 
           {/* Swap Icon */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-            <div className="bg-[var(--background-card)] border-4 border-[var(--background)] rounded-full p-3 shadow-lg">
-              <Image src={swapDown} alt="swap" width={20} height={20} style={{ filter: 'brightness(0) saturate(100%) invert(76%) sepia(98%) saturate(1000%) hue-rotate(359deg) brightness(103%) contrast(106%)' }} />
+            <div className="bg-background-card border-4 border-background rounded-full p-3 shadow-lg">
+              <Image
+                src={swapDown}
+                alt="swap"
+                width={20}
+                height={20}
+                style={{
+                  filter:
+                    "brightness(0) saturate(100%) invert(76%) sepia(98%) saturate(1000%) hue-rotate(359deg) brightness(103%) contrast(106%)",
+                }}
+              />
             </div>
           </div>
 
           {/* To */}
           <div className="card mt-2">
-            <p className="text-sm text-[var(--text-secondary)] mb-3 text-left">{btcSwap.reviceAddress as string}</p>
+            <p className="text-sm text-text-secondary mb-3 text-left">
+              {btcSwap.reviceAddress as string}
+            </p>
             <div className="input flex items-center justify-between">
               <input
                 type="text"
                 value={toAddress}
                 onChange={(e) => setToAddress(e.target.value)}
                 placeholder="0x..."
-                className="flex-1 outline-none text-sm bg-transparent text-[var(--foreground)] placeholder:text-[var(--text-muted)]"
+                className="flex-1 outline-none text-sm bg-transparent text-secondary placeholder:text-text-muted"
               />
               <button
                 onClick={handlePaste}
-                className="text-sm text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors shrink-0"
+                className="text-sm text-primary hover:text-primary-hover transition-colors shrink-0"
               >
                 {btcSwap.paste as string}
               </button>
@@ -446,22 +495,30 @@ export default function BtcSwapPage() {
         {/* Submit Button */}
         <button
           onClick={handleSubmit}
-          disabled={!(selectedCoin.amount > 0 && isAddress(toAddress)) || postLoading}
+          disabled={
+            !(selectedCoin.amount > 0 && isAddress(toAddress)) || postLoading
+          }
           className="btn-primary w-full mt-6 h-[52px] rounded-2xl"
         >
-          {postLoading ? '...' : btcSwap.submit as string}
+          {postLoading ? "..." : (btcSwap.submit as string)}
         </button>
 
         {/* Records */}
         <div className="mt-10">
           <div className="flex items-center justify-between mb-5">
-            <span className="text-base font-semibold text-[var(--foreground)]">{btcSwap.history as string}</span>
+            <span className="text-base font-semibold text-secondary">
+              {btcSwap.history as string}
+            </span>
             <button
               onClick={fetchRecordList}
               disabled={loading}
-              className="w-10 h-10 flex items-center justify-center bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl hover:border-[var(--primary)]/30 transition-colors"
+              className="w-10 h-10 flex items-center justify-center bg-background-card border border-border rounded-xl hover:border-primary/30 transition-colors"
             >
-              <RefreshCw className={`w-4 h-4 text-[var(--text-secondary)] ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`w-4 h-4 text-text-secondary ${
+                  loading ? "animate-spin" : ""
+                }`}
+              />
             </button>
           </div>
 
@@ -471,61 +528,85 @@ export default function BtcSwapPage() {
                 <div key={index} className="card space-y-3 text-sm">
                   {record.brc20_txid && (
                     <div className="flex justify-between items-center">
-                      <span className="text-[var(--text-secondary)]">{btcSwap.hash as string}</span>
+                      <span className="text-text-secondary">
+                        {btcSwap.hash as string}
+                      </span>
                       <div className="flex items-center gap-2">
                         <a
                           href={`https://www.oklink.com/zh-hans/btc/tx/${record.brc20_txid}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors"
+                          className="text-primary hover:text-primary-hover transition-colors"
                         >
                           {shortAddress(record.brc20_txid)}
                         </a>
-                        <button onClick={() => handleCopy(record.brc20_txid!)} className="opacity-60 hover:opacity-100 transition-opacity">
-                          <Copy className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
+                        <button
+                          onClick={() => handleCopy(record.brc20_txid!)}
+                          className="opacity-60 hover:opacity-100 transition-opacity"
+                        >
+                          <Copy className="w-3.5 h-3.5 text-text-secondary" />
                         </button>
                       </div>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">From ({record.from_net})</span>
-                    <span className="text-[var(--foreground)]">{shortAddress(record.from_net_address)}</span>
+                    <span className="text-text-secondary">
+                      From ({record.from_net})
+                    </span>
+                    <span className="text-secondary">
+                      {shortAddress(record.from_net_address)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">To ({record.to_net})</span>
-                    <span className="text-[var(--foreground)]">{shortAddress(record.to_net_address)}</span>
+                    <span className="text-text-secondary">
+                      To ({record.to_net})
+                    </span>
+                    <span className="text-secondary">
+                      {shortAddress(record.to_net_address)}
+                    </span>
                   </div>
                   {record.convert_txid && (
                     <div className="flex justify-between items-center">
-                      <span className="text-[var(--text-secondary)]">{btcSwap.convertHash as string}</span>
+                      <span className="text-text-secondary">
+                        {btcSwap.convertHash as string}
+                      </span>
                       <div className="flex items-center gap-2">
                         <a
                           href={`https://bscscan.com/tx/${record.convert_txid}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors"
+                          className="text-primary hover:text-primary-hover transition-colors"
                         >
                           {shortAddress(record.convert_txid)}
                         </a>
-                        <button onClick={() => handleCopy(record.convert_txid!)} className="opacity-60 hover:opacity-100 transition-opacity">
-                          <Copy className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
+                        <button
+                          onClick={() => handleCopy(record.convert_txid!)}
+                          className="opacity-60 hover:opacity-100 transition-opacity"
+                        >
+                          <Copy className="w-3.5 h-3.5 text-text-secondary" />
                         </button>
                       </div>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-[var(--text-secondary)]">{btcSwap.orderStatus as string}</span>
-                    <span className="text-[var(--primary)]">{getStatusText(record.order_state)}</span>
+                    <span className="text-text-secondary">
+                      {btcSwap.orderStatus as string}
+                    </span>
+                    <span className="text-primary">
+                      {getStatusText(record.order_state)}
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
             <div className="card text-center py-12">
-              <div className="w-16 h-16 rounded-full bg-[var(--background-card)] flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 rounded-full bg-background-card flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">📋</span>
               </div>
-              <p className="text-[var(--text-muted)] text-sm">{btcSwap.allData as string}</p>
+              <p className="text-text-muted text-sm">
+                {btcSwap.allData as string}
+              </p>
             </div>
           )}
         </div>
@@ -536,16 +617,16 @@ export default function BtcSwapPage() {
 
       {/* Chain Selection Modal */}
       {showChainModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/60 flex items-end z-100"
           onClick={() => setShowChainModal(false)}
         >
-          <div 
-            className="bg-[var(--background-card)] w-full rounded-t-3xl border-t border-[var(--border-color)] animate-slide-up"
+          <div
+            className="bg-background-card w-full rounded-t-3xl border-t border-border animate-slide-up"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-12 h-1 bg-[var(--text-muted)] rounded-full mx-auto mt-4" />
-            <div className="text-center py-4 font-semibold text-[var(--foreground)] text-lg">
+            <div className="w-12 h-1 bg-text-muted rounded-full mx-auto mt-4" />
+            <div className="text-center py-4 font-semibold text-secondary text-lg">
               {btcSwap.select as string}
             </div>
             <div className="max-h-[60vh] overflow-y-auto px-2 pb-6">
@@ -554,9 +635,9 @@ export default function BtcSwapPage() {
                   key={token.name}
                   onClick={() => handleSelectChain(token.name)}
                   className={`w-full px-4 py-4 flex items-center gap-3 rounded-xl transition-all ${
-                    selectedChain === token.name 
-                      ? 'bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/30' 
-                      : 'text-[var(--foreground)] hover:bg-[var(--background-card-hover)]'
+                    selectedChain === token.name
+                      ? "bg-primary/10 text-primary border border-primary/30"
+                      : "text-secondary hover:bg-card-hover"
                   }`}
                 >
                   <Image
@@ -576,16 +657,16 @@ export default function BtcSwapPage() {
 
       {/* Coin Selection Modal */}
       {showCoinModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/60 flex items-end z-100"
           onClick={() => setShowCoinModal(false)}
         >
-          <div 
-            className="bg-[var(--background-card)] w-full rounded-t-3xl border-t border-[var(--border-color)] animate-slide-up"
+          <div
+            className="bg-background-card w-full rounded-t-3xl border-t border-border animate-slide-up"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-12 h-1 bg-[var(--text-muted)] rounded-full mx-auto mt-4" />
-            <div className="text-center py-4 font-semibold text-[var(--foreground)] text-lg">
+            <div className="w-12 h-1 bg-text-muted rounded-full mx-auto mt-4" />
+            <div className="text-center py-4 font-semibold text-secondary text-lg">
               {btcSwap.select as string}
             </div>
             <div className="max-h-[60vh] overflow-y-auto px-2 pb-6">
@@ -595,20 +676,23 @@ export default function BtcSwapPage() {
                     key={index}
                     onClick={() => handleSelectCoin(coin)}
                     className={`w-full px-4 py-4 flex items-center justify-between rounded-xl transition-all ${
-                      selectedCoin.inscriptionNumber === coin.inscriptionNumber 
-                        ? 'bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/30' 
-                        : 'text-[var(--foreground)] hover:bg-[var(--background-card-hover)]'
+                      selectedCoin.inscriptionNumber === coin.inscriptionNumber
+                        ? "bg-primary/10 text-primary border border-primary/30"
+                        : "text-secondary hover:bg-card-hover"
                     }`}
                   >
                     <span className="font-medium">
                       {coin.tokenName}#{coin.inscriptionNumber}
                     </span>
-                    <span className="text-[var(--text-secondary)]">{coin.amount}</span>
+                    <span className="text-text-secondary">{coin.amount}</span>
                   </button>
                 ))
               ) : (
-                <div className="py-12 text-center text-[var(--text-muted)] text-sm">
-                  {(btcSwap.tips as string)?.replace('{selectedChain}', selectedChain) || `暫無${selectedChain}餘額`}
+                <div className="py-12 text-center text-text-muted text-sm">
+                  {(btcSwap.tips as string)?.replace(
+                    "{selectedChain}",
+                    selectedChain
+                  ) || `暫無${selectedChain}餘額`}
                 </div>
               )}
             </div>

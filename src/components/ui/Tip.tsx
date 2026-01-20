@@ -293,7 +293,7 @@ export function Tip({
         aria-label="Show info"
       >
         {trigger || (
-          <HelpCircle className="w-3.5 h-3.5 text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors" />
+          <HelpCircle className="w-3.5 h-3.5 text-text-muted hover:text-primary transition-colors" />
         )}
       </span>
 

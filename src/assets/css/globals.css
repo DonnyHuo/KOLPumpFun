@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@config "../../../tailwind.config.ts";
+
 
 :root {
   /* Web3 暗色主题配色 */

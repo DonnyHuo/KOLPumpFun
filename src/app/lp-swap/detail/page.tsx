@@ -1,28 +1,40 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback, Suspense, useRef, startTransition } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useAccount, usePublicClient, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { formatUnits, parseUnits, maxUint256 } from 'viem';
-import Image from 'next/image';
-import Link from 'next/link';
-import { toast } from 'sonner';
-import { CONTRACTS } from '@/constants/contracts';
-import lpExchangeAbi from '@/constants/abi/lpExchange.json';
-import erc20Abi from '@/constants/abi/erc20.json';
-import { shortAddress } from '@/lib/utils';
-import { useStore } from '@/store/useStore';
-import zhCN from '@/i18n/zh-CN';
-import enUS from '@/i18n/en-US';
-import { getTokenIcon } from '@/assets/images/tokenList';
-import { ArrowLeft, Copy } from 'lucide-react';
+import {
+  useState,
+  useEffect,
+  useCallback,
+  Suspense,
+  useRef,
+  startTransition,
+} from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import {
+  useAccount,
+  usePublicClient,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { formatUnits, parseUnits, maxUint256 } from "viem";
+import Image from "next/image";
+import Link from "next/link";
+import { toast } from "sonner";
+import { CONTRACTS } from "@/constants/contracts";
+import lpExchangeAbi from "@/constants/abi/lpExchange.json";
+import erc20Abi from "@/constants/abi/erc20.json";
+import { shortAddress } from "@/lib/utils";
+import { useStore } from "@/store/useStore";
+import zhCN from "@/i18n/zh-CN";
+import enUS from "@/i18n/en-US";
+import { getTokenIcon } from "@/assets/images/tokenList";
+import { ArrowLeft, Copy } from "lucide-react";
 
 // Loading 组件
 function LoadingFallback() {
   return (
-    <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }
@@ -44,45 +56,73 @@ function LpSwapDetailContent() {
   const { address, isConnected } = useAccount();
   const { openConnectModal } = useConnectModal();
   const { lang } = useStore();
-  const t = lang === 'zh' ? zhCN : enUS;
+  const t = lang === "zh" ? zhCN : enUS;
   const poolDetail = t.poolDetail as Record<string, unknown>;
   const lpSwapT = t.lpSwap as Record<string, unknown>;
   const common = t.common as Record<string, unknown>;
   const publicClient = usePublicClient();
 
-  const pairId = searchParams.get('pairId') || '';
+  const pairId = searchParams.get("pairId") || "";
 
   const [loading, setLoading] = useState(true);
   const [pairInfo, setPairInfo] = useState<PairInfo | null>(null);
-  const [tokenName, setTokenName] = useState('--');
+  const [tokenName, setTokenName] = useState("--");
   const [tokenDecimals, setTokenDecimals] = useState(18);
-  const [lpBalance, setLpBalance] = useState('0');
-  const [lpAllowance, setLpAllowance] = useState('0');
-  const [inputValue, setInputValue] = useState('');
-  const [expectedTokens, setExpectedTokens] = useState('--');
+  const [lpBalance, setLpBalance] = useState("0");
+  const [lpAllowance, setLpAllowance] = useState("0");
+  const [inputValue, setInputValue] = useState("");
+  const [expectedTokens, setExpectedTokens] = useState("--");
   const [noLp, setNoLp] = useState(false);
 
   // 写入合约
-  const { writeContract: approve, data: approveTxHash, isPending: approveLoading } = useWriteContract();
-  const { writeContract: exchange, data: exchangeTxHash, isPending: exchangeLoading } = useWriteContract();
+  const {
+    writeContract: approve,
+    data: approveTxHash,
+    isPending: approveLoading,
+  } = useWriteContract();
+  const {
+    writeContract: exchange,
+    data: exchangeTxHash,
+    isPending: exchangeLoading,
+  } = useWriteContract();
 
   // 等待交易确认
-  const { isSuccess: approveSuccess } = useWaitForTransactionReceipt({ hash: approveTxHash });
-  const { isSuccess: exchangeSuccess } = useWaitForTransactionReceipt({ hash: exchangeTxHash });
+  const { isSuccess: approveSuccess } = useWaitForTransactionReceipt({
+    hash: approveTxHash,
+  });
+  const { isSuccess: exchangeSuccess } = useWaitForTransactionReceipt({
+    hash: exchangeTxHash,
+  });
 
   // 获取 pair 信息
   const fetchPairInfo = useCallback(async () => {
     if (!publicClient || !pairId) return;
 
     try {
-      const result = await publicClient.readContract({
+      const result = (await publicClient.readContract({
         address: CONTRACTS.LP_EXCHANGE as `0x${string}`,
         abi: lpExchangeAbi,
-        functionName: 'pairs',
+        functionName: "pairs",
         args: [BigInt(pairId)],
-      }) as readonly [string, string, string, boolean, string, bigint, boolean];
+      })) as readonly [
+        string,
+        string,
+        string,
+        boolean,
+        string,
+        bigint,
+        boolean
+      ];
 
-      const [lpToken, pairName, disPlayNmae, baseTokenIsToken0, changeToken, rate, isOpen] = result;
+      const [
+        lpToken,
+        pairName,
+        disPlayNmae,
+        baseTokenIsToken0,
+        changeToken,
+        rate,
+        isOpen,
+      ] = result;
 
       setPairInfo({
         pairId,
@@ -95,7 +135,7 @@ function LpSwapDetailContent() {
         isOpen,
       });
     } catch (error) {
-      console.error('fetchPairInfo error:', error);
+      console.error("fetchPairInfo error:", error);
     }
   }, [publicClient, pairId]);
 
@@ -113,19 +153,19 @@ function LpSwapDetailContent() {
         publicClient.readContract({
           address: changeToken as `0x${string}`,
           abi: erc20Abi,
-          functionName: 'symbol',
+          functionName: "symbol",
         }),
         publicClient.readContract({
           address: changeToken as `0x${string}`,
           abi: erc20Abi,
-          functionName: 'decimals',
+          functionName: "decimals",
         }),
       ]);
 
       setTokenName(symbol as string);
       setTokenDecimals(Number(decimals));
     } catch (error) {
-      console.error('fetchTokenInfo error:', error);
+      console.error("fetchTokenInfo error:", error);
     }
   }, [publicClient, changeToken]);
 
@@ -134,18 +174,18 @@ function LpSwapDetailContent() {
     if (!publicClient || !lpToken || !address) return;
 
     try {
-      const balance = await publicClient.readContract({
+      const balance = (await publicClient.readContract({
         address: lpToken as `0x${string}`,
         abi: erc20Abi,
-        functionName: 'balanceOf',
+        functionName: "balanceOf",
         args: [address],
-      }) as bigint;
+      })) as bigint;
 
       const formatted = formatUnits(balance, 18);
       setLpBalance(formatted);
       setNoLp(parseFloat(formatted) === 0);
     } catch (error) {
-      console.error('fetchLpBalance error:', error);
+      console.error("fetchLpBalance error:", error);
     }
   }, [publicClient, lpToken, address]);
 
@@ -154,41 +194,44 @@ function LpSwapDetailContent() {
     if (!publicClient || !lpToken || !address) return;
 
     try {
-      const allowance = await publicClient.readContract({
+      const allowance = (await publicClient.readContract({
         address: lpToken as `0x${string}`,
         abi: erc20Abi,
-        functionName: 'allowance',
+        functionName: "allowance",
         args: [address, CONTRACTS.LP_EXCHANGE],
-      }) as bigint;
+      })) as bigint;
 
       setLpAllowance(formatUnits(allowance, 18));
     } catch (error) {
-      console.error('fetchAllowance error:', error);
+      console.error("fetchAllowance error:", error);
     }
   }, [publicClient, lpToken, address]);
 
   // 计算预期兑换数量
-  const calculateExpectedTokens = useCallback(async (value: string) => {
-    if (!publicClient || !pairIdValue || !value || parseFloat(value) <= 0) {
-      setExpectedTokens('--');
-      return;
-    }
+  const calculateExpectedTokens = useCallback(
+    async (value: string) => {
+      if (!publicClient || !pairIdValue || !value || parseFloat(value) <= 0) {
+        setExpectedTokens("--");
+        return;
+      }
 
-    try {
-      const result = await publicClient.readContract({
-        address: CONTRACTS.LP_EXCHANGE as `0x${string}`,
-        abi: lpExchangeAbi,
-        functionName: 'viewExchangeLpTokenForTokens',
-        args: [BigInt(pairIdValue), parseUnits(value, 18)],
-      }) as bigint;
+      try {
+        const result = (await publicClient.readContract({
+          address: CONTRACTS.LP_EXCHANGE as `0x${string}`,
+          abi: lpExchangeAbi,
+          functionName: "viewExchangeLpTokenForTokens",
+          args: [BigInt(pairIdValue), parseUnits(value, 18)],
+        })) as bigint;
 
-      const formatted = formatUnits(result, tokenDecimals);
-      setExpectedTokens(parseFloat(formatted).toFixed(4));
-    } catch (error) {
-      console.error('calculateExpectedTokens error:', error);
-      setExpectedTokens('--');
-    }
-  }, [publicClient, pairIdValue, tokenDecimals]);
+        const formatted = formatUnits(result, tokenDecimals);
+        setExpectedTokens(parseFloat(formatted).toFixed(4));
+      } catch (error) {
+        console.error("calculateExpectedTokens error:", error);
+        setExpectedTokens("--");
+      }
+    },
+    [publicClient, pairIdValue, tokenDecimals]
+  );
 
   // 授权
   const handleApprove = async () => {
@@ -198,11 +241,11 @@ function LpSwapDetailContent() {
       approve({
         address: pairInfo.lpToken as `0x${string}`,
         abi: erc20Abi,
-        functionName: 'approve',
+        functionName: "approve",
         args: [CONTRACTS.LP_EXCHANGE, maxUint256],
       });
     } catch (error) {
-      console.error('approve error:', error);
+      console.error("approve error:", error);
       toast.error(common.approveFailed as string);
     }
   };
@@ -225,11 +268,11 @@ function LpSwapDetailContent() {
       exchange({
         address: CONTRACTS.LP_EXCHANGE as `0x${string}`,
         abi: lpExchangeAbi,
-        functionName: 'exchangeLpTokenForTokens',
+        functionName: "exchangeLpTokenForTokens",
         args: [BigInt(pairInfo.pairId), parseUnits(inputValue, 18)],
       });
     } catch (error) {
-      console.error('exchange error:', error);
+      console.error("exchange error:", error);
       toast.error(poolDetail.swapFail as string);
     }
   };
@@ -296,7 +339,7 @@ function LpSwapDetailContent() {
     if (exchangeSuccess) {
       toast.success(poolDetail.swapSuccess as string);
       startTransition(() => {
-      setInputValue('');
+        setInputValue("");
         fetchLpBalanceRef.current();
       });
     }
@@ -304,7 +347,7 @@ function LpSwapDetailContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--background)] p-5">
+      <div className="min-h-screen bg-background p-5">
         <div className="space-y-4">
           <div className="h-10 skeleton" />
           <div className="h-80 skeleton" />
@@ -315,8 +358,10 @@ function LpSwapDetailContent() {
 
   if (!pairInfo) {
     return (
-      <div className="min-h-screen bg-[var(--background)] flex flex-col items-center justify-center p-5">
-        <p className="text-[var(--text-muted)] mb-4 text-sm">{lpSwapT.pairNotExist as string}</p>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-5">
+        <p className="text-text-muted mb-4 text-sm">
+          {lpSwapT.pairNotExist as string}
+        </p>
         <Link href="/lp-swap" className="btn-primary px-6">
           {lpSwapT.backToList as string}
         </Link>
@@ -327,22 +372,24 @@ function LpSwapDetailContent() {
   const needApprove = parseFloat(lpAllowance) === 0;
 
   return (
-    <div className="min-h-screen bg-[var(--background)] bg-grid bg-gradient-radial p-5">
+    <div className="min-h-screen bg-background bg-grid bg-gradient-radial p-5">
       {/* 顶部标题 */}
       <div className="flex items-center gap-3 mb-6">
-        <button 
-          onClick={() => router.back()} 
-          className="w-10 h-10 rounded-xl bg-[var(--background-card)] border border-[var(--border-color)] flex items-center justify-center hover:bg-[var(--background-card-hover)] transition-colors"
+        <button
+          onClick={() => router.back()}
+          className="w-10 h-10 rounded-xl bg-background-card border border-border flex items-center justify-center hover:bg-card-hover transition-colors"
         >
-          <ArrowLeft className="w-5 h-5 text-[var(--foreground)]" />
+          <ArrowLeft className="w-5 h-5 text-secondary" />
         </button>
-        <h1 className="text-lg font-semibold text-[var(--foreground)]">{lpSwapT.lpExchange as string}</h1>
+        <h1 className="text-lg font-semibold text-secondary">
+          {lpSwapT.lpExchange as string}
+        </h1>
       </div>
 
       {/* Token 信息卡片 */}
       <div className="card mb-4">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-[var(--background-card-hover)] p-1.5 ring-2 ring-[var(--primary)]/30">
+          <div className="w-14 h-14 rounded-full bg-card-hover p-1.5 ring-2 ring-primary/30">
             <Image
               src={getTokenIcon(tokenName.toLowerCase())}
               alt={tokenName}
@@ -352,8 +399,12 @@ function LpSwapDetailContent() {
             />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-[var(--foreground)]">{pairInfo.disPlayName}</h2>
-            <p className="text-sm text-[var(--primary)] mt-1">{lpSwapT.timely as string} {pairInfo.rate}%</p>
+            <h2 className="text-lg font-bold text-secondary">
+              {pairInfo.disPlayName}
+            </h2>
+            <p className="text-sm text-primary mt-1">
+              {lpSwapT.timely as string} {pairInfo.rate}%
+            </p>
           </div>
         </div>
       </div>
@@ -361,23 +412,27 @@ function LpSwapDetailContent() {
       {/* 合约地址 */}
       <div className="card mb-4 space-y-4 text-sm">
         <div className="flex justify-between items-center">
-          <span className="text-[var(--text-secondary)]">{tokenName} {poolDetail.contractAddress as string}</span>
+          <span className="text-text-secondary">
+            {tokenName} {poolDetail.contractAddress as string}
+          </span>
           <div
-            className="flex items-center gap-2 cursor-pointer text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors"
+            className="flex items-center gap-2 cursor-pointer text-primary hover:text-primary-hover transition-colors"
             onClick={() => copyAddress(pairInfo.changeToken)}
           >
-            <span className="font-medium">{shortAddress(pairInfo.changeToken)}</span>
+            <span className="font-medium">
+              {shortAddress(pairInfo.changeToken)}
+            </span>
             <Copy className="w-3.5 h-3.5" />
           </div>
         </div>
-        <div className="h-px bg-[var(--border-color)]" />
+        <div className="h-px bg-border" />
         <div className="flex justify-between items-center">
-          <span className="text-[var(--text-secondary)]">{poolDetail.lp as string}</span>
+          <span className="text-text-secondary">{poolDetail.lp as string}</span>
           <a
             href={`https://bscscan.com/address/${pairInfo.lpToken}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors font-medium"
+            className="text-primary hover:text-primary-hover transition-colors font-medium"
           >
             {shortAddress(pairInfo.lpToken)} ↗
           </a>
@@ -387,27 +442,30 @@ function LpSwapDetailContent() {
       {/* 输入区域 */}
       <div className="card mb-5">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-sm text-[var(--text-secondary)]">{poolDetail.search2 as string}</span>
+          <span className="text-sm text-text-secondary">
+            {poolDetail.search2 as string}
+          </span>
           {noLp && (
-            <span className="text-xs text-[var(--error)] px-3 py-1.5 rounded-full border border-[var(--error)]/50 bg-[var(--error)]/10">
+            <span className="text-xs text-error px-3 py-1.5 rounded-full border border-error/50 bg-error/10">
               {poolDetail.getLp as string}
             </span>
           )}
         </div>
-        <div className="flex items-center justify-between bg-[var(--background-secondary)] rounded-xl h-[52px] px-4 border border-[var(--border-color)] focus-within:border-[var(--primary)]/50 transition-colors">
+        <div className="flex items-center justify-between bg-background-secondary rounded-xl h-[52px] px-4 border border-border focus-within:border-primary/50 transition-colors">
           <input
             type="text"
             value={inputValue}
             onChange={(e) => {
-              const value = e.target.value.match(/^\d+(?:\.\d{0,18})?/)?.[0] || '';
+              const value =
+                e.target.value.match(/^\d+(?:\.\d{0,18})?/)?.[0] || "";
               setInputValue(value);
             }}
             placeholder={poolDetail.placeHolder as string}
-            className="w-[calc(100%-70px)] bg-transparent border-none outline-none text-[var(--foreground)] text-base placeholder:text-[var(--text-muted)]"
+            className="w-[calc(100%-70px)] bg-transparent border-none outline-none text-secondary text-base placeholder:text-text-muted"
           />
           <button
             onClick={() => setInputValue(lpBalance)}
-            className="w-16 shrink-0 bg-[var(--primary)]/20 text-[var(--primary)] text-xs font-semibold px-4 py-1.5 rounded-lg hover:bg-[var(--primary)]/30 transition-colors"
+            className="w-16 shrink-0 bg-primary/20 text-primary text-xs font-semibold px-4 py-1.5 rounded-lg hover:bg-primary/30 transition-colors"
           >
             MAX
           </button>
@@ -416,12 +474,18 @@ function LpSwapDetailContent() {
         {/* 余额和预期 */}
         <div className="mt-5 space-y-3 text-sm">
           <div className="flex justify-between items-center">
-            <span className="text-[var(--primary)]">{poolDetail.balance as string}</span>
-            <span className="text-[var(--foreground)] font-medium">{parseFloat(lpBalance).toFixed(4)} LP</span>
+            <span className="text-primary">{poolDetail.balance as string}</span>
+            <span className="text-secondary font-medium">
+              {parseFloat(lpBalance).toFixed(4)} LP
+            </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-[var(--primary)]">{poolDetail.expected as string}</span>
-            <span className="text-[var(--primary)] font-semibold">{expectedTokens} {tokenName}</span>
+            <span className="text-primary">
+              {poolDetail.expected as string}
+            </span>
+            <span className="text-primary font-semibold">
+              {expectedTokens} {tokenName}
+            </span>
           </div>
         </div>
       </div>
@@ -433,7 +497,7 @@ function LpSwapDetailContent() {
             onClick={openConnectModal}
             className="btn-primary w-full h-[52px] text-base font-bold"
           >
-            {lang === 'zh' ? '連接錢包' : 'Connect Wallet'}
+            {lang === "zh" ? "連接錢包" : "Connect Wallet"}
           </button>
         ) : needApprove ? (
           <button
@@ -441,7 +505,9 @@ function LpSwapDetailContent() {
             disabled={approveLoading}
             className="btn-primary w-full h-[52px] text-base font-bold"
           >
-            {approveLoading ? `${common.loading}` : poolDetail.approve as string}
+            {approveLoading
+              ? `${common.loading}`
+              : (poolDetail.approve as string)}
           </button>
         ) : (
           <button
@@ -449,7 +515,9 @@ function LpSwapDetailContent() {
             disabled={exchangeLoading || !inputValue}
             className="btn-primary w-full h-[52px] text-base font-bold"
           >
-            {exchangeLoading ? `${common.loading}` : poolDetail.stake as string}
+            {exchangeLoading
+              ? `${common.loading}`
+              : (poolDetail.stake as string)}
           </button>
         )}
       </div>
@@ -459,13 +527,15 @@ function LpSwapDetailContent() {
         href="https://pancakeswap.finance/v2/add/BNB/0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82"
         target="_blank"
         rel="noopener noreferrer"
-        className="card flex items-center justify-between hover:bg-[var(--background-card-hover)] transition-colors py-4"
+        className="card flex items-center justify-between hover:bg-card-hover transition-colors py-4"
       >
         <div className="flex items-center gap-3">
           <span className="text-2xl">🥞</span>
-          <span className="text-sm text-[var(--text-secondary)]">{poolDetail.goPancake as string}</span>
+          <span className="text-sm text-text-secondary">
+            {poolDetail.goPancake as string}
+          </span>
         </div>
-        <span className="text-[var(--primary)] text-xl">→</span>
+        <span className="text-primary text-xl">→</span>
       </a>
     </div>
   );

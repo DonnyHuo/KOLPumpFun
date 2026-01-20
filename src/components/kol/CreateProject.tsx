@@ -8,7 +8,7 @@ import { ChevronDown, Upload, X, Copy, Check, Send } from "lucide-react";
 import { Tip } from "@/components/ui/Tip";
 import { kolApi, type SelectToken, type ProjectInfo } from "@/lib/api";
 import { useStore } from "@/store/useStore";
-import { shortAddress, copyToClipboard } from "@/lib/utils";
+import { shortAddress, copyToClipboard, cn } from "@/lib/utils";
 import { getTokenIcon } from "@/assets/images/tokenList";
 
 import Image from "next/image";
@@ -47,9 +47,9 @@ function PercentBox({
   tooltip?: string;
 }) {
   return (
-    <div className="flex items-center justify-between bg-[var(--background-card)] border border-[var(--border-color)] h-[48px] px-4 rounded-xl">
+    <div className="flex items-center justify-between bg-background-card border border-border h-[48px] px-4 rounded-xl">
       <div className="flex items-center gap-1">
-        <span className="text-xs text-[var(--text-secondary)]">{label}</span>
+        <span className="text-xs text-text-secondary">{label}</span>
         {tooltip && <Tip content={tooltip} />}
       </div>
       {editable ? (
@@ -59,12 +59,12 @@ function PercentBox({
             value={value}
             onChange={(e) => onChange?.(e.target.value)}
             placeholder="> 0"
-            className="w-[50px] h-[30px] text-xs text-right bg-[var(--background-card)] border border-[var(--border-color)] rounded-lg px-2 text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)]"
+            className="w-[50px] h-[30px] text-xs text-right bg-background-card border border-border rounded-lg px-2 text-foreground focus:outline-none focus:border-primary"
           />
-          <span className="ml-2 text-[var(--text-secondary)]">%</span>
+          <span className="ml-2 text-text-secondary">%</span>
         </div>
       ) : (
-        <span className="font-semibold text-[var(--primary)]">{value}%</span>
+        <span className="font-semibold text-primary">{value}%</span>
       )}
     </div>
   );
@@ -478,37 +478,37 @@ export function CreateProject({
     <div className="relative my-4">
       <button
         onClick={() => setShowTokenList(!showTokenList)}
-        className="w-full flex items-center justify-between bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl px-4 py-3 hover:border-[var(--border-color-hover)] transition-colors"
+        className="w-full flex items-center justify-between bg-background-card border border-border rounded-xl px-4 py-3 hover:border-border-hover transition-colors"
       >
         <div className="flex items-center gap-3">
-          <span className="font-semibold text-sm text-[var(--foreground)]">
+          <span className="font-semibold text-sm text-foreground">
             {selectedToken?.mint_base_token || "BNB"}
           </span>
-          <span className="text-xs text-[var(--text-secondary)]">
+          <span className="text-xs text-text-secondary">
             1 {selectedToken?.mint_base_token || "BNB"} ={" "}
-            <span className="text-[var(--primary)]">
+            <span className="text-primary">
               {selectedToken?.exchange_rate || "9000000"}
             </span>{" "}
             代幣
           </span>
         </div>
         <ChevronDown
-          className={`w-5 h-5 text-[var(--primary)] transition-transform ${
+          className={`w-5 h-5 text-primary transition-transform ${
             showTokenList ? "rotate-180" : ""
           }`}
         />
       </button>
 
       {showTokenList && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl shadow-2xl z-10 max-h-48 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-background-card border border-border rounded-xl shadow-2xl z-10 max-h-48 overflow-y-auto">
           {tokenList.map((token, index) => (
             <button
               key={index}
               onClick={() => handleSelectToken(token)}
               className={`w-full text-left px-4 py-3 text-sm transition-colors ${
                 selectedToken?.mint_base_token === token.mint_base_token
-                  ? "bg-[var(--primary)]/10 text-[var(--primary)]"
-                  : "text-[var(--foreground)] hover:bg-[var(--background-card-hover)]"
+                  ? "bg-primary/10 text-primary"
+                  : "text-foreground hover:bg-background-card-hover"
               }`}
             >
               {token.mint_base_token} - 1 {token.mint_base_token} ={" "}
@@ -548,7 +548,7 @@ export function CreateProject({
           <div className="flex justify-center mb-6">
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="w-[200px] h-[150px] border-2 border-dashed border-[var(--border-color)] rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-[var(--primary)]/50 transition-colors bg-[var(--background-card)]"
+              className="w-[200px] h-[150px] border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors bg-background-card"
             >
               {logoPreview ? (
                 <div className="relative w-full h-full">
@@ -570,15 +570,13 @@ export function CreateProject({
                 </div>
               ) : (
                 <>
-                  <div className="w-12 h-12 mb-3 flex items-center justify-center rounded-xl bg-[var(--background-card-hover)]">
-                    <Upload className="w-6 h-6 text-[var(--text-muted)]" />
+                  <div className="w-12 h-12 mb-3 flex items-center justify-center rounded-xl bg-background-card-hover">
+                    <Upload className="w-6 h-6 text-text-muted" />
                   </div>
-                  <p className="text-xs text-[var(--text-secondary)]">
+                  <p className="text-xs text-text-secondary">
                     PNG-JPEG-WEBP-GIF
                   </p>
-                  <p className="text-xs text-[var(--text-muted)]">
-                    Max Size: 5MB
-                  </p>
+                  <p className="text-xs text-text-muted">Max Size: 5MB</p>
                 </>
               )}
             </div>
@@ -592,7 +590,7 @@ export function CreateProject({
           </div>
 
           {/* 模式选择 */}
-          <div className="h-[44px] bg-[var(--background-card)] border border-[var(--border-color)] flex items-center rounded-xl p-1 text-xs mb-6">
+          <div className="h-[44px] bg-background-card border border-border flex items-center rounded-xl p-1 text-xs mb-6">
             {(["joint", "single", "marketMaking"] as KolMode[]).map((mode) => (
               <button
                 key={mode}
@@ -600,10 +598,10 @@ export function CreateProject({
                 disabled={!canSelectMode(mode)}
                 className={`flex-1 h-full flex items-center justify-center cursor-pointer rounded-lg transition-all ${
                   activeMode === mode
-                    ? "bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] text-black font-semibold"
+                    ? "bg-gradient-to-r from-primary to-primary-hover text-black font-semibold"
                     : canSelectMode(mode)
-                    ? "text-[var(--text-secondary)] hover:text-[var(--foreground)]"
-                    : "text-[var(--text-muted)] cursor-not-allowed opacity-40"
+                    ? "text-text-secondary hover:text-foreground"
+                    : "text-text-muted cursor-not-allowed opacity-40"
                 }`}
               >
                 {kolTypes[mode]}
@@ -962,7 +960,7 @@ export function CreateProject({
         <div>
           {/* 已认领项目展示 */}
           {hasClaimedProject ? (
-            <div className="bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl p-5 my-4">
+            <div className="bg-background-card border border-border rounded-xl p-5 my-4">
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-1">
                   <Image
@@ -972,7 +970,7 @@ export function CreateProject({
                     width={28}
                     height={28}
                   />
-                  <span className="font-semibold text-[var(--foreground)] text-sm">
+                  <span className="font-semibold text-foreground text-sm">
                     {kolInfo?.project_name?.split("100T-")[1] ||
                       kolInfo?.project_name}
                   </span>
@@ -988,29 +986,27 @@ export function CreateProject({
               <div className="flex items-center justify-between gap-4 mb-4">
                 <button
                   onClick={() => handleSort()}
-                  className="flex items-center gap-2 bg-[var(--background-card)] border border-[var(--border-color)] px-4 py-2.5 rounded-xl hover:bg-[var(--background-card-hover)] transition-colors"
+                  className="flex items-center gap-2 bg-background-card border border-border px-4 py-2.5 rounded-xl hover:bg-background-card-hover transition-colors"
                 >
-                  <span className="text-[var(--foreground)] text-sm">
+                  <span className="text-foreground text-sm">
                     {newData.marketCap || "市值"}
                   </span>
                   <div className="flex flex-col gap-[2px]">
                     <div
-                      className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[4px]"
-                      style={{
-                        borderBottomColor:
-                          sortOrder === "asc"
-                            ? "var(--primary)"
-                            : "var(--text-muted)",
-                      }}
+                      className={cn(
+                        "w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[4px]",
+                        sortOrder === "asc"
+                          ? "border-b-primary"
+                          : "border-b-text-muted"
+                      )}
                     />
                     <div
-                      className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px]"
-                      style={{
-                        borderTopColor:
-                          sortOrder === "desc"
-                            ? "var(--primary)"
-                            : "var(--text-muted)",
-                      }}
+                      className={cn(
+                        "w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px]",
+                        sortOrder === "desc"
+                          ? "border-t-primary"
+                          : "border-t-text-muted"
+                      )}
                     />
                   </div>
                 </button>
@@ -1047,7 +1043,7 @@ export function CreateProject({
                     return (
                       <div
                         key={index}
-                        className="bg-[var(--background-card)] border border-[var(--border-color)] rounded-xl p-4 text-left hover:border-[var(--border-color-hover)] transition-colors"
+                        className="bg-background-card border border-border rounded-xl p-4 text-left hover:border-border-hover transition-colors"
                       >
                         {/* 头部：Logo、Symbol、价格 */}
                         <div className="flex items-start justify-between">
@@ -1064,18 +1060,18 @@ export function CreateProject({
                             />
 
                             <div>
-                              <div className="text-sm font-semibold text-[var(--foreground)]">
+                              <div className="text-sm font-semibold text-foreground">
                                 {project.symbol}
                               </div>
-                              <div className="text-[var(--text-secondary)] text-xs mt-0.5">
+                              <div className="text-text-secondary text-xs mt-0.5">
                                 {newData.marketCap || "市值"}:{" "}
-                                <span className="text-[var(--foreground)]">
+                                <span className="text-foreground">
                                   ${marketCap}
                                 </span>
                               </div>
                             </div>
                           </div>
-                          <div className="text-sm text-[var(--primary)] font-semibold">
+                          <div className="text-sm text-primary font-semibold">
                             ${Number(project.lastPrice || 0).toFixed(6)}
                           </div>
                         </div>
@@ -1086,7 +1082,7 @@ export function CreateProject({
                             href={project.twitter_account || "#"}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="bg-[var(--background-card-hover)] border border-[var(--border-color)] p-1.5 px-2.5 rounded-lg flex items-center gap-1.5 hover:border-[var(--border-color-hover)] transition-colors text-[var(--text-secondary)] hover:text-[var(--foreground)]"
+                            className="bg-background-card-hover border border-border p-1.5 px-2.5 rounded-lg flex items-center gap-1.5 hover:border-border-hover transition-colors text-text-secondary hover:text-foreground"
                             onClick={(e) => e.stopPropagation()}
                           >
                             {/* X (Twitter) Icon */}
@@ -1103,13 +1099,13 @@ export function CreateProject({
                             href={project.tg_account || "#"}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="bg-[var(--background-card-hover)] border border-[var(--border-color)] p-1.5 px-2.5 rounded-lg flex items-center gap-1.5 hover:border-[var(--border-color-hover)] transition-colors text-[var(--text-secondary)] hover:text-[var(--foreground)]"
+                            className="bg-background-card-hover border border-border p-1.5 px-2.5 rounded-lg flex items-center gap-1.5 hover:border-border-hover transition-colors text-text-secondary hover:text-foreground"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <Send className="w-3 h-3" />
                             <span>Telegram</span>
                           </a>
-                          <div className="bg-[var(--primary)]/10 border border-[var(--primary)]/30 text-[var(--primary)] p-1.5 px-2.5 rounded-lg">
+                          <div className="bg-primary/10 border border-primary/30 text-primary p-1.5 px-2.5 rounded-lg">
                             {projectTypeName}
                           </div>
                           {!project.details && (
@@ -1125,7 +1121,7 @@ export function CreateProject({
                         {/* 描述和认领按钮 */}
                         {project.details && (
                           <div className="flex items-center justify-between gap-4 mt-3">
-                            <div className="text-[var(--text-secondary)] text-xs text-left flex-1">
+                            <div className="text-text-secondary text-xs text-left flex-1">
                               {project.details}
                             </div>
                             <button
@@ -1139,13 +1135,13 @@ export function CreateProject({
 
                         {/* 公平发射信息 */}
                         {project.exchange_rate ? (
-                          <div className="mt-3 pt-3 border-t border-[var(--border-color)]">
+                          <div className="mt-3 pt-3 border-t border-border">
                             <div className="text-sm mb-2">
-                              <span className="text-[var(--foreground)]">
+                              <span className="text-secondary">
                                 {(shareProject?.fairLaunch as string) ||
                                   "公平發射"}
                               </span>
-                              <span className="text-[var(--primary)] ml-2">
+                              <span className="text-primary ml-2">
                                 1{project.display_name?.split("-")[0] || "BNB"}{" "}
                                 = {project.exchange_rate || 0}
                                 {project.symbol}
@@ -1178,7 +1174,7 @@ export function CreateProject({
 
                         {/* 无公平发射但有mint_pool_id时也显示入口 */}
                         {!project.exchange_rate && project.mint_pool_id ? (
-                          <div className="mt-3 pt-3 border-t border-[var(--border-color)]">
+                          <div className="mt-3 pt-3 border-t border-border">
                             <div className="flex items-center gap-2 justify-end">
                               <button
                                 onClick={(e) => {
@@ -1209,10 +1205,10 @@ export function CreateProject({
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 rounded-full bg-[var(--background-card-hover)] flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 rounded-full bg-background-card-hover flex items-center justify-center mx-auto mb-4">
                     <span className="text-2xl">📭</span>
                   </div>
-                  <p className="text-[var(--text-muted)] text-sm">
+                  <p className="text-text-muted text-sm">
                     {newData.noData || "暫無數據"}
                   </p>
                 </div>
@@ -1229,19 +1225,19 @@ export function CreateProject({
               onClick={() => setShowClaimModal(false)}
             >
               <div
-                className="bg-[var(--background-card)] border-t border-[var(--border-color)] w-full max-w-md max-h-[90vh] rounded-t-3xl p-5 pb-8 animate-slide-up overflow-hidden flex flex-col"
+                className="bg-background-card border-t border-border w-full max-w-md max-h-[90vh] rounded-t-3xl p-5 pb-8 animate-slide-up overflow-hidden flex flex-col"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* 拖动条 */}
-                <div className="w-12 h-1 bg-[var(--text-muted)] rounded-full mx-auto mb-6 shrink-0" />
+                <div className="w-12 h-1 bg-text-muted rounded-full mx-auto mb-6 shrink-0" />
 
                 {/* 标题 */}
-                <h3 className="text-center font-semibold text-sm text-[var(--foreground)] mb-6 shrink-0">
+                <h3 className="text-center font-semibold text-sm text-secondary mb-6 shrink-0">
                   {(kol?.claimRule as string) || "認領規則"}
                 </h3>
 
                 {/* 规则内容 */}
-                <div className="text-left text-sm leading-6 mb-5 flex-1 overflow-y-auto text-[var(--text-secondary)]">
+                <div className="text-left text-sm leading-6 mb-5 flex-1 overflow-y-auto text-text-secondary">
                   {contentDesc.map((desc, i) => (
                     <p key={i} className="mb-3">
                       {desc}
@@ -1249,22 +1245,22 @@ export function CreateProject({
                   ))}
 
                   {/* 推文文案 */}
-                  <div className="mt-5 p-4 bg-[var(--background)] border border-[var(--border-color)] rounded-xl">
+                  <div className="mt-5 p-4 bg-background border border-border rounded-xl">
                     <div
                       className="flex items-start gap-2 cursor-pointer"
                       onClick={handleCopyTweet}
                     >
-                      <span className="text-[var(--primary)] font-bold">*</span>
-                      <span className="text-[var(--foreground)] font-medium flex-1 break-all text-sm">
+                      <span className="text-primary font-bold">*</span>
+                      <span className="text-secondary font-medium flex-1 break-all text-sm">
                         {getTweetText()}
                       </span>
                       {copied ? (
-                        <Check className="w-4 h-4 text-[var(--success)] flex-shrink-0" />
+                        <Check className="w-4 h-4 text-success flex-shrink-0" />
                       ) : (
-                        <Copy className="w-4 h-4 text-[var(--text-muted)] flex-shrink-0 hover:text-[var(--primary)]" />
+                        <Copy className="w-4 h-4 text-text-muted flex-shrink-0 hover:text-primary" />
                       )}
                     </div>
-                    <p className="text-[var(--text-muted)] mt-3 text-xs">
+                    <p className="text-text-muted mt-3 text-xs">
                       {(kol?.tweetTips as string) ||
                         "复制以上文案发布推特并@smartbtcdao"}
                     </p>
@@ -1277,9 +1273,9 @@ export function CreateProject({
                     type="checkbox"
                     checked={claimChecked}
                     onChange={(e) => setClaimChecked(e.target.checked)}
-                    className="mt-0.5 w-5 h-5 rounded border-[var(--border-color)] bg-[var(--background)] checked:bg-[var(--primary)] checked:border-[var(--primary)]"
+                    className="mt-0.5 w-5 h-5 rounded border-border bg-background checked:bg-primary checked:border-primary"
                   />
-                  <span className="text-sm text-[var(--text-secondary)] group-hover:text-[var(--text-secondary)] transition-colors">
+                  <span className="text-sm text-text-secondary group-hover:text-text-secondary transition-colors">
                     {(kol?.sure as string) ||
                       "我已閱讀並認可認領規則，同意認領此項目。"}
                   </span>

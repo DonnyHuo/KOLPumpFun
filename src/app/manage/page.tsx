@@ -1,19 +1,24 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
-import { formatUnits } from 'viem';
-import { toast } from 'sonner';
-import { shortAddress, copyToClipboard } from '@/lib/utils';
-import { CONTRACTS } from '@/constants/contracts';
-import lpExchangeAbi from '@/constants/abi/lpExchange.json';
-import erc20Abi from '@/constants/abi/erc20.json';
-import { useStore } from '@/store/useStore';
-import zhCN from '@/i18n/zh-CN';
-import enUS from '@/i18n/en-US';
-import { copy } from '@/assets/images';
+import { useState, useEffect } from "react";
+import { useAccount } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import {
+  useReadContract,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+  usePublicClient,
+} from "wagmi";
+import { formatUnits } from "viem";
+import { toast } from "sonner";
+import { shortAddress, copyToClipboard } from "@/lib/utils";
+import { CONTRACTS } from "@/constants/contracts";
+import lpExchangeAbi from "@/constants/abi/lpExchange.json";
+import erc20Abi from "@/constants/abi/erc20.json";
+import { useStore } from "@/store/useStore";
+import zhCN from "@/i18n/zh-CN";
+import enUS from "@/i18n/en-US";
+import { copy } from "@/assets/images";
 
 interface PairInfo {
   id: number;
@@ -31,7 +36,7 @@ export default function ManagePage() {
   const { address, isConnected } = useAccount();
   const { openConnectModal } = useConnectModal();
   const { lang } = useStore();
-  const t = lang === 'zh' ? zhCN : enUS;
+  const t = lang === "zh" ? zhCN : enUS;
   const manage = t.manage as Record<string, string>;
 
   const [exchangePairs, setExchangePairs] = useState<PairInfo[]>([]);
@@ -42,23 +47,35 @@ export default function ManagePage() {
   const { data: owner } = useReadContract({
     address: CONTRACTS.LP_EXCHANGE as `0x${string}`,
     abi: lpExchangeAbi,
-    functionName: 'owner',
+    functionName: "owner",
   });
 
   // 获取交易对数量
   const { data: pairsCount } = useReadContract({
     address: CONTRACTS.LP_EXCHANGE as `0x${string}`,
     abi: lpExchangeAbi,
-    functionName: 'getPairsCount',
+    functionName: "getPairsCount",
   });
 
   // 提取 LP
-  const { writeContract, data: hash, isPending, error: writeError } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess, isError: isTransactionError } = useWaitForTransactionReceipt({ hash });
+  const {
+    writeContract,
+    data: hash,
+    isPending,
+    error: writeError,
+  } = useWriteContract();
+  const {
+    isLoading: isConfirming,
+    isSuccess,
+    isError: isTransactionError,
+  } = useWaitForTransactionReceipt({ hash });
   const publicClient = usePublicClient();
 
   // 检查是否是 owner
-  const isOwner = address && owner && address.toLowerCase() === (owner as string).toLowerCase();
+  const isOwner =
+    address &&
+    owner &&
+    address.toLowerCase() === (owner as string).toLowerCase();
 
   // 复制地址
   const handleCopy = async () => {
@@ -82,28 +99,36 @@ export default function ManagePage() {
 
       try {
         // 循环获取每个 pair 的信息
-      for (let i = 0; i < count; i++) {
-        try {
+        for (let i = 0; i < count; i++) {
+          try {
             // 获取 pair 信息
-            const pairData = await publicClient.readContract({
+            const pairData = (await publicClient.readContract({
               address: CONTRACTS.LP_EXCHANGE as `0x${string}`,
               abi: lpExchangeAbi,
-              functionName: 'pairs',
+              functionName: "pairs",
               args: [BigInt(i)],
-            }) as [string, string, string, boolean, string, bigint, boolean];
+            })) as [string, string, string, boolean, string, bigint, boolean];
 
-            const [lpToken, pairName, disPlayName, baseTokenIsToken0, changeToken, rate, isOpen] = pairData;
+            const [
+              lpToken,
+              pairName,
+              disPlayName,
+              baseTokenIsToken0,
+              changeToken,
+              rate,
+              isOpen,
+            ] = pairData;
 
             // 获取 lpToken 的余额（LP_EXCHANGE 合约持有的 LP token 数量）
             const lpTokenBalance = await publicClient.readContract({
               address: lpToken as `0x${string}`,
               abi: erc20Abi,
-              functionName: 'balanceOf',
+              functionName: "balanceOf",
               args: [CONTRACTS.LP_EXCHANGE as `0x${string}`],
             });
 
             const pairInfo: PairInfo = {
-                id: i,
+              id: i,
               pairName,
               disPlayName,
               lpToken,
@@ -119,8 +144,8 @@ export default function ManagePage() {
             console.error(`Failed to fetch pair ${i}:`, err);
           }
         }
-        } catch (err) {
-        console.error('Failed to fetch pairs:', err);
+      } catch (err) {
+        console.error("Failed to fetch pairs:", err);
       }
 
       setExchangePairs(pairs);
@@ -134,7 +159,7 @@ export default function ManagePage() {
   useEffect(() => {
     if (isSuccess) {
       toast.success(t.common.withdrawSuccess as string);
-      setWithdrawingId(null);
+      queueMicrotask(() => setWithdrawingId(null));
       // 刷新列表
       if (pairsCount && publicClient) {
         const fetchPairs = async () => {
@@ -144,19 +169,35 @@ export default function ManagePage() {
           try {
             for (let i = 0; i < count; i++) {
               try {
-                const pairData = await publicClient.readContract({
+                const pairData = (await publicClient.readContract({
                   address: CONTRACTS.LP_EXCHANGE as `0x${string}`,
                   abi: lpExchangeAbi,
-                  functionName: 'pairs',
+                  functionName: "pairs",
                   args: [BigInt(i)],
-                }) as [string, string, string, boolean, string, bigint, boolean];
+                })) as [
+                  string,
+                  string,
+                  string,
+                  boolean,
+                  string,
+                  bigint,
+                  boolean
+                ];
 
-                const [lpToken, pairName, disPlayName, baseTokenIsToken0, changeToken, rate, isOpen] = pairData;
+                const [
+                  lpToken,
+                  pairName,
+                  disPlayName,
+                  baseTokenIsToken0,
+                  changeToken,
+                  rate,
+                  isOpen,
+                ] = pairData;
 
                 const lpTokenBalance = await publicClient.readContract({
                   address: lpToken as `0x${string}`,
                   abi: erc20Abi,
-                  functionName: 'balanceOf',
+                  functionName: "balanceOf",
                   args: [CONTRACTS.LP_EXCHANGE as `0x${string}`],
                 });
 
@@ -178,7 +219,7 @@ export default function ManagePage() {
               }
             }
           } catch (err) {
-            console.error('Failed to fetch pairs:', err);
+            console.error("Failed to fetch pairs:", err);
           }
 
           setExchangePairs(pairs);
@@ -192,8 +233,8 @@ export default function ManagePage() {
   // 提取失败处理
   useEffect(() => {
     if (writeError || isTransactionError) {
-      toast.error(t.common.withdrawFailed as string || '提取失败');
-      setWithdrawingId(null);
+      toast.error((t.common.withdrawFailed as string) || "提取失败");
+      queueMicrotask(() => setWithdrawingId(null));
     }
   }, [writeError, isTransactionError, t]);
 
@@ -208,23 +249,33 @@ export default function ManagePage() {
     writeContract({
       address: CONTRACTS.LP_EXCHANGE as `0x${string}`,
       abi: lpExchangeAbi,
-      functionName: 'withdrawLpToken',
+      functionName: "withdrawLpToken",
       args: [BigInt(pairId)],
     });
   };
 
   return (
-    <div className="bg-[var(--background)] min-h-screen p-5">
+    <div className="bg-background min-h-screen p-5">
       {/* Header */}
       <div className="flex justify-end mb-6">
         {isConnected && address ? (
           <div
-            className="flex items-center gap-2 cursor-pointer bg-[var(--background-card)] border border-[var(--border-color)] px-3 py-2 rounded-xl hover:border-[var(--border-color-hover)] transition-colors"
+            className="flex items-center gap-2 cursor-pointer bg-background-card border border-border px-3 py-2 rounded-xl hover:border-hover transition-colors"
             onClick={handleCopy}
           >
-            <span className="text-sm text-[var(--foreground)]">{shortAddress(address)}</span>
+            <span className="text-sm text-secondary">
+              {shortAddress(address)}
+            </span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={copy.src} alt="copy" className="w-3.5 h-3.5 opacity-70" style={{ filter: 'brightness(0) saturate(100%) invert(var(--icon-invert))' }} />
+            <img
+              src={copy.src}
+              alt="copy"
+              className="w-3.5 h-3.5 opacity-70"
+              style={{
+                filter:
+                  "brightness(0) saturate(100%) invert(var(--icon-invert))",
+              }}
+            />
           </div>
         ) : (
           <button
@@ -237,46 +288,59 @@ export default function ManagePage() {
       </div>
 
       {/* 标题 */}
-      <h1 className="text-left text-lg font-semibold mb-6 text-[var(--foreground)]">{manage.title}</h1>
+      <h1 className="text-left text-lg font-semibold mb-6 text-secondary">
+        {manage.title}
+      </h1>
 
       {/* LP 余额领取 */}
-      <div className="text-left text-sm flex items-center justify-between py-3 text-[var(--text-secondary)] font-medium">
+      <div className="text-left text-sm flex items-center justify-between py-3 text-text-secondary font-medium">
         {manage.lpWithdraw}
       </div>
 
       {/* 列表 */}
       <div className="card space-y-1">
         {loading ? (
-          <div className="text-center py-8 text-[var(--text-muted)]">{t.common.loading as string}</div>
+          <div className="text-center py-8 text-text-muted">
+            {t.common.loading as string}
+          </div>
         ) : exchangePairs.length > 0 ? (
           exchangePairs.map((item) => (
             <div
               key={item.id}
-              className="flex items-center justify-between py-3 px-3 bg-[var(--background-card-hover)] rounded-xl text-sm border border-[var(--border-color)] hover:border-[var(--border-color-hover)] transition-colors"
+              className="flex items-center justify-between py-3 px-3 bg-card-hover rounded-xl text-sm border border-border hover:border-hover transition-colors"
             >
-              <div className="text-[var(--foreground)] font-medium">{item.disPlayName}</div>
-              <span className="text-[var(--text-secondary)]">{Number(item.lpTokenBalance || 0).toFixed(2)}</span>
+              <div className="text-secondary font-medium">
+                {item.disPlayName}
+              </div>
+              <span className="text-text-secondary">
+                {Number(item.lpTokenBalance || 0).toFixed(2)}
+              </span>
               <button
                 onClick={() => handleWithdraw(item.id)}
-                disabled={withdrawingId === item.id || isPending || isConfirming}
+                disabled={
+                  withdrawingId === item.id || isPending || isConfirming
+                }
                 className="btn-primary h-[30px] px-4 text-xs"
               >
-                {withdrawingId === item.id && (isPending || isConfirming) ? '...' : manage.withdraw}
+                {withdrawingId === item.id && (isPending || isConfirming)
+                  ? "..."
+                  : manage.withdraw}
               </button>
             </div>
           ))
         ) : (
-          <div className="text-center py-8 text-[var(--text-muted)]">{t.common.noData as string}</div>
+          <div className="text-center py-8 text-text-muted">
+            {t.common.noData as string}
+          </div>
         )}
       </div>
 
       {/* 权限提示 */}
       {!isOwner && isConnected && (
-        <div className="mt-6 text-center text-sm text-[var(--warning)] bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-xl p-3">
+        <div className="mt-6 text-center text-sm text-warning bg-warning/10 border border-warning/20 rounded-xl p-3">
           {manage.noPermission}
         </div>
       )}
     </div>
   );
 }
-
