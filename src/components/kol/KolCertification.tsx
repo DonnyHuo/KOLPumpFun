@@ -40,9 +40,7 @@ export function KolCertification({
   const displayTwitterUrl = hasSubmitted
     ? kolInfo?.twitter_account || ""
     : twitterUrl;
-  const displayTelegramUrl = hasSubmitted
-    ? kolInfo?.tg_account || ""
-    : telegramUrl;
+  const displayTelegramUrl = hasSubmitted ? kolInfo?.tg_account || "" : telegramUrl;
 
   const handleCopyAddress = async () => {
     if (address) {

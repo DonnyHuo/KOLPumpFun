@@ -1077,10 +1077,10 @@ export function CreateProject({
                     <span className="text-foreground text-sm">
                       {newData.marketCap as string}
                     </span>
-                    <div className="flex flex-col gap-0.5">
+                    <div className="flex flex-col gap-0.5 shrink-0">
                       <div
                         className={cn(
-                          "w-0 h-0 border-l border-l-transparent border-r border-r-transparent border-b",
+                          "w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent",
                           sortOrder === "asc"
                             ? "border-b-primary"
                             : "border-b-text-muted"
@@ -1088,7 +1088,7 @@ export function CreateProject({
                       />
                       <div
                         className={cn(
-                          "w-0 h-0 border-l border-l-transparent border-r border-r-transparent border-t",
+                          "w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent",
                           sortOrder === "desc"
                             ? "border-t-primary"
                             : "border-t-text-muted"
@@ -1107,7 +1107,7 @@ export function CreateProject({
 
                 {/* 项目列表 */}
                 {filteredList.length > 0 ? (
-                  <div className="max-h-125 overflow-y-auto space-y-3">
+                  <div className="space-y-3">
                     {filteredList.map((project, index) => {
                       const marketCap =
                         project.total_supply && project.lastPrice
@@ -1136,19 +1136,22 @@ export function CreateProject({
                           {/* 头部：Logo、Symbol、价格 */}
                           <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
-                              <Image
-                                src={
-                                  project?.logo_url || getTokenIcon("100t").src
-                                }
-                                alt={
-                                  project?.symbol ||
-                                  (createProject.token as string)
-                                }
-                                width={36}
-                                height={36}
-                                className="rounded-full"
-                                unoptimized={!!project?.logo_url}
-                              />
+                              <div className="w-9 h-9">
+                                <Image
+                                  src={
+                                    project?.logo_url ||
+                                    getTokenIcon("100t").src
+                                  }
+                                  alt={
+                                    project?.symbol ||
+                                    (createProject.token as string)
+                                  }
+                                  width={36}
+                                  height={36}
+                                  className="w-9 h-9 rounded-full object-cover flex-none"
+                                  unoptimized={!!project?.logo_url}
+                                />
+                              </div>
 
                               <div>
                                 <div className="text-sm font-semibold text-foreground">

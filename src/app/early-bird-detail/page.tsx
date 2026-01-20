@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useConnection } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
@@ -63,6 +63,7 @@ export default function EarlyBirdDetailPage() {
     contract: currentProject?.contract_addr || "",
     exchangeRate: String(currentProject?.exchange_rate || 1),
     token: "SOS",
+    mintStatus: currentProject?.mint_status,
   };
 
   // 如果没有项目信息，返回列表页
@@ -203,6 +204,12 @@ export default function EarlyBirdDetailPage() {
   const isDisabled =
     numAmount === 0 || numBalance < numAmount || isTransferring || buyLoading;
 
+  console.log("poolInfo", poolInfo);
+
+  const closeStatus = useMemo(() => {
+    return poolInfo.mintStatus === 3 || poolInfo.mintStatus === 5;
+  }, [poolInfo.mintStatus]);
+
   return (
     <div className="min-h-full bg-background pb-6">
       {/* Header */}
@@ -247,6 +254,15 @@ export default function EarlyBirdDetailPage() {
           <span className="bg-primary text-xs text-black rounded-full px-3 py-1 font-medium">
             {getProjectType(poolInfo.type, t)}
           </span>
+          <span
+            className={`text-xs rounded-full px-3 py-1 font-medium ${
+              closeStatus
+                ? "bg-red-500/10 text-red-400 border border-red-400/30"
+                : "bg-primary text-black"
+            }`}
+          >
+            {closeStatus ? t.poolDetail.statusClosed : t.poolDetail.statusOpen}
+          </span>
         </div>
         <p className="text-sm text-text-secondary mb-2">{poolInfo.details}</p>
         {poolInfo.createTime && (
@@ -255,89 +271,164 @@ export default function EarlyBirdDetailPage() {
             {dayjs(poolInfo.createTime).format("YYYY-MM-DD HH:mm:ss")}
           </p>
         )}
-
         {/* Progress */}
-        <div className="mt-6">
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-text-secondary">
-              {t.poolDetail.launchProgress}
-            </span>
-            <span className="text-secondary font-bold">
-              {Number(poolInfo.processPercent) < 0.01
-                ? "<0.01"
-                : Number(poolInfo.processPercent).toFixed(4)}
-              %
-            </span>
-          </div>
-          <Progress value={Number(poolInfo.processPercent)} color="yellow" />
-        </div>
-      </div>
-
-      {/* Buy Section */}
-      <div className="px-4 mt-8">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-secondary font-bold">{t.poolDetail.buy}</span>
-          <span className="text-sm text-text-secondary">
-            {t.poolDetail.balance}：{parseFloat(sosBalance).toFixed(2)} SOS
-          </span>
-        </div>
-
-        {/* Input */}
-        <div className="card flex items-center justify-between gap-4">
-          <span className="text-text-secondary text-sm">
-            {t.poolDetail.payment}
-          </span>
-          <div className="flex flex-1 items-center gap-2">
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              onBlur={validateAmount}
-              placeholder={t.poolDetail.inputAmount}
-              className="bg-transparent text-right text-secondary w-24 outline-none flex-1"
-            />
-            <span className="text-secondary font-medium shrink-0">SOS</span>
-          </div>
-        </div>
-
-        {/* Quick Amounts */}
-        <div className="flex gap-2 mt-4">
-          {[100, 200, 500, 1000].map((val) => (
-            <button
-              key={val}
-              onClick={() => changeAmount(val)}
-              className="flex-1 py-3 rounded-xl bg-background-card text-secondary font-bold text-sm hover:bg-card-hover transition-colors border border-border"
-            >
-              {val}
-            </button>
-          ))}
-        </div>
-
-        {/* Buy Button */}
-        {!isConnected ? (
-          <button
-            onClick={openConnectModal}
-            className="btn-primary w-full mt-6"
-          >
-            {lang === "zh" ? "連接錢包" : "Connect Wallet"}
-          </button>
-        ) : (
-          <button
-            onClick={handleBuy}
-            disabled={isDisabled}
-            className="btn-primary w-full mt-6"
-          >
-            {isTransferring || buyLoading ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                {t.common.loading}
-              </span>
-            ) : (
-              t.poolDetail.buyToken
-            )}
-          </button>
+        {!closeStatus && (
+          <>
+            <div className="mt-6">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-text-secondary">
+                  {t.poolDetail.launchProgress}
+                </span>
+                <span className="text-secondary font-bold">
+                  {Number(poolInfo.processPercent) < 0.01
+                    ? "<0.01"
+                    : Number(poolInfo.processPercent).toFixed(4)}
+                  %
+                </span>
+              </div>
+              <Progress
+                value={Number(poolInfo.processPercent)}
+                color="yellow"
+              />
+            </div>
+          </>
         )}
       </div>
+      {/* Buy Section */}
+      {!closeStatus && (
+        <div className="px-4 mt-8">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-secondary font-bold">{t.poolDetail.buy}</span>
+            <span className="text-sm text-text-secondary">
+              {t.poolDetail.balance}：{parseFloat(sosBalance).toFixed(2)} SOS
+            </span>
+          </div>
+
+          {/* Input */}
+          <div className="card flex items-center justify-between gap-4">
+            <span className="text-text-secondary text-sm">
+              {t.poolDetail.payment}
+            </span>
+            <div className="flex flex-1 items-center gap-2">
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                onBlur={validateAmount}
+                placeholder={t.poolDetail.inputAmount}
+                className="bg-transparent text-right text-secondary w-24 outline-none flex-1"
+              />
+              <span className="text-secondary font-medium shrink-0">SOS</span>
+            </div>
+          </div>
+
+          {/* Quick Amounts */}
+          <div className="flex gap-2 mt-4">
+            {[100, 200, 500, 1000].map((val) => (
+              <button
+                key={val}
+                onClick={() => changeAmount(val)}
+                className="flex-1 py-3 rounded-xl bg-background-card text-secondary font-bold text-sm hover:bg-card-hover transition-colors border border-border"
+              >
+                {val}
+              </button>
+            ))}
+          </div>
+
+          {/* Buy Button */}
+          {!isConnected ? (
+            <button
+              onClick={openConnectModal}
+              className="btn-primary w-full mt-6"
+            >
+              {lang === "zh" ? "連接錢包" : "Connect Wallet"}
+            </button>
+          ) : (
+            <button
+              onClick={handleBuy}
+              disabled={isDisabled}
+              className="btn-primary w-full mt-6"
+            >
+              {isTransferring || buyLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                  {t.common.loading}
+                </span>
+              ) : (
+                t.poolDetail.buyToken
+              )}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Buy Section */}
+      {!closeStatus && (
+        <div className="px-4 mt-8">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-secondary font-bold">{t.poolDetail.buy}</span>
+            <span className="text-sm text-text-secondary">
+              {t.poolDetail.balance}：{parseFloat(sosBalance).toFixed(2)} SOS
+            </span>
+          </div>
+
+          {/* Input */}
+          <div className="card flex items-center justify-between gap-4">
+            <span className="text-text-secondary text-sm">
+              {t.poolDetail.payment}
+            </span>
+            <div className="flex flex-1 items-center gap-2">
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                onBlur={validateAmount}
+                placeholder={t.poolDetail.inputAmount}
+                className="bg-transparent text-right text-secondary w-24 outline-none flex-1"
+              />
+              <span className="text-secondary font-medium shrink-0">SOS</span>
+            </div>
+          </div>
+
+          {/* Quick Amounts */}
+          <div className="flex gap-2 mt-4">
+            {[100, 200, 500, 1000].map((val) => (
+              <button
+                key={val}
+                onClick={() => changeAmount(val)}
+                className="flex-1 py-3 rounded-xl bg-background-card text-secondary font-bold text-sm hover:bg-card-hover transition-colors border border-border"
+              >
+                {val}
+              </button>
+            ))}
+          </div>
+
+          {/* Buy Button */}
+          {!isConnected ? (
+            <button
+              onClick={openConnectModal}
+              className="btn-primary w-full mt-6"
+            >
+              {lang === "zh" ? "連接錢包" : "Connect Wallet"}
+            </button>
+          ) : (
+            <button
+              onClick={handleBuy}
+              disabled={isDisabled}
+              className="btn-primary w-full mt-6"
+            >
+              {isTransferring || buyLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                  {t.common.loading}
+                </span>
+              ) : (
+                t.poolDetail.buyToken
+              )}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Orders Section */}
       <div className="px-4 mt-8">

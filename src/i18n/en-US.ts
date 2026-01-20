@@ -314,6 +314,8 @@ const lan = {
     inputMultipleOf100: "Please enter a multiple of 100",
     expectedAmount: "Expected Amount",
     buyToken: "Buy Token",
+    statusOpen: "Open",
+    statusClosed: "Closed",
     approve: "Approve",
     earlyRedeem: "Early Redeem",
     buySuccess: "Purchase Successful",
