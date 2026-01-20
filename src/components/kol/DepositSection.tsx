@@ -43,7 +43,7 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
   const stakeRanges = [
     { name: kolTypes?.joint || '聯合KOL', value: 100 },
     { name: kolTypes?.single || '單一KOL', value: 10000 },
-    { name: (home?.claimProject as string) || '銘文做市', value: 2100 },
+    { name: (home?.claimProject as string) || '銘文做市', value: 1000 },
   ];
 
   // 获取授权额度
@@ -132,10 +132,8 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
 
   // 获取翻译
   const inputPlaceholder = kol.inputPlaceholder as Record<string, string>;
-  const placeholderText = inputPlaceholder?.stakeAmount?.replace('{minDeposit}', minDeposit.toString()) 
+  const placeholderText = inputPlaceholder?.stakeAmount 
     || `${kol.inputNumber} ≥ ${minDeposit} SOS`;
-
-    // 请输入≥100SOS，每100SOS约可 解锁0.1%项目代币总量
 
   return (
     <div>
@@ -152,7 +150,7 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder={placeholderText}
-          className="flex-1 outline-none bg-transparent text-[var(--foreground)] text-sm placeholder:text-[var(--text-muted)]"
+          className="flex-1 outline-none bg-transparent text-[var(--foreground)] text-sm placeholder:text-[var(--text-muted)] placeholder:text-gray-500"
         />
         <button
           onClick={handleMax}

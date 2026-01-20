@@ -112,7 +112,7 @@ export default {
       twitter: 'https://x.com/xxx',
       telegram: 'https://t.me/xxx',
       discord: 'https://accounts.binance.cor',
-      stakeAmount: '請輸入質押數量 ≥{minDeposit} SOS',
+      stakeAmount: '請輸入≥100SOS',
     },
     tips: [
       '請填寫正確的錢包地址',
@@ -147,7 +147,7 @@ export default {
     copyright: '©2025 KOLPumpFun',
   },
   deposit: {
-    stakeNote: 'SOS質押數量越多，KOL分配代幣越多，解鎖越快',
+    stakeNote: 'SOS質押數量越多，KOL分配代幣越多，解鎖越快；每100SOS約可分配0.1%項目代幣總量',
     kolCertificationRequired: '請先完成KOL認證',
     approveSuccess: '授權成功',
     approveFailed: '授權失敗',

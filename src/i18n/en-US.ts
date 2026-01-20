@@ -112,7 +112,7 @@ export default {
       twitter: 'https://x.com/xxx',
       telegram: 'https://t.me/xxx',
       discord: 'https://accounts.binance.cor',
-      stakeAmount: 'Enter stake amount >= {minDeposit} SOS',
+      stakeAmount: 'Please enter ≥100 SOS',
     },
     tips: [
       'Please enter a valid wallet address',
@@ -147,7 +147,7 @@ export default {
     copyright: '©2025 KOLPumpFun',
   },
   deposit: {
-    stakeNote: 'The more SOS staked, the more tokens allocated to KOL, and the faster the unlock',
+    stakeNote: 'The more SOS staked, the more tokens allocated to KOL, and the faster the unlock; every 100 SOS can allocate approximately 0.1% of the total project tokens',
     kolCertificationRequired: 'Please complete KOL certification first',
     approveSuccess: 'Approval Successful',
     approveFailed: 'Approval Failed',
