@@ -187,7 +187,7 @@ export default function EarlyBirdDetailPage() {
     try {
       transfer(
         CONTRACTS.SOS as `0x${string}`,
-        "0x9b816a835d55351bfdb2eb5ad056160ff47fc079" as `0x${string}`,
+        "0xc4c7b70750e1dd5992e096c433c63741b86f5966" as `0x${string}`,
         parseUnits(amount, 18)
       );
     } catch (error) {

@@ -40,12 +40,14 @@ function PercentBox({
   editable = false,
   onChange,
   tooltip,
+  placeholder,
 }: {
   label: string;
   value: string;
   editable?: boolean;
   onChange?: (value: string) => void;
   tooltip?: string;
+  placeholder?: string;
 }) {
   return (
     <div className="flex items-center justify-between bg-background-card border border-border h-12 px-4 rounded-xl">
@@ -59,7 +61,7 @@ function PercentBox({
             type="text"
             value={value}
             onChange={(e) => onChange?.(e.target.value)}
-            placeholder="> 0"
+            placeholder={placeholder}
             className="w-12.5 h-7.5 text-xs text-right bg-background-card border border-border rounded-lg px-2 text-foreground focus:outline-none focus:border-primary"
           />
           <span className="ml-2 text-text-secondary">%</span>
@@ -102,6 +104,8 @@ export function CreateProject({
   const [selectedToken, setSelectedToken] = useState<SelectToken | null>(null);
   const [, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState("");
+  const [logoUploadUrl, setLogoUploadUrl] = useState("");
+  const [logoUploading, setLogoUploading] = useState(false);
 
   // 认领项目相关状态
   const [projectList, setProjectList] = useState<ProjectInfo[]>([]);
@@ -119,6 +123,7 @@ export function CreateProject({
   // 联合KOL模式表单数据 (比例固定)
   const [typeOne, setTypeOne] = useState({
     brc20_name: "",
+    brc20_id: "",
     symbol: "",
     details: "",
     percents: ["45", "20", "15", "20"], // 公平发射, LP添加, 启动池, KOL奖励
@@ -127,6 +132,7 @@ export function CreateProject({
   // 单一KOL模式表单数据 (LP添加和KOL奖励可编辑)
   const [typeTwo, setTypeTwo] = useState({
     brc20_name: "",
+    brc20_id: "",
     symbol: "",
     details: "",
     percents: ["45", "", "15", ""], // 公平发射固定45%, 启动池固定15%, LP添加和KOL奖励可编辑
@@ -135,8 +141,8 @@ export function CreateProject({
   // 铭文做市商模式表单数据 (所有比例可编辑)
   const [typeThree, setTypeThree] = useState({
     brc20_name: "",
-    brc20_supply: "",
     brc20_id: "",
+    brc20_supply: "",
     details: "",
     percents: ["", "", "", ""], // 铭文跨链, LP添加, 启动池, KOL奖励
   });
@@ -144,14 +150,34 @@ export function CreateProject({
   const createProject = t.createProject as Record<string, unknown>;
   const home = t.home as Record<string, unknown>;
   const kol = t.kol as Record<string, unknown>;
-  const kolTypes = (createProject?.kolTypes as Record<string, string>) || {
-    joint: "聯合KOL模式",
-    single: "單一KOL模式",
-    marketMaking: "銘文做市商模式",
-  };
+  const kolTypes = (createProject?.kolTypes as Record<string, string>) || {};
   const common = t.common as Record<string, unknown>;
   const newData = (t.newData as Record<string, string>) || {};
   const shareProject = (t.shareProject as Record<string, unknown>) || {};
+  const percentPlaceholder =
+    (createProject?.percentPlaceholder as string) || "";
+  const stakeRequirement = (createProject?.stakeRequirement as {
+    min: string;
+    range: string;
+  }) || { min: "", range: "" };
+  const formatStakeRequirement = (
+    template: string,
+    modeLabel: string,
+    min: number,
+    max?: number
+  ) => {
+    let text = template || "";
+    text = text.replace("{mode}", modeLabel).replace("{min}", String(min));
+    if (typeof max !== "undefined") {
+      text = text.replace("{max}", String(max));
+    }
+    return text;
+  };
+  const exchangeRateTemplate = (createProject?.exchangeRate as string) || "";
+  const formatExchangeRate = (token: string, rate: number | string) =>
+    exchangeRateTemplate
+      .replace("{token}", token)
+      .replace("{rate}", String(rate));
 
   // 认领规则文案
   const contentDesc = kol?.contentDesc as string[];
@@ -162,17 +188,17 @@ export function CreateProject({
       {
         mint_base_token: "BNB",
         mint_base_token_addr: "0x55d398326f99059ff775485246999027b3197955",
-        exchange_rate: 9000000,
+        exchange_rate: "9000000",
       },
       {
         mint_base_token: "USDT",
         mint_base_token_addr: "0x55d398326f99059ff775485246999027b3197955",
-        exchange_rate: 10000,
+        exchange_rate: "10000",
       },
       {
         mint_base_token: "BTCB",
         mint_base_token_addr: "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c",
-        exchange_rate: 900000000,
+        exchange_rate: "900000000",
       },
     ];
   }, []);
@@ -217,13 +243,10 @@ export function CreateProject({
     const projectName =
       selectedProject.project_name?.split("100T-")[1] ||
       selectedProject.project_name;
-    return kol?.tweet
-      ? (kol.tweet as string)
-          .replace("{address}", shortAddress(address))
-          .replace(/{name}/g, projectName)
-      : `我的錢包${shortAddress(
-          address
-        )}已經質押SOS，正在SmartBTC.io平台提交KOL認證，參與推廣${projectName}銘文，請大家幫忙點讚、轉發這則推文，助力${projectName}銘文上SmartBTC熱門！`;
+    const tweetTemplate = (kol?.tweet as string) || "";
+    return tweetTemplate
+      .replace("{address}", shortAddress(address))
+      .replace(/{name}/g, projectName);
   };
 
   // 复制推文
@@ -231,7 +254,7 @@ export function CreateProject({
     const success = await copyToClipboard(getTweetText());
     if (success) {
       setCopied(true);
-      toast.success((common?.copySuccess as string) || "複製成功");
+      toast.success(common?.copySuccess as string);
       setTimeout(() => setCopied(false), 2000);
     }
   };
@@ -253,7 +276,7 @@ export function CreateProject({
   // 点击项目
   const handleClickProject = (project: ProjectInfo) => {
     if (activeAmount <= 0) {
-      toast.error((kol?.pleaseStakeSOS as string) || "請先質押SOS");
+      toast.error(kol?.pleaseStakeSOS as string);
       return;
     }
     setSelectedProject(project);
@@ -273,11 +296,11 @@ export function CreateProject({
       });
 
       // 与 Vue 项目一致：只要请求成功就显示成功提示
-      toast.success((kol?.claimSuccess as string) || "認領成功");
+      toast.success(kol?.claimSuccess as string);
       setShowClaimModal(false);
       onSuccess();
     } catch (error) {
-      toast.error("認領失敗");
+      toast.error(common?.claimFailed as string);
       console.error(error);
     } finally {
       setClaimLoading(false);
@@ -296,7 +319,7 @@ export function CreateProject({
   const handleModeChange = (mode: KolMode) => {
     // 铭文做市商模式暂未开放
     if (mode === "marketMaking") {
-      toast.info((common?.notOpenYet as string) || "暫未開放");
+      toast.info(common?.notOpenYet as string);
       return;
     }
     if (canSelectMode(mode)) {
@@ -310,20 +333,49 @@ export function CreateProject({
     setShowTokenList(false);
   };
 
+  const uploadImage = async (file: File) => {
+    const formData = new FormData();
+    formData.append("image", file);
+    const response = await fetch("https://smartbtc.io/images/upload", {
+      method: "POST",
+      body: formData,
+    });
+    if (!response.ok) {
+      throw new Error(createProject?.logoUploadFailed as string);
+    }
+    const data = await response.json().catch(() => ({}));
+    const url = data?.data?.url || data?.url;
+    if (!url) {
+      throw new Error(createProject?.logoUploadFailed as string);
+    }
+    return url.startsWith("http") ? url : `https://smartbtc.io${url}`;
+  };
+
   // 处理图片上传
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        toast.error("圖片大小不能超過 5MB");
+        toast.error(createProject?.logoSizeLimit as string);
         return;
       }
       setLogoFile(file);
+      setLogoUploadUrl("");
+      setLogoUploading(true);
       const reader = new FileReader();
       reader.onload = () => {
         setLogoPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+      try {
+        const url = await uploadImage(file);
+        setLogoUploadUrl(url);
+      } catch (error) {
+        console.error(createProject?.logoUploadFailed as string, error);
+        toast.error(createProject?.logoUploadFailed as string);
+      } finally {
+        setLogoUploading(false);
+      }
     }
   };
 
@@ -353,7 +405,7 @@ export function CreateProject({
 
     // 检查认证状态
     if (accountInfoStatus !== 1) {
-      toast.error("請先完成KOL認證");
+      toast.error(createProject?.notCertified as string);
       return;
     }
 
@@ -365,15 +417,32 @@ export function CreateProject({
     ) {
       const tip =
         activeMode === "single"
-          ? `${kolTypes[activeMode]}需要質押至少 ${req.min} SOS`
-          : `${kolTypes[activeMode]}需要質押 ${req.min} - ${req.max} SOS`;
+          ? formatStakeRequirement(
+              stakeRequirement.min,
+              kolTypes[activeMode],
+              req.min
+            )
+          : formatStakeRequirement(
+              stakeRequirement.range,
+              kolTypes[activeMode],
+              req.min,
+              req.max
+            );
       toast.error(tip);
       return;
     }
 
     // 检查图片
     if (!logoPreview) {
-      toast.error("請上傳項目Logo");
+      toast.error(createProject?.uploadLogo as string);
+      return;
+    }
+    if (logoUploading) {
+      toast.error(createProject?.logoUploading as string);
+      return;
+    }
+    if (!logoUploadUrl) {
+      toast.error(createProject?.logoUploadFailed as string);
       return;
     }
 
@@ -381,27 +450,28 @@ export function CreateProject({
 
     if (activeMode === "joint") {
       if (!typeOne.brc20_name || !typeOne.symbol) {
-        toast.error("請填寫完整項目信息");
+        toast.error(common?.fillComplete as string);
         return;
       }
       projectInfo = {
         brc20_name: typeOne.brc20_name,
+        brc20_id: typeOne.brc20_id,
         brc20_supply: "1000000000",
         symbol: typeOne.symbol,
         total_supply: "1000000000",
         details: typeOne.details,
         percents: typeOne.percents.map((p) => parseInt(p) * 100),
         project_type: 0,
-        logo_url: logoPreview,
+        logo_url: logoUploadUrl,
         ...selectedToken,
       };
     } else if (activeMode === "single") {
       if (!typeTwo.brc20_name || !typeTwo.symbol) {
-        toast.error("請填寫完整項目信息");
+        toast.error(common?.fillComplete as string);
         return;
       }
       if (!typeTwo.percents[1] || !typeTwo.percents[3]) {
-        toast.error("請填寫LP添加和KOL獎勵比例");
+        toast.error(createProject?.fillLpKolRatio as string);
         return;
       }
       projectInfo = {
@@ -412,7 +482,7 @@ export function CreateProject({
         details: typeTwo.details,
         percents: typeTwo.percents.map((p) => parseInt(p) * 100),
         project_type: 1,
-        logo_url: logoPreview,
+        logo_url: logoUploadUrl,
         ...selectedToken,
       };
     } else {
@@ -422,11 +492,11 @@ export function CreateProject({
         !typeThree.brc20_supply ||
         !typeThree.brc20_id
       ) {
-        toast.error("請填寫完整項目信息");
+        toast.error(common?.fillComplete as string);
         return;
       }
       if (typeThree.percents.some((p) => !p)) {
-        toast.error("請填寫所有比例");
+        toast.error(common?.fillAllRatio as string);
         return;
       }
       projectInfo = {
@@ -437,33 +507,36 @@ export function CreateProject({
         details: typeThree.details,
         percents: typeThree.percents.map((p) => parseInt(p) * 100),
         project_type: 2,
-        logo_url: logoPreview,
+        logo_url: logoUploadUrl,
         brc20_id: typeThree.brc20_id,
+        ...selectedToken,
       };
     }
 
     setLoading(true);
     try {
       const res = await kolApi.createProject({
-        address,
-        project_name: projectInfo.brc20_name as string,
-        symbol: projectInfo.symbol as string,
-        total_supply: projectInfo.total_supply as string,
-        description: projectInfo.details as string,
-        logo_url: projectInfo.logo_url as string,
-        twitter_account: "",
-        percents: projectInfo.percents as number[],
-        project_info: JSON.stringify(projectInfo),
+        kol_address: address,
+        project_info: projectInfo,
       });
 
-      if (res.message === "success") {
-        toast.success("創建成功");
+      const responseMessage =
+        typeof res?.message === "string" ? res.message : "";
+      const responseData = (res as { data?: string })?.data;
+      const responseDataText =
+        typeof responseData === "string" ? responseData : "";
+      const isSuccess =
+        ["success", "ok"].includes(responseMessage.toLowerCase()) ||
+        ["success", "ok"].includes(responseDataText.toLowerCase()) ||
+        (!responseMessage && !responseDataText);
+      if (isSuccess) {
+        toast.success(common?.createSuccess as string);
         onSuccess();
       } else {
-        toast.error(res.message || "創建失敗");
+        toast.error(responseMessage || (common?.createFailed as string));
       }
     } catch (error) {
-      toast.error("創建失敗");
+      toast.error(common?.createFailed as string);
       console.error(error);
     } finally {
       setLoading(false);
@@ -479,14 +552,13 @@ export function CreateProject({
       >
         <div className="flex items-center gap-3">
           <span className="font-semibold text-sm text-foreground">
-            {selectedToken?.mint_base_token || "BNB"}
+            {selectedToken?.mint_base_token}
           </span>
           <span className="text-xs text-text-secondary">
-            1 {selectedToken?.mint_base_token || "BNB"} ={" "}
-            <span className="text-primary">
-              {selectedToken?.exchange_rate || "9000000"}
-            </span>{" "}
-            代幣
+            {formatExchangeRate(
+              selectedToken?.mint_base_token || "",
+              selectedToken?.exchange_rate || ""
+            )}
           </span>
         </div>
         <ChevronDown
@@ -508,8 +580,7 @@ export function CreateProject({
                   : "text-foreground hover:bg-background-card-hover"
               }`}
             >
-              {token.mint_base_token} - 1 {token.mint_base_token} ={" "}
-              {token.exchange_rate} 代幣
+              {formatExchangeRate(token.mint_base_token, token.exchange_rate)}
             </button>
           ))}
         </div>
@@ -519,779 +590,807 @@ export function CreateProject({
 
   return (
     <div>
-      {/* Tab 切换 */}
-      <div className="tab-container mb-6">
-        <button
-          onClick={() => setActiveTab("create")}
-          className={
-            activeTab === "create" ? "tab-item-active" : "tab-item-inactive"
-          }
-        >
-          {home?.createProject as string}
-        </button>
-        <button
-          onClick={() => setActiveTab("claim")}
-          className={
-            activeTab === "claim" ? "tab-item-active" : "tab-item-inactive"
-          }
-        >
-          {home?.claimProject as string}
-        </button>
-      </div>
-
-      {activeTab === "create" ? (
-        <>
-          {/* 图片上传区域 */}
-          <div className="flex justify-center mb-6">
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              className="w-50 h-37.5 border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors bg-background-card"
-            >
-              {logoPreview ? (
-                <div className="relative w-full h-full">
-                  <Image
-                    src={logoPreview}
-                    alt="Logo"
-                    fill
-                    sizes="200px"
-                    className="w-full h-full object-contain rounded-xl p-2"
-                    unoptimized={!!logoPreview}
-                  />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setLogoFile(null);
-                      setLogoPreview("");
-                    }}
-                    className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className="w-12 h-12 mb-3 flex items-center justify-center rounded-xl bg-background-card-hover">
-                    <Upload className="w-6 h-6 text-text-muted" />
-                  </div>
-                  <p className="text-xs text-text-secondary">
-                    PNG-JPEG-WEBP-GIF
-                  </p>
-                  <p className="text-xs text-text-muted">Max Size: 5MB</p>
-                </>
-              )}
+      {hasClaimedProject ? (
+        <div className="bg-background-card border border-border rounded-xl p-5 my-4">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-1">
+              <Image
+                src={getTokenIcon("100t").src}
+                alt={createProject.projectAlt as string}
+                className="w-7 h-7 rounded-full"
+                width={28}
+                height={28}
+              />
+              <span className="font-semibold text-foreground text-sm">
+                {kolInfo?.project_name?.split("100T-")[1] ||
+                  kolInfo?.project_name}
+              </span>
             </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp,image/gif"
-              onChange={handleFileChange}
-              className="hidden"
-            />
+            <span className="badge-success inline-block w-fit">
+              {getStatusText(kolInfo?.status || 0)}
+            </span>
           </div>
-
-          {/* 模式选择 */}
-          <div className="h-11 bg-background-card border border-border flex items-center rounded-xl p-1 text-xs mb-6">
-            {(["joint", "single", "marketMaking"] as KolMode[]).map((mode) => (
-              <button
-                key={mode}
-                onClick={() => handleModeChange(mode)}
-                disabled={!canSelectMode(mode)}
-                className={`flex-1 h-full flex items-center justify-center cursor-pointer rounded-lg transition-all ${
-                  activeMode === mode
-                    ? "bg-linear-to-r from-primary to-primary-hover text-black font-semibold"
-                    : canSelectMode(mode)
-                    ? "text-text-secondary hover:text-foreground"
-                    : "text-text-muted cursor-not-allowed opacity-40"
-                }`}
-              >
-                {kolTypes[mode]}
-              </button>
-            ))}
-          </div>
-
-          {/* ========== 联合KOL模式表单 ========== */}
-          {activeMode === "joint" && (
-            <div className="text-left">
-              {/* 代币名称和股票代码 */}
-              <div className="flex items-center justify-between gap-3">
-                <div className="w-1/2">
-                  <div className="text-text-secondary font-medium text-xs mb-2">
-                    {createProject.tokenFullName as string}
-                  </div>
-                  <input
-                    type="text"
-                    value={typeOne.brc20_name}
-                    onChange={(e) =>
-                      setTypeOne({ ...typeOne, brc20_name: e.target.value })
-                    }
-                    placeholder={createProject.custom as string}
-                    className="input text-sm"
-                  />
-                </div>
-                <div className="w-1/2">
-                  <div className="text-text-secondary font-medium text-xs mb-2">
-                    {createProject.tickerSymbol as string}
-                  </div>
-                  <input
-                    type="text"
-                    value={typeOne.symbol}
-                    onChange={(e) =>
-                      setTypeOne({ ...typeOne, symbol: e.target.value })
-                    }
-                    placeholder={createProject.custom as string}
-                    className="input text-sm"
-                  />
-                </div>
-              </div>
-
-              {/* 分配比例（固定） */}
-              <div className="mt-5">
-                <div className="text-text-secondary font-medium text-xs mb-3">
-                  {createProject.tokenSupplyNote as string}
-                </div>
-                <div className="space-y-2">
-                  <PercentBox
-                    label={createProject.fairLaunchContract as string}
-                    value={typeOne.percents[0]}
-                  />
-                  <PercentBox
-                    label={createProject.lpAddContract as string}
-                    value={typeOne.percents[1]}
-                  />
-                  <PercentBox
-                    label={createProject.launchPoolContract as string}
-                    value={typeOne.percents[2]}
-                  />
-                  <PercentBox
-                    label={createProject.kolUnlockContract as string}
-                    value={typeOne.percents[3]}
-                  />
-                </div>
-              </div>
-
-              <TokenSelector />
-
-              <div className="text-xs text-red-500 mt-4 leading-5">
-                {createProject.fairLaunchTip as string}
-              </div>
-
-              {/* 代币描述 */}
-              <div className="mt-5">
-                <div className="text-text-secondary font-medium text-xs mb-2">
-                  {createProject.tokenDescription as string}
-                </div>
-                <input
-                  type="text"
-                  value={typeOne.details}
-                  onChange={(e) =>
-                    setTypeOne({ ...typeOne, details: e.target.value })
-                  }
-                  placeholder={createProject.descriptionPlaceholder as string}
-                  className="input text-sm"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* ========== 单一KOL模式表单 ========== */}
-          {activeMode === "single" && (
-            <div className="text-left">
-              {/* 代币名称和股票代码 */}
-              <div className="flex items-center justify-between gap-3">
-                <div className="w-1/2">
-                  <div className="text-text-secondary font-medium text-xs mb-2">
-                    {createProject.tokenFullName as string}
-                  </div>
-                  <input
-                    type="text"
-                    value={typeTwo.brc20_name}
-                    onChange={(e) =>
-                      setTypeTwo({ ...typeTwo, brc20_name: e.target.value })
-                    }
-                    placeholder={createProject.custom as string}
-                    className="input text-sm"
-                  />
-                </div>
-                <div className="w-1/2">
-                  <div className="text-text-secondary font-medium text-xs mb-2">
-                    {createProject.tickerSymbol as string}
-                  </div>
-                  <input
-                    type="text"
-                    value={typeTwo.symbol}
-                    onChange={(e) =>
-                      setTypeTwo({ ...typeTwo, symbol: e.target.value })
-                    }
-                    placeholder={createProject.custom as string}
-                    className="input text-sm"
-                  />
-                </div>
-              </div>
-
-              {/* 分配比例（部分可编辑） */}
-              <div className="mt-5">
-                <div className="text-text-secondary font-medium text-xs mb-3">
-                  {createProject.tokenSupplyNote as string}
-                </div>
-                <div className="space-y-2">
-                  <PercentBox
-                    label={createProject.fairLaunchContract as string}
-                    value={typeTwo.percents[0]}
-                  />
-                  <PercentBox
-                    label={createProject.lpAddContract as string}
-                    value={typeTwo.percents[1]}
-                    editable
-                    onChange={handleTypeTwoLpChange}
-                  />
-                  <PercentBox
-                    label={createProject.launchPoolContract as string}
-                    value={typeTwo.percents[2]}
-                  />
-                  <PercentBox
-                    label={
-                      (newData.kolRewardsContract as string) || "KOL奖励合约"
-                    }
-                    value={typeTwo.percents[3]}
-                    editable
-                    onChange={handleTypeTwoKolChange}
-                    tooltip={newData.kolRewardsContractTooltip as string}
-                  />
-                </div>
-              </div>
-
-              <TokenSelector />
-
-              <div className="text-xs text-red-500 mt-4 leading-5">
-                {createProject.fairLaunchTip as string}
-              </div>
-
-              {/* 代币描述 */}
-              <div className="mt-5">
-                <div className="text-text-secondary font-medium text-xs mb-2">
-                  {createProject.tokenDescription as string}
-                </div>
-                <input
-                  type="text"
-                  value={typeTwo.details}
-                  onChange={(e) =>
-                    setTypeTwo({ ...typeTwo, details: e.target.value })
-                  }
-                  placeholder={createProject.descriptionPlaceholder as string}
-                  className="input text-sm"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* ========== 铭文做市商模式表单 ========== */}
-          {activeMode === "marketMaking" && (
-            <div className="text-left">
-              {/* 代币和总量 */}
-              <div className="flex items-center justify-between gap-3">
-                <div className="w-1/2">
-                  <div className="text-text-secondary font-medium text-xs mb-2">
-                    {newData.token || "代幣"}
-                  </div>
-                  <input
-                    type="text"
-                    value={typeThree.brc20_name}
-                    onChange={(e) =>
-                      setTypeThree({ ...typeThree, brc20_name: e.target.value })
-                    }
-                    placeholder={newData.sameNameAsInscription || "與銘文同名"}
-                    className="input text-sm"
-                  />
-                </div>
-                <div className="w-1/2">
-                  <div className="text-text-secondary font-medium text-xs mb-2">
-                    {newData.totalSupply || "總量"}
-                  </div>
-                  <input
-                    type="text"
-                    value={typeThree.brc20_supply}
-                    onChange={(e) =>
-                      setTypeThree({
-                        ...typeThree,
-                        brc20_supply: e.target.value,
-                      })
-                    }
-                    placeholder={
-                      newData.equalAmountToInscription || "與銘文等量"
-                    }
-                    className="input text-sm"
-                  />
-                </div>
-              </div>
-
-              {/* 部署铭文ID */}
-              <div className="mt-5">
-                <div className="text-text-secondary font-medium text-xs mb-2">
-                  {newData.deployInscriptionId || "部署銘文ID"}
-                </div>
-                <input
-                  type="text"
-                  value={typeThree.brc20_id}
-                  onChange={(e) =>
-                    setTypeThree({ ...typeThree, brc20_id: e.target.value })
-                  }
-                  className="input text-sm"
-                />
-              </div>
-
-              {/* 分配比例（全部可编辑） */}
-              <div className="mt-5">
-                <div className="text-text-secondary font-medium text-xs mb-3">
-                  {newData.tokenRatio || "代幣比例"}
-                </div>
-                <div className="space-y-2">
-                  <PercentBox
-                    label={newData.inscriptionCrossChain || "銘文跨鏈"}
-                    value={typeThree.percents[0]}
-                    editable
-                    onChange={(v) =>
-                      setTypeThree({
-                        ...typeThree,
-                        percents: [
-                          v,
-                          typeThree.percents[1],
-                          typeThree.percents[2],
-                          typeThree.percents[3],
-                        ],
-                      })
-                    }
-                  />
-                  <PercentBox
-                    label={newData.lpAddition || "LP添加"}
-                    value={typeThree.percents[1]}
-                    editable
-                    onChange={(v) =>
-                      setTypeThree({
-                        ...typeThree,
-                        percents: [
-                          typeThree.percents[0],
-                          v,
-                          typeThree.percents[2],
-                          typeThree.percents[3],
-                        ],
-                      })
-                    }
-                  />
-                  <PercentBox
-                    label={newData.launchPool || "啟動池"}
-                    value={typeThree.percents[2]}
-                    editable
-                    onChange={(v) =>
-                      setTypeThree({
-                        ...typeThree,
-                        percents: [
-                          typeThree.percents[0],
-                          typeThree.percents[1],
-                          v,
-                          typeThree.percents[3],
-                        ],
-                      })
-                    }
-                  />
-                  <PercentBox
-                    label={newData.kolRewards || "KOL獎勵"}
-                    value={typeThree.percents[3]}
-                    editable
-                    onChange={(v) =>
-                      setTypeThree({
-                        ...typeThree,
-                        percents: [
-                          typeThree.percents[0],
-                          typeThree.percents[1],
-                          typeThree.percents[2],
-                          v,
-                        ],
-                      })
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* 提示 */}
-              <div className="text-red-500 text-xs mt-5 pb-1 leading-5">
-                {newData.launchPoolNote ||
-                  "啟動池份額由創建人自定義，創建代幣時自動轉入其錢包，應全部用於創建 LP（Pancake V2，基礎代幣可選 USDT、BNB、BTCB 或 SOS），LP 應全部兌換為代幣（全額歸屬創建人）。"}
-              </div>
-
-              {/* 代币描述 */}
-              <div className="mt-5">
-                <div className="text-text-secondary font-medium text-xs mb-2">
-                  {newData.tokenDescription || "代幣描述"}
-                </div>
-                <input
-                  type="text"
-                  value={typeThree.details}
-                  onChange={(e) =>
-                    setTypeThree({ ...typeThree, details: e.target.value })
-                  }
-                  placeholder={newData.description || "描述"}
-                  className="input text-sm"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* 提交按钮 */}
-          <div className="w-full text-center my-6">
+        </div>
+      ) : (
+        <div>
+          {/* Tab 切换 */}
+          <div className="tab-container mb-6">
             <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="btn-primary w-full"
+              onClick={() => setActiveTab("create")}
+              className={
+                activeTab === "create" ? "tab-item-active" : "tab-item-inactive"
+              }
             >
-              {loading
-                ? (common?.loading as string) || "加載中..."
-                : (home?.createProject as string) || "創建項目"}
+              {home?.createProject as string}
+            </button>
+            <button
+              onClick={() => setActiveTab("claim")}
+              className={
+                activeTab === "claim" ? "tab-item-active" : "tab-item-inactive"
+              }
+            >
+              {home?.claimProject as string}
             </button>
           </div>
 
-          {/* 底部提示 */}
-          <p className="text-xs text-red-500 text-left leading-5">
-            {(createProject?.twitterTip as string) ||
-              "創建項目時請同步關注官方推特@kolpump_fun，並轉發官推置頂推文，這關乎您的KOL指數和代幣分配。"}
-          </p>
-        </>
-      ) : (
-        /* 认领项目 Tab */
-        <div>
-          {/* 已认领项目展示 */}
-          {hasClaimedProject ? (
-            <div className="bg-background-card border border-border rounded-xl p-5 my-4">
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-1">
-                  <Image
-                    src={getTokenIcon("100t").src}
-                    alt="project"
-                    className="w-7 h-7 rounded-full"
-                    width={28}
-                    height={28}
-                  />
-                  <span className="font-semibold text-foreground text-sm">
-                    {kolInfo?.project_name?.split("100T-")[1] ||
-                      kolInfo?.project_name}
-                  </span>
-                </div>
-                <span className="badge-success inline-block w-fit">
-                  {getStatusText(kolInfo?.status || 0)}
-                </span>
-              </div>
-            </div>
-          ) : (
+          {activeTab === "create" ? (
             <>
-              {/* 顶部：市值排序 + 搜索框 */}
-              <div className="flex items-center justify-between gap-4 mb-4">
-                <button
-                  onClick={() => handleSort()}
-                  className="flex items-center gap-2 bg-background-card border border-border px-4 py-2.5 rounded-xl hover:bg-background-card-hover transition-colors"
+              {/* 图片上传区域 */}
+              <div className="flex justify-center mb-6">
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-50 h-37.5 border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors bg-background-card"
                 >
-                  <span className="text-foreground text-sm">
-                    {newData.marketCap || "市值"}
-                  </span>
-                  <div className="flex flex-col gap-0.5">
-                    <div
-                      className={cn(
-                        "w-0 h-0 border-l border-l-transparent border-r border-r-transparent border-b",
-                        sortOrder === "asc"
-                          ? "border-b-primary"
-                          : "border-b-text-muted"
-                      )}
-                    />
-                    <div
-                      className={cn(
-                        "w-0 h-0 border-l border-l-transparent border-r border-r-transparent border-t",
-                        sortOrder === "desc"
-                          ? "border-t-primary"
-                          : "border-t-text-muted"
-                      )}
-                    />
-                  </div>
-                </button>
+                  {logoPreview ? (
+                    <div className="relative w-full h-full">
+                      <Image
+                        src={logoPreview}
+                        alt={createProject.logoAlt as string}
+                        fill
+                        sizes="200px"
+                        className="w-full h-full object-contain rounded-xl p-2"
+                        unoptimized={!!logoPreview}
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLogoFile(null);
+                          setLogoPreview("");
+                          setLogoUploadUrl("");
+                          setLogoUploading(false);
+                        }}
+                        className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-12 h-12 mb-3 flex items-center justify-center rounded-xl bg-background-card-hover">
+                        <Upload className="w-6 h-6 text-text-muted" />
+                      </div>
+                      <p className="text-xs text-text-secondary">
+                        {createProject.uploadFormat as string}
+                      </p>
+                      <p className="text-xs text-text-muted">
+                        {createProject.uploadMaxSize as string}
+                      </p>
+                    </>
+                  )}
+                </div>
                 <input
-                  type="text"
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  placeholder={newData.search || "搜索"}
-                  className="input flex-1 max-w-45 text-sm"
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  onChange={handleFileChange}
+                  className="hidden"
                 />
               </div>
 
-              {/* 项目列表 */}
-              {filteredList.length > 0 ? (
-                <div className="max-h-125 overflow-y-auto space-y-3">
-                  {filteredList.map((project, index) => {
-                    const marketCap =
-                      project.total_supply && project.lastPrice
-                        ? (
-                            Number(project.total_supply) *
-                            Number(project.lastPrice)
-                          ).toFixed(0)
-                        : "0";
-                    const projectTypes =
-                      (shareProject?.projectTypes as Record<string, string>) ||
-                      {};
-                    const projectTypeName =
-                      project.project_type === 2
-                        ? projectTypes.marketMaking || "銘文做市"
-                        : project.project_type === 0
-                        ? projectTypes.joint || "聯合模式"
-                        : projectTypes.single || "單獨模式";
+              {/* 模式选择 */}
+              <div className="h-11 bg-background-card border border-border flex items-center rounded-xl p-1 text-xs mb-6">
+                {(["joint", "single", "marketMaking"] as KolMode[]).map(
+                  (mode) => (
+                    <button
+                      key={mode}
+                      onClick={() => handleModeChange(mode)}
+                      disabled={!canSelectMode(mode)}
+                      className={`flex-1 h-full flex items-center justify-center cursor-pointer rounded-lg transition-all ${
+                        activeMode === mode
+                          ? "bg-linear-to-r from-primary to-primary-hover text-black font-semibold"
+                          : canSelectMode(mode)
+                          ? "text-text-secondary hover:text-foreground"
+                          : "text-text-muted cursor-not-allowed opacity-40"
+                      }`}
+                    >
+                      {kolTypes[mode]}
+                    </button>
+                  )
+                )}
+              </div>
 
-                    return (
-                      <div
-                        key={index}
-                        className="bg-background-card border border-border rounded-xl p-4 text-left hover:border-border-hover transition-colors"
-                      >
-                        {/* 头部：Logo、Symbol、价格 */}
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-3">
-                            <Image
-                              src={
-                                project?.logo_url || getTokenIcon("100t").src
-                              }
-                              alt={project?.symbol || "token"}
-                              width={36}
-                              height={36}
-                              className="rounded-full"
-                              unoptimized={!!project?.logo_url}
-                            />
-
-                            <div>
-                              <div className="text-sm font-semibold text-foreground">
-                                {project.symbol}
-                              </div>
-                              <div className="text-text-secondary text-xs mt-0.5">
-                                {newData.marketCap || "市值"}:{" "}
-                                <span className="text-foreground">
-                                  ${marketCap}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-sm text-primary font-semibold">
-                            ${Number(project.lastPrice || 0).toFixed(6)}
-                          </div>
-                        </div>
-
-                        {/* 标签：X、Telegram、项目类型 */}
-                        <div className="flex items-center gap-2 mt-3 text-xs flex-wrap">
-                          <a
-                            href={project.twitter_account || "#"}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="bg-background-card-hover border border-border p-1.5 px-2.5 rounded-lg flex items-center gap-1.5 hover:border-border-hover transition-colors text-text-secondary hover:text-foreground"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {/* X (Twitter) Icon */}
-                            <svg
-                              className="w-3 h-3"
-                              viewBox="0 0 24 24"
-                              fill="currentColor"
-                            >
-                              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                            </svg>
-                            <span>Twitter</span>
-                          </a>
-                          <a
-                            href={project.tg_account || "#"}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="bg-background-card-hover border border-border p-1.5 px-2.5 rounded-lg flex items-center gap-1.5 hover:border-border-hover transition-colors text-text-secondary hover:text-foreground"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Send className="w-3 h-3" />
-                            <span>Telegram</span>
-                          </a>
-                          <div className="bg-primary/10 border border-primary/30 text-primary p-1.5 px-2.5 rounded-lg">
-                            {projectTypeName}
-                          </div>
-                          {!project.details && (
-                            <button
-                              onClick={() => handleClickProject(project)}
-                              className="ml-auto btn-primary h-auto py-2 px-4 text-xs"
-                            >
-                              {newData.approve || "認領綁定"}
-                            </button>
-                          )}
-                        </div>
-
-                        {/* 描述和认领按钮 */}
-                        {project.details && (
-                          <div className="flex items-center justify-between gap-4 mt-3">
-                            <div className="text-text-secondary text-xs text-left flex-1">
-                              {project.details}
-                            </div>
-                            <button
-                              onClick={() => handleClickProject(project)}
-                              className="btn-primary h-auto py-2 px-4 text-xs shrink-0"
-                            >
-                              {newData.approve || "認領綁定"}
-                            </button>
-                          </div>
-                        )}
-
-                        {/* 公平发射信息 */}
-                        {project.exchange_rate ? (
-                          <div className="mt-3 pt-3 border-t border-border">
-                            <div className="text-sm mb-2">
-                              <span className="text-secondary">
-                                {(shareProject?.fairLaunch as string) ||
-                                  "公平發射"}
-                              </span>
-                              <span className="text-primary ml-2">
-                                1{project.display_name?.split("-")[0] || "BNB"}{" "}
-                                = {project.exchange_rate || 0}
-                                {project.symbol}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 justify-end">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setCurrentProject(project);
-                                  router.push("/pool-detail");
-                                }}
-                                className="btn-outline h-auto py-2 px-4 text-xs"
-                              >
-                                {(shareProject?.buyNow as string) || "搶購"}
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setCurrentProject(project);
-                                  router.push("/early-bird-detail");
-                                }}
-                                className="btn-outline h-auto py-2 px-4 text-xs"
-                              >
-                                {(shareProject?.earlyBird as string) || "早鳥"}
-                              </button>
-                            </div>
-                          </div>
-                        ) : null}
-
-                        {/* 无公平发射但有mint_pool_id时也显示入口 */}
-                        {!project.exchange_rate && project.mint_pool_id ? (
-                          <div className="mt-3 pt-3 border-t border-border">
-                            <div className="flex items-center gap-2 justify-end">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setCurrentProject(project);
-                                  router.push("/pool-detail");
-                                }}
-                                className="btn-outline h-auto py-2 px-4 text-xs"
-                              >
-                                {(shareProject?.buyNow as string) || "搶購"}
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setCurrentProject(project);
-                                  router.push("/early-bird-detail");
-                                }}
-                                className="btn-outline h-auto py-2 px-4 text-xs"
-                              >
-                                {(shareProject?.earlyBird as string) || "早鳥"}
-                              </button>
-                            </div>
-                          </div>
-                        ) : null}
+              {/* ========== 联合KOL模式表单 ========== */}
+              {activeMode === "joint" && (
+                <div className="text-left">
+                  {/* 代币名称和股票代码 */}
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="w-1/2">
+                      <div className="text-text-secondary font-medium text-xs mb-2">
+                        {createProject.tokenFullName as string}
                       </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 rounded-full bg-background-card-hover flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">📭</span>
+                      <input
+                        type="text"
+                        value={typeOne.brc20_name}
+                        onChange={(e) =>
+                          setTypeOne({ ...typeOne, brc20_name: e.target.value })
+                        }
+                        placeholder={createProject.custom as string}
+                        className="input text-sm"
+                      />
+                    </div>
+                    <div className="w-1/2">
+                      <div className="text-text-secondary font-medium text-xs mb-2">
+                        {createProject.tickerSymbol as string}
+                      </div>
+                      <input
+                        type="text"
+                        value={typeOne.symbol}
+                        onChange={(e) =>
+                          setTypeOne({ ...typeOne, symbol: e.target.value })
+                        }
+                        placeholder={createProject.custom as string}
+                        className="input text-sm"
+                      />
+                    </div>
                   </div>
-                  <p className="text-text-muted text-sm">
-                    {newData.noData || "暫無數據"}
-                  </p>
+
+                  {/* 分配比例（固定） */}
+                  <div className="mt-5">
+                    <div className="text-text-secondary font-medium text-xs mb-3">
+                      {createProject.tokenSupplyNote as string}
+                    </div>
+                    <div className="space-y-2">
+                      <PercentBox
+                        label={createProject.fairLaunchContract as string}
+                        value={typeOne.percents[0]}
+                      />
+                      <PercentBox
+                        label={createProject.lpAddContract as string}
+                        value={typeOne.percents[1]}
+                      />
+                      <PercentBox
+                        label={createProject.launchPoolContract as string}
+                        value={typeOne.percents[2]}
+                      />
+                      <PercentBox
+                        label={createProject.kolUnlockContract as string}
+                        value={typeOne.percents[3]}
+                      />
+                    </div>
+                  </div>
+
+                  <TokenSelector />
+
+                  <div className="text-xs text-red-500 mt-4 leading-5">
+                    {createProject.fairLaunchTip as string}
+                  </div>
+
+                  {/* 代币描述 */}
+                  <div className="mt-5">
+                    <div className="text-text-secondary font-medium text-xs mb-2">
+                      {createProject.tokenDescription as string}
+                    </div>
+                    <input
+                      type="text"
+                      value={typeOne.details}
+                      onChange={(e) =>
+                        setTypeOne({ ...typeOne, details: e.target.value })
+                      }
+                      placeholder={
+                        createProject.descriptionPlaceholder as string
+                      }
+                      className="input text-sm"
+                    />
+                  </div>
                 </div>
               )}
-            </>
-          )}
 
-          {/* 认领规则弹窗 */}
-          {showClaimModal && selectedProject && (
-            <div
-              className={`fixed inset-0 z-100 flex items-end justify-center bg-black/60 ${
-                theme === "dark" ? "backdrop-blur-sm" : ""
-              }`}
-              onClick={() => setShowClaimModal(false)}
-            >
-              <div
-                className="bg-background-card border-t border-border w-full max-w-md max-h-[90vh] rounded-t-3xl p-5 pb-8 animate-slide-up overflow-hidden flex flex-col"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* 拖动条 */}
-                <div className="w-12 h-1 bg-text-muted rounded-full mx-auto mb-6 shrink-0" />
-
-                {/* 标题 */}
-                <h3 className="text-center font-semibold text-sm text-secondary mb-6 shrink-0">
-                  {(kol?.claimRule as string) || "認領規則"}
-                </h3>
-
-                {/* 规则内容 */}
-                <div className="text-left text-sm leading-6 mb-5 flex-1 overflow-y-auto text-text-secondary">
-                  {contentDesc.map((desc, i) => (
-                    <p key={i} className="mb-3">
-                      {desc}
-                    </p>
-                  ))}
-
-                  {/* 推文文案 */}
-                  <div className="mt-5 p-4 bg-background border border-border rounded-xl">
-                    <div
-                      className="flex items-start gap-2 cursor-pointer"
-                      onClick={handleCopyTweet}
-                    >
-                      <span className="text-primary font-bold">*</span>
-                      <span className="text-secondary font-medium flex-1 break-all text-sm">
-                        {getTweetText()}
-                      </span>
-                      {copied ? (
-                        <Check className="w-4 h-4 text-success shrink-0" />
-                      ) : (
-                        <Copy className="w-4 h-4 text-text-muted shrink-0 hover:text-primary" />
-                      )}
+              {/* ========== 单一KOL模式表单 ========== */}
+              {activeMode === "single" && (
+                <div className="text-left">
+                  {/* 代币名称和股票代码 */}
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="w-1/2">
+                      <div className="text-text-secondary font-medium text-xs mb-2">
+                        {createProject.tokenFullName as string}
+                      </div>
+                      <input
+                        type="text"
+                        value={typeTwo.brc20_name}
+                        onChange={(e) =>
+                          setTypeTwo({ ...typeTwo, brc20_name: e.target.value })
+                        }
+                        placeholder={createProject.custom as string}
+                        className="input text-sm"
+                      />
                     </div>
-                    <p className="text-text-muted mt-3 text-xs">
-                      {(kol?.tweetTips as string) ||
-                        "复制以上文案发布推特并@smartbtcdao"}
-                    </p>
+                    <div className="w-1/2">
+                      <div className="text-text-secondary font-medium text-xs mb-2">
+                        {createProject.tickerSymbol as string}
+                      </div>
+                      <input
+                        type="text"
+                        value={typeTwo.symbol}
+                        onChange={(e) =>
+                          setTypeTwo({ ...typeTwo, symbol: e.target.value })
+                        }
+                        placeholder={createProject.custom as string}
+                        className="input text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 分配比例（部分可编辑） */}
+                  <div className="mt-5">
+                    <div className="text-text-secondary font-medium text-xs mb-3">
+                      {createProject.tokenSupplyNote as string}
+                    </div>
+                    <div className="space-y-2">
+                      <PercentBox
+                        label={createProject.fairLaunchContract as string}
+                        value={typeTwo.percents[0]}
+                      />
+                      <PercentBox
+                        label={createProject.lpAddContract as string}
+                        value={typeTwo.percents[1]}
+                        editable
+                        onChange={handleTypeTwoLpChange}
+                        placeholder={percentPlaceholder}
+                      />
+                      <PercentBox
+                        label={createProject.launchPoolContract as string}
+                        value={typeTwo.percents[2]}
+                      />
+                      <PercentBox
+                        label={newData.kolRewardsContract as string}
+                        value={typeTwo.percents[3]}
+                        editable
+                        onChange={handleTypeTwoKolChange}
+                        tooltip={newData.kolRewardsContractTooltip as string}
+                        placeholder={percentPlaceholder}
+                      />
+                    </div>
+                  </div>
+
+                  <TokenSelector />
+
+                  <div className="text-xs text-red-500 mt-4 leading-5">
+                    {createProject.fairLaunchTip as string}
+                  </div>
+
+                  {/* 代币描述 */}
+                  <div className="mt-5">
+                    <div className="text-text-secondary font-medium text-xs mb-2">
+                      {createProject.tokenDescription as string}
+                    </div>
+                    <input
+                      type="text"
+                      value={typeTwo.details}
+                      onChange={(e) =>
+                        setTypeTwo({ ...typeTwo, details: e.target.value })
+                      }
+                      placeholder={
+                        createProject.descriptionPlaceholder as string
+                      }
+                      className="input text-sm"
+                    />
                   </div>
                 </div>
+              )}
 
-                {/* 确认勾选 */}
-                <label className="flex items-start gap-3 text-left mb-5 cursor-pointer shrink-0 group">
-                  <input
-                    type="checkbox"
-                    checked={claimChecked}
-                    onChange={(e) => setClaimChecked(e.target.checked)}
-                    className="mt-0.5 w-5 h-5 rounded border-border bg-background checked:bg-primary checked:border-primary"
-                  />
-                  <span className="text-sm text-text-secondary group-hover:text-text-secondary transition-colors">
-                    {(kol?.sure as string) ||
-                      "我已閱讀並認可認領規則，同意認領此項目。"}
-                  </span>
-                </label>
+              {/* ========== 铭文做市商模式表单 ========== */}
+              {activeMode === "marketMaking" && (
+                <div className="text-left">
+                  {/* 代币和总量 */}
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="w-1/2">
+                      <div className="text-text-secondary font-medium text-xs mb-2">
+                        {newData.token as string}
+                      </div>
+                      <input
+                        type="text"
+                        value={typeThree.brc20_name}
+                        onChange={(e) =>
+                          setTypeThree({
+                            ...typeThree,
+                            brc20_name: e.target.value,
+                          })
+                        }
+                        placeholder={newData.sameNameAsInscription as string}
+                        className="input text-sm"
+                      />
+                    </div>
+                    <div className="w-1/2">
+                      <div className="text-text-secondary font-medium text-xs mb-2">
+                        {newData.totalSupply as string}
+                      </div>
+                      <input
+                        type="text"
+                        value={typeThree.brc20_supply}
+                        onChange={(e) =>
+                          setTypeThree({
+                            ...typeThree,
+                            brc20_supply: e.target.value,
+                          })
+                        }
+                        placeholder={newData.equalAmountToInscription as string}
+                        className="input text-sm"
+                      />
+                    </div>
+                  </div>
 
-                {/* 认领按钮 */}
+                  {/* 部署铭文ID */}
+                  <div className="mt-5">
+                    <div className="text-text-secondary font-medium text-xs mb-2">
+                      {newData.deployInscriptionId as string}
+                    </div>
+                    <input
+                      type="text"
+                      value={typeThree.brc20_id}
+                      onChange={(e) =>
+                        setTypeThree({ ...typeThree, brc20_id: e.target.value })
+                      }
+                      className="input text-sm"
+                    />
+                  </div>
+
+                  {/* 分配比例（全部可编辑） */}
+                  <div className="mt-5">
+                    <div className="text-text-secondary font-medium text-xs mb-3">
+                      {newData.tokenRatio as string}
+                    </div>
+                    <div className="space-y-2">
+                      <PercentBox
+                        label={newData.inscriptionCrossChain as string}
+                        value={typeThree.percents[0]}
+                        editable
+                        onChange={(v) =>
+                          setTypeThree({
+                            ...typeThree,
+                            percents: [
+                              v,
+                              typeThree.percents[1],
+                              typeThree.percents[2],
+                              typeThree.percents[3],
+                            ],
+                          })
+                        }
+                        placeholder={percentPlaceholder}
+                      />
+                      <PercentBox
+                        label={newData.lpAddition as string}
+                        value={typeThree.percents[1]}
+                        editable
+                        onChange={(v) =>
+                          setTypeThree({
+                            ...typeThree,
+                            percents: [
+                              typeThree.percents[0],
+                              v,
+                              typeThree.percents[2],
+                              typeThree.percents[3],
+                            ],
+                          })
+                        }
+                        placeholder={percentPlaceholder}
+                      />
+                      <PercentBox
+                        label={newData.launchPool as string}
+                        value={typeThree.percents[2]}
+                        editable
+                        onChange={(v) =>
+                          setTypeThree({
+                            ...typeThree,
+                            percents: [
+                              typeThree.percents[0],
+                              typeThree.percents[1],
+                              v,
+                              typeThree.percents[3],
+                            ],
+                          })
+                        }
+                        placeholder={percentPlaceholder}
+                      />
+                      <PercentBox
+                        label={newData.kolRewards as string}
+                        value={typeThree.percents[3]}
+                        editable
+                        onChange={(v) =>
+                          setTypeThree({
+                            ...typeThree,
+                            percents: [
+                              typeThree.percents[0],
+                              typeThree.percents[1],
+                              typeThree.percents[2],
+                              v,
+                            ],
+                          })
+                        }
+                        placeholder={percentPlaceholder}
+                      />
+                    </div>
+                  </div>
+
+                  {/* 提示 */}
+                  <div className="text-red-500 text-xs mt-5 pb-1 leading-5">
+                    {newData.launchPoolNote as string}
+                  </div>
+
+                  {/* 代币描述 */}
+                  <div className="mt-5">
+                    <div className="text-text-secondary font-medium text-xs mb-2">
+                      {newData.tokenDescription as string}
+                    </div>
+                    <input
+                      type="text"
+                      value={typeThree.details}
+                      onChange={(e) =>
+                        setTypeThree({ ...typeThree, details: e.target.value })
+                      }
+                      placeholder={newData.description as string}
+                      className="input text-sm"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* 提交按钮 */}
+              <div className="w-full text-center my-6">
                 <button
-                  onClick={handleClaim}
-                  disabled={!claimChecked || claimLoading}
-                  className="btn-primary w-full shrink-0"
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="btn-primary w-full"
                 >
-                  {claimLoading
-                    ? (common?.loading as string) || "加載中..."
-                    : (kol?.claim as string) || "認領"}
+                  {loading
+                    ? (common?.loading as string)
+                    : (home?.createProject as string)}
                 </button>
               </div>
+
+              {/* 底部提示 */}
+              <p className="text-xs text-red-500 text-left leading-5">
+                {createProject?.twitterTip as string}
+              </p>
+            </>
+          ) : (
+            /* 认领项目 Tab */
+            <div>
+              {/* 已认领项目展示 */}
+
+              <>
+                {/* 顶部：市值排序 + 搜索框 */}
+                <div className="flex items-center justify-between gap-4 mb-4">
+                  <button
+                    onClick={() => handleSort()}
+                    className="flex items-center gap-2 bg-background-card border border-border px-4 py-2.5 rounded-xl hover:bg-background-card-hover transition-colors"
+                  >
+                    <span className="text-foreground text-sm">
+                      {newData.marketCap as string}
+                    </span>
+                    <div className="flex flex-col gap-0.5">
+                      <div
+                        className={cn(
+                          "w-0 h-0 border-l border-l-transparent border-r border-r-transparent border-b",
+                          sortOrder === "asc"
+                            ? "border-b-primary"
+                            : "border-b-text-muted"
+                        )}
+                      />
+                      <div
+                        className={cn(
+                          "w-0 h-0 border-l border-l-transparent border-r border-r-transparent border-t",
+                          sortOrder === "desc"
+                            ? "border-t-primary"
+                            : "border-t-text-muted"
+                        )}
+                      />
+                    </div>
+                  </button>
+                  <input
+                    type="text"
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    placeholder={newData.search as string}
+                    className="input flex-1 max-w-45 text-sm"
+                  />
+                </div>
+
+                {/* 项目列表 */}
+                {filteredList.length > 0 ? (
+                  <div className="max-h-125 overflow-y-auto space-y-3">
+                    {filteredList.map((project, index) => {
+                      const marketCap =
+                        project.total_supply && project.lastPrice
+                          ? (
+                              Number(project.total_supply) *
+                              Number(project.lastPrice)
+                            ).toFixed(0)
+                          : "0";
+                      const projectTypes =
+                        (shareProject?.projectTypes as Record<
+                          string,
+                          string
+                        >) || {};
+                      const projectTypeName =
+                        project.project_type === 2
+                          ? projectTypes.marketMaking
+                          : project.project_type === 0
+                          ? projectTypes.joint
+                          : projectTypes.single;
+
+                      return (
+                        <div
+                          key={index}
+                          className="bg-background-card border border-border rounded-xl p-4 text-left hover:border-border-hover transition-colors"
+                        >
+                          {/* 头部：Logo、Symbol、价格 */}
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                              <Image
+                                src={
+                                  project?.logo_url || getTokenIcon("100t").src
+                                }
+                                alt={
+                                  project?.symbol ||
+                                  (createProject.token as string)
+                                }
+                                width={36}
+                                height={36}
+                                className="rounded-full"
+                                unoptimized={!!project?.logo_url}
+                              />
+
+                              <div>
+                                <div className="text-sm font-semibold text-foreground">
+                                  {project.symbol}
+                                </div>
+                                <div className="text-text-secondary text-xs mt-0.5">
+                                  {newData.marketCap as string}:{" "}
+                                  <span className="text-foreground">
+                                    ${marketCap}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-sm text-primary font-semibold">
+                              ${Number(project.lastPrice || 0).toFixed(6)}
+                            </div>
+                          </div>
+
+                          {/* 标签：X、Telegram、项目类型 */}
+                          <div className="flex items-center gap-2 mt-3 text-xs flex-wrap">
+                            <a
+                              href={project.twitter_account || "#"}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-background-card-hover border border-border p-1.5 px-2.5 rounded-lg flex items-center gap-1.5 hover:border-border-hover transition-colors text-text-secondary hover:text-foreground"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {/* X (Twitter) Icon */}
+                              <svg
+                                className="w-3 h-3"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                              >
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                              </svg>
+                              <span>{kol?.twitter as string}</span>
+                            </a>
+                            <a
+                              href={project.tg_account || "#"}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-background-card-hover border border-border p-1.5 px-2.5 rounded-lg flex items-center gap-1.5 hover:border-border-hover transition-colors text-text-secondary hover:text-foreground"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Send className="w-3 h-3" />
+                              <span>
+                                {
+                                  (
+                                    shareProject?.social as Record<
+                                      string,
+                                      string
+                                    >
+                                  )?.telegram as string
+                                }
+                              </span>
+                            </a>
+                            <div className="bg-primary/10 border border-primary/30 text-primary p-1.5 px-2.5 rounded-lg">
+                              {projectTypeName}
+                            </div>
+                            {!project.details && (
+                              <button
+                                onClick={() => handleClickProject(project)}
+                                className="ml-auto btn-primary h-auto py-2 px-4 text-xs"
+                              >
+                                {newData.approve as string}
+                              </button>
+                            )}
+                          </div>
+
+                          {/* 描述和认领按钮 */}
+                          {project.details && (
+                            <div className="flex items-center justify-between gap-4 mt-3">
+                              <div className="text-text-secondary text-xs text-left flex-1">
+                                {project.details}
+                              </div>
+                              <button
+                                onClick={() => handleClickProject(project)}
+                                className="btn-primary h-auto py-2 px-4 text-xs shrink-0"
+                              >
+                                {newData.approve as string}
+                              </button>
+                            </div>
+                          )}
+
+                          {/* 公平发射信息 */}
+                          {project.exchange_rate ? (
+                            <div className="mt-3 pt-3 border-t border-border">
+                              <div className="text-sm mb-2">
+                                <span className="text-secondary">
+                                  {shareProject?.fairLaunch as string}
+                                </span>
+                                <span className="text-primary ml-2">
+                                  1
+                                  {project.display_name?.split("-")[0] || "BNB"}{" "}
+                                  = {project.exchange_rate || 0}
+                                  {project.symbol}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 justify-end">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentProject(project);
+                                    router.push("/pool-detail");
+                                  }}
+                                  className="btn-outline h-auto py-2 px-4 text-xs"
+                                >
+                                  {shareProject?.buyNow as string}
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentProject(project);
+                                    router.push("/early-bird-detail");
+                                  }}
+                                  className="btn-outline h-auto py-2 px-4 text-xs"
+                                >
+                                  {shareProject?.earlyBird as string}
+                                </button>
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {/* 无公平发射但有mint_pool_id时也显示入口 */}
+                          {!project.exchange_rate && project.mint_pool_id ? (
+                            <div className="mt-3 pt-3 border-t border-border">
+                              <div className="flex items-center gap-2 justify-end">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentProject(project);
+                                    router.push("/pool-detail");
+                                  }}
+                                  className="btn-outline h-auto py-2 px-4 text-xs"
+                                >
+                                  {shareProject?.buyNow as string}
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentProject(project);
+                                    router.push("/early-bird-detail");
+                                  }}
+                                  className="btn-outline h-auto py-2 px-4 text-xs"
+                                >
+                                  {shareProject?.earlyBird as string}
+                                </button>
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 rounded-full bg-background-card-hover flex items-center justify-center mx-auto mb-4">
+                      <span className="text-2xl">📭</span>
+                    </div>
+                    <p className="text-text-muted text-sm">
+                      {newData.noData as string}
+                    </p>
+                  </div>
+                )}
+              </>
+
+              {/* 认领规则弹窗 */}
+              {showClaimModal && selectedProject && (
+                <div
+                  className={`fixed inset-0 z-100 flex items-end justify-center bg-black/60 ${
+                    theme === "dark" ? "backdrop-blur-sm" : ""
+                  }`}
+                  onClick={() => setShowClaimModal(false)}
+                >
+                  <div
+                    className="bg-background-card border-t border-border w-full max-w-md max-h-[90vh] rounded-t-3xl p-5 pb-8 animate-slide-up overflow-hidden flex flex-col"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* 拖动条 */}
+                    <div className="w-12 h-1 bg-text-muted rounded-full mx-auto mb-6 shrink-0" />
+
+                    {/* 标题 */}
+                    <h3 className="text-center font-semibold text-sm text-secondary mb-6 shrink-0">
+                      {kol?.claimRule as string}
+                    </h3>
+
+                    {/* 规则内容 */}
+                    <div className="text-left text-sm leading-6 mb-5 flex-1 overflow-y-auto text-text-secondary">
+                      {contentDesc.map((desc, i) => (
+                        <p key={i} className="mb-3">
+                          {desc}
+                        </p>
+                      ))}
+
+                      {/* 推文文案 */}
+                      <div className="mt-5 p-4 bg-background border border-border rounded-xl">
+                        <div
+                          className="flex items-start gap-2 cursor-pointer"
+                          onClick={handleCopyTweet}
+                        >
+                          <span className="text-primary font-bold">*</span>
+                          <span className="text-secondary font-medium flex-1 break-all text-sm">
+                            {getTweetText()}
+                          </span>
+                          {copied ? (
+                            <Check className="w-4 h-4 text-success shrink-0" />
+                          ) : (
+                            <Copy className="w-4 h-4 text-text-muted shrink-0 hover:text-primary" />
+                          )}
+                        </div>
+                        <p className="text-text-muted mt-3 text-xs">
+                          {kol?.tweetTips as string}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* 确认勾选 */}
+                    <label className="flex items-start gap-3 text-left mb-5 cursor-pointer shrink-0 group">
+                      <input
+                        type="checkbox"
+                        checked={claimChecked}
+                        onChange={(e) => setClaimChecked(e.target.checked)}
+                        className="mt-0.5 w-5 h-5 rounded border-border bg-background checked:bg-primary checked:border-primary"
+                      />
+                      <span className="text-sm text-text-secondary group-hover:text-text-secondary transition-colors">
+                        {kol?.sure as string}
+                      </span>
+                    </label>
+
+                    {/* 认领按钮 */}
+                    <button
+                      onClick={handleClaim}
+                      disabled={!claimChecked || claimLoading}
+                      className="btn-primary w-full shrink-0"
+                    >
+                      {claimLoading
+                        ? (common?.loading as string)
+                        : (kol?.claim as string)}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -181,6 +181,15 @@ const lan = {
     },
     notCertified: "Please complete KOL certification first",
     uploadLogo: "Please upload project logo",
+    logoSizeLimit: "Image size must not exceed 5MB",
+    logoUploading: "Image is uploading",
+    logoUploadFailed: "Image upload failed",
+    percentPlaceholder: "> 0",
+    logoAlt: "Project Logo",
+    projectAlt: "Project",
+    fillLpKolRatio: "Please fill LP addition and KOL reward ratios",
+    uploadFormat: "PNG-JPEG-WEBP-GIF",
+    uploadMaxSize: "Max 5MB",
     twitterTip:
       "When creating a project, please follow @kolpump_fun and retweet the pinned tweet. This affects your KOL index and token allocation.",
     // Form labels
