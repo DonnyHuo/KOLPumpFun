@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useConnection } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useQuery } from "@tanstack/react-query";
@@ -70,22 +70,31 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
   const { percentage: kolProgressValue } = useKolProgress(tokenIdBigInt);
 
   // 提取收益
-  const { withdraw, isPending, isConfirming, isSuccess } =
+  const { withdraw, isPending, isConfirming, isSuccess, hash } =
     useWithdrawKolAirdrop();
+  const lastSuccessHashRef = useRef<string | undefined>(undefined);
 
   // 监听提取成功
   useEffect(() => {
+    if (!isSuccess || !hash || lastSuccessHashRef.current === hash) {
+      return;
+    }
+    lastSuccessHashRef.current = hash;
     if (isSuccess) {
       const common = t.common as Record<string, unknown>;
-      toast.success(
-        (common.withdrawSuccess as string) ||
-          (lang === "zh" ? "領取成功" : "Withdraw Success")
-      );
+      toast.success(common.withdrawSuccess as string);
       // 刷新待收取收益和余额
       refetchCanWithdrawValue();
       refetchReserveBalance();
     }
-  }, [isSuccess, lang, t, refetchCanWithdrawValue, refetchReserveBalance]);
+  }, [
+    isSuccess,
+    hash,
+    lang,
+    t,
+    refetchCanWithdrawValue,
+    refetchReserveBalance,
+  ]);
 
   // 领取收益
   const handleWithdraw = () => {
