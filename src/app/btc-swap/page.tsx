@@ -12,6 +12,7 @@ import zhCN from "@/i18n/zh-CN";
 import enUS from "@/i18n/en-US";
 import { homeBg, homeBg2, swapDown, logo } from "@/assets/images";
 import { getTokenIcon } from "@/assets/images/tokenList";
+import { brc20Api } from "@/lib/api";
 
 interface BridgeRecord {
   brc20_txid?: string;
@@ -113,16 +114,8 @@ export default function BtcSwapPage() {
     if (!btcAddress) return;
     setLoading(true);
     try {
-      const res = await fetch(
-        "https://smartbtc.io/bridge/brc20/bridge_record",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ address: btcAddress }),
-        }
-      );
-      const data = await res.json();
-      setRecordList(data.data || []);
+      const res = await brc20Api.getBridgeRecord(btcAddress);
+      setRecordList(res.data || []);
     } catch (error) {
       console.error("Failed to fetch records:", error);
     } finally {
@@ -218,10 +211,9 @@ export default function BtcSwapPage() {
   useEffect(() => {
     const fetchTokenList = async () => {
       try {
-        const res = await fetch("https://smartbtc.io/bridge/brc20/token_list");
-        const data = await res.json();
-        if (data.data) {
-          const tokens = data.data.map((item: { symbol: string }) => ({
+        const res = await brc20Api.getTokenList();
+        if (res.data) {
+          const tokens = res.data.map((item) => ({
             name: item.symbol,
           }));
           setTokenList(tokens);
@@ -237,15 +229,17 @@ export default function BtcSwapPage() {
     fetchTokenList();
   }, []);
 
-  // 当钱包连接后获取数据
+  // 当钱包连接后获取跨链记录
   useEffect(() => {
-    if (btcAddress) {
-      fetchRecordList();
-      if (selectedChain) {
-        getBTCBalance(selectedChain);
-      }
-    }
-  }, [btcAddress, selectedChain, fetchRecordList, getBTCBalance]);
+    if (!btcAddress) return;
+    fetchRecordList();
+  }, [btcAddress, fetchRecordList]);
+
+  // 当钱包连接且选中代币后获取余额
+  useEffect(() => {
+    if (!btcAddress || !selectedChain) return;
+    getBTCBalance(selectedChain);
+  }, [btcAddress, selectedChain, getBTCBalance]);
 
   // 检查钱包
   useEffect(() => {
@@ -258,7 +252,6 @@ export default function BtcSwapPage() {
   const handleSelectChain = (name: string) => {
     setSelectedChain(name);
     setShowChainModal(false);
-    getBTCBalance(name);
   };
 
   // 选择币种
@@ -312,20 +305,15 @@ export default function BtcSwapPage() {
   // 通知后端服务
   const noticeService = async (txid: string) => {
     try {
-      const res = await fetch("https://smartbtc.io/bridge/brc20/bridge", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          symbol: selectedChain,
-          from_net_address: btcAddress,
-          to_net_address: toAddress,
-          amount: selectedCoin.amount,
-          brc20_txid: txid,
-        }),
+      const res = await brc20Api.bridge({
+        symbol: selectedChain,
+        from_net_address: btcAddress,
+        to_net_address: toAddress,
+        amount: selectedCoin.amount,
+        brc20_txid: txid,
       });
-      const data = await res.json();
 
-      if (data.data?.order_id) {
+      if (res.data?.order_id) {
         setPostLoading(false);
         toast.success(t.common.submitSuccess as string);
         fetchRecordList();

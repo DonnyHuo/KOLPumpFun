@@ -1,24 +1,21 @@
-const BASE_URL = 'https://smartbtc.io/bridge';
+const BASE_URL = "https://smartbtc.io/bridge";
 
 // 通用请求方法
-async function request<T>(
-  endpoint: string,
-  options?: RequestInit
-): Promise<T> {
+async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${BASE_URL}${endpoint}`;
   const response = await fetch(url, {
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...options?.headers,
     },
     ...options,
   });
-  
+
   // 500 状态码不抛出错误，直接返回响应
   if (!response.ok && response.status !== 500) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-  
+
   return response.json();
 }
 
@@ -26,99 +23,123 @@ async function request<T>(
 export const kolApi = {
   // 查询 KOL 信息
   queryKol: (address: string) =>
-    request<{ data: KolInfo }>('/kol/query_kol', {
-      method: 'POST',
+    request<{ data: KolInfo }>("/kol/query_kol", {
+      method: "POST",
       body: JSON.stringify({ address }),
     }),
 
   // 提交认证
   certify: (data: CertifyParams) =>
-    request<{ message: string }>('/kol/register', {
-      method: 'POST',
+    request<{ message: string }>("/kol/register", {
+      method: "POST",
       body: JSON.stringify(data),
     }),
 
   // 获取投票中的项目
   getVotingList: () =>
-    request<{ data: VotingProject[] }>('/kol/project_voting_list'),
+    request<{ data: VotingProject[] }>("/kol/project_voting_list"),
 
   // 获取已发行项目
   getProjectIssuedList: () =>
-    request<{ data: ProjectInfo[] }>('/kol/project_issued_list'),
+    request<{ data: ProjectInfo[] }>("/kol/project_issued_list"),
 
   // 获取待审核项目列表
   getProjectWaitAgreeList: () =>
-    request<{ data: ProjectWaitInfo[] }>('/kol/project_wait_aggree_list'),
+    request<{ data: ProjectWaitInfo[] }>("/kol/project_wait_aggree_list"),
 
   // 投票
   vote: (address: string, projectName: string) =>
-    request<{ message: string }>('/kol/vote', {
-      method: 'POST',
+    request<{ message: string }>("/kol/vote", {
+      method: "POST",
       body: JSON.stringify({ address, project_name: projectName }),
     }),
 
   // 检查是否已投票
   isVoted: (kolAddress: string, projectName: string) =>
-    request<{ data: boolean }>('/kol/is_voted', {
-      method: 'POST',
-      body: JSON.stringify({ kol_address: kolAddress, project_name: projectName }),
+    request<{ data: boolean }>("/kol/is_voted", {
+      method: "POST",
+      body: JSON.stringify({
+        kol_address: kolAddress,
+        project_name: projectName,
+      }),
     }),
 
   // 获取最低门槛
   getMinThreshold: () =>
-    request<{ data: { RepMinThreshold: number; vote_pass_nums: number } }>('/kol/min_threshold'),
+    request<{ data: { RepMinThreshold: number; vote_pass_nums: number } }>(
+      "/kol/min_threshold"
+    ),
 
   // 获取待审核 KOL 列表
   getKolWaitAgreeList: () =>
-    request<{ data: KolWaitInfo[] }>('/kol/kol_wait_aggree_list'),
+    request<{ data: KolWaitInfo[] }>("/kol/kol_wait_aggree_list"),
 
   // 获取待审核绑定项目列表
   getBindProjectWaitList: () =>
-    request<{ data: BindProjectWaitInfo[] }>('/kol/bind_project_wait_aggre_list'),
+    request<{ data: BindProjectWaitInfo[] }>(
+      "/kol/bind_project_wait_aggre_list"
+    ),
 
   // 获取项目私募列表
   getProjectPrivateFundList: (token: string, address?: string) =>
-    request<{ data: PrivateFundOrder[] }>('/kol/project_private_fund_list', {
-      method: 'POST',
+    request<{ data: PrivateFundOrder[] }>("/kol/project_private_fund_list", {
+      method: "POST",
       body: JSON.stringify({ token, ...(address && { address }) }),
     }),
 
   // 私募购买
   projectPrivateFund: (data: PrivateFundParams) =>
-    request<{ message: string }>('/kol/project_private_fund', {
-      method: 'POST',
+    request<{ message: string }>("/kol/project_private_fund", {
+      method: "POST",
       body: JSON.stringify(data),
     }),
 
   // 获取代币列表
   getSelectTokenList: () =>
-    request<{ data: SelectToken[] }>('/kol/mint_token_list'),
+    request<{ data: SelectToken[] }>("/kol/mint_token_list"),
 
   // 创建新项目
   createProject: (data: CreateProjectParams) =>
-    request<{ message: string }>('/kol/new_project', {
-      method: 'POST',
+    request<{ message: string }>("/kol/new_project", {
+      method: "POST",
       body: JSON.stringify(data),
     }),
 
   // 认领项目
   bindProject: (data: BindProjectParams) =>
-    request<{ message: string }>('/kol/bind_project', {
-      method: 'POST',
+    request<{ message: string }>("/kol/bind_project", {
+      method: "POST",
       body: JSON.stringify(data),
     }),
 
   // 获取 Meme 订单列表
   getMemeOrders: (address: string) =>
-    request<{ data: MemeOrder[] }>('/kol/meme_orders', {
-      method: 'POST',
+    request<{ data: MemeOrder[] }>("/kol/meme_orders", {
+      method: "POST",
       body: JSON.stringify({ address }),
     }),
 
   // 创建 Meme 交易记录
   memeTrade: (data: MemeTradeParams) =>
-    request<{ message: string }>('/kol/meme_trade', {
-      method: 'POST',
+    request<{ message: string }>("/kol/meme_trade", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+};
+
+// BRC20 跨链相关 API
+export const brc20Api = {
+  getTokenList: () => request<{ data: Brc20Token[] }>("/brc20/token_list"),
+
+  getBridgeRecord: (address: string) =>
+    request<{ data: Brc20BridgeRecord[] }>("/brc20/bridge_record", {
+      method: "POST",
+      body: JSON.stringify({ address }),
+    }),
+
+  bridge: (data: Brc20BridgeParams) =>
+    request<{ data?: { order_id?: string } }>("/brc20/bridge", {
+      method: "POST",
       body: JSON.stringify(data),
     }),
 };
@@ -127,8 +148,8 @@ export const kolApi = {
 export const adminApi = {
   // 审核 KOL
   agreeKol: (adminAddress: string, kolAddress: string, agree: boolean) =>
-    request<{ message?: string }>('/kol_admin/aggree', {
-      method: 'POST',
+    request<{ message?: string }>("/kol_admin/aggree", {
+      method: "POST",
       body: JSON.stringify({
         admin_address: adminAddress,
         kol_address: kolAddress,
@@ -138,8 +159,8 @@ export const adminApi = {
 
   // 审核项目
   agreeProject: (adminAddress: string, projectName: string, agree: boolean) =>
-    request<{ message?: string }>('/kol_admin/project_aggree', {
-      method: 'POST',
+    request<{ message?: string }>("/kol_admin/project_aggree", {
+      method: "POST",
       body: JSON.stringify({
         admin_address: adminAddress,
         project_name: projectName,
@@ -155,8 +176,8 @@ export const adminApi = {
     agree: boolean,
     percent: number
   ) =>
-    request<{ message?: string }>('/kol_admin/bind_project_aggree', {
-      method: 'POST',
+    request<{ message?: string }>("/kol_admin/bind_project_aggree", {
+      method: "POST",
       body: JSON.stringify({
         admin_address: adminAddress,
         kol_address: kolAddress,
@@ -168,8 +189,8 @@ export const adminApi = {
 
   // 迁移 Token
   migrateToken: (data: MigrateTokenParams) =>
-    request<{ message: string }>('/kol_admin/migrate_token', {
-      method: 'POST',
+    request<{ message: string }>("/kol_admin/migrate_token", {
+      method: "POST",
       body: JSON.stringify(data),
     }),
 };
@@ -190,6 +211,30 @@ export interface CertifyParams {
   twitter_account: string;
   tg_account?: string;
   discord_account?: string;
+}
+
+export interface Brc20Token {
+  symbol: string;
+}
+
+export interface Brc20BridgeRecord {
+  brc20_txid?: string;
+  from_net: string;
+  from_net_address: string;
+  to_net: string;
+  to_net_address: string;
+  convert_txid?: string;
+  order_state: number;
+  amount?: string;
+  symbol?: string;
+}
+
+export interface Brc20BridgeParams {
+  symbol: string;
+  from_net_address: string;
+  to_net_address: string;
+  amount: number;
+  brc20_txid: string;
 }
 
 export interface VotingProject {
@@ -324,4 +369,3 @@ export interface MemeTradeParams {
   spend_txid: string;
   order_type: number;
 }
-
