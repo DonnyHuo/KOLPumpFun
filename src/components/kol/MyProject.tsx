@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useConnection } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useQuery } from "@tanstack/react-query";
@@ -70,22 +70,31 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
   const { percentage: kolProgressValue } = useKolProgress(tokenIdBigInt);
 
   // 提取收益
-  const { withdraw, isPending, isConfirming, isSuccess } =
+  const { withdraw, isPending, isConfirming, isSuccess, hash } =
     useWithdrawKolAirdrop();
+  const lastSuccessHashRef = useRef<string | undefined>(undefined);
 
   // 监听提取成功
   useEffect(() => {
+    if (!isSuccess || !hash || lastSuccessHashRef.current === hash) {
+      return;
+    }
+    lastSuccessHashRef.current = hash;
     if (isSuccess) {
       const common = t.common as Record<string, unknown>;
-      toast.success(
-        (common.withdrawSuccess as string) ||
-          (lang === "zh" ? "領取成功" : "Withdraw Success")
-      );
+      toast.success(common.withdrawSuccess as string);
       // 刷新待收取收益和余额
       refetchCanWithdrawValue();
       refetchReserveBalance();
     }
-  }, [isSuccess, lang, t, refetchCanWithdrawValue, refetchReserveBalance]);
+  }, [
+    isSuccess,
+    hash,
+    lang,
+    t,
+    refetchCanWithdrawValue,
+    refetchReserveBalance,
+  ]);
 
   // 领取收益
   const handleWithdraw = () => {
@@ -101,10 +110,15 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
     <div className="space-y-4">
       {/* 项目名称和余额 */}
       <div className="flex items-center justify-between py-3 bg-background-card rounded-xl">
-        <span className="text-text-secondary">{reserveInfo?.name}</span>
-        <span className="font-medium text-secondary">
-          {parseFloat(reserveBalance).toFixed(2)} {reserveInfo?.symbol}
-        </span>
+        <span className="text-text-secondary text-sm">{reserveInfo?.name}</span>
+        <div className="flex items-center gap-1">
+          <span className="font-medium text-secondary">
+            {parseFloat(reserveBalance).toFixed(2)}
+          </span>
+          <span className="text-primary font-medium">
+            {reserveInfo?.symbol}
+          </span>
+        </div>
       </div>
 
       {/* 待领取收益 */}
