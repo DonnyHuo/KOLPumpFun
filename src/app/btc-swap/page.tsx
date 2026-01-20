@@ -197,12 +197,7 @@ export default function BtcSwapPage() {
       console.error("Connect wallet failed:", error);
       toast.error(t.common.walletConnectFailed as string);
     }
-  }, [
-    btcSwap.installWallet,
-    t.common.pleaseConnect,
-    t.common.walletConnectFailed,
-    t.common.walletConnectSuccess,
-  ]);
+  }, [btcSwap.installWallet, t.common.walletConnectFailed]);
 
   // 获取代币列表
   useEffect(() => {

@@ -72,7 +72,7 @@ function Skeleton() {
 
 export default function CreatePage() {
   const { address, isConnected } = useConnection();
-  const { disconnect } = useDisconnect();
+  const disconnect = useDisconnect();
   const { openConnectModal } = useConnectModal();
   const {
     lang,
@@ -192,7 +192,7 @@ export default function CreatePage() {
           {/* 钱包连接/断开按钮 */}
           {isConnected ? (
             <button
-              onClick={() => disconnect()}
+              onClick={() => disconnect.mutate()}
               className="h-9 px-3 bg-background-card border border-primary rounded-xl flex items-center gap-2 hover:bg-card-hover hover:border-red-500/50 transition-all group"
               title={lang === "zh" ? "點擊斷開連接" : "Click to disconnect"}
             >
@@ -204,7 +204,7 @@ export default function CreatePage() {
           ) : (
             <button
               onClick={openConnectModal}
-              className="h-[36px] w-[36px] bg-background-card border border-border rounded-xl flex items-center justify-center hover:bg-card-hover hover:border-primary/30 transition-all"
+              className="h-9 w-9 bg-background-card border border-border rounded-xl flex items-center justify-center hover:bg-card-hover hover:border-primary/30 transition-all"
             >
               <Image src={wallet} alt="wallet" width={18} height={18} />
             </button>
@@ -212,7 +212,7 @@ export default function CreatePage() {
           {/* 主题切换按钮 */}
           <button
             onClick={toggleTheme}
-            className="h-[36px] w-[36px] bg-background-card border border-border rounded-xl flex items-center justify-center hover:bg-card-hover hover:border-hover transition-all"
+            className="h-9 w-9 bg-background-card border border-border rounded-xl flex items-center justify-center hover:bg-card-hover hover:border-hover transition-all"
             title={
               theme === "dark"
                 ? lang === "zh"
@@ -233,12 +233,12 @@ export default function CreatePage() {
           <div className="relative" ref={langMenuRef}>
             <button
               onClick={() => setShowLangMenu(!showLangMenu)}
-              className="h-[36px] w-[36px] bg-background-card border border-border rounded-xl flex items-center justify-center hover:bg-card-hover hover:border-hover transition-all"
+              className="h-9 w-9 bg-background-card border border-border rounded-xl flex items-center justify-center hover:bg-card-hover hover:border-hover transition-all"
             >
-              <Globe className="w-[18px] h-[18px] text-secondary" />
+              <Globe className="w-4.5 h-4.5 text-secondary" />
             </button>
             {showLangMenu && (
-              <div className="absolute right-0 top-[42px] bg-background-card border border-border rounded-xl overflow-hidden z-50 min-w-[120px]">
+              <div className="absolute right-0 top-10.5 bg-background-card border border-border rounded-xl overflow-hidden z-50 min-w-30">
                 <button
                   onClick={() => handleSelectLang("zh")}
                   className={`w-full px-4 py-2.5 text-sm text-left hover:bg-card-hover transition-colors ${
