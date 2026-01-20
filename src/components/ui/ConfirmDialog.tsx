@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -17,8 +17,8 @@ export function ConfirmDialog({
   open,
   title,
   message,
-  confirmText = '確認',
-  cancelText = '取消',
+  confirmText = "確認",
+  cancelText = "取消",
   loading = false,
   onConfirm,
   onCancel,
@@ -28,13 +28,14 @@ export function ConfirmDialog({
 
   useEffect(() => {
     if (open) {
-      setIsVisible(true);
+      // 使用微任务避免同步 setState
+      queueMicrotask(() => setIsVisible(true));
       // 延迟一帧后开始动画
       requestAnimationFrame(() => {
         setIsAnimating(true);
       });
     } else {
-      setIsAnimating(false);
+      queueMicrotask(() => setIsAnimating(false));
       // 等待动画结束后隐藏
       const timer = setTimeout(() => {
         setIsVisible(false);
@@ -47,16 +48,16 @@ export function ConfirmDialog({
 
   return (
     <div
-      className={`fixed inset-0 z-[100] flex items-center justify-center transition-all duration-200 ${
-        isAnimating ? 'bg-black/60 backdrop-blur-sm' : 'bg-transparent'
+      className={`fixed inset-0 z-100 flex items-center justify-center transition-all duration-200 ${
+        isAnimating ? "bg-black/60 backdrop-blur-sm" : "bg-transparent"
       }`}
       onClick={onCancel}
     >
       <div
-        className={`bg-[#1A1A1E] border border-white/10 rounded-2xl p-6 mx-6 max-w-[300px] w-full shadow-2xl transition-all duration-200 ${
+        className={`bg-[#1A1A1E] border border-white/10 rounded-2xl p-6 mx-6 max-w-75 w-full shadow-2xl transition-all duration-200 ${
           isAnimating
-            ? 'opacity-100 scale-100 translate-y-0'
-            : 'opacity-0 scale-95 translate-y-4'
+            ? "opacity-100 scale-100 translate-y-0"
+            : "opacity-0 scale-95 translate-y-4"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -70,14 +71,14 @@ export function ConfirmDialog({
           <button
             onClick={onCancel}
             disabled={loading}
-            className="flex-1 h-[42px] bg-background border border-border rounded-xl text-sm text-text-secondary hover:bg-background-card-hover hover:border-border-hover transition-all disabled:opacity-50"
+            className="flex-1 h-10.5 bg-background border border-border rounded-xl text-sm text-text-secondary hover:bg-background-card-hover hover:border-border-hover transition-all disabled:opacity-50"
           >
             {cancelText}
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="flex-1 h-[42px] bg-gradient-to-r from-[#FFC519] to-[#FFD54F] rounded-xl text-sm font-semibold text-black hover:shadow-lg hover:shadow-[#FFC519]/30 transition-all disabled:opacity-50"
+            className="flex-1 h-10.5 bg-linear-to-r from-[#FFC519] to-[#FFD54F] rounded-xl text-sm font-semibold text-black hover:shadow-lg hover:shadow-[#FFC519]/30 transition-all disabled:opacity-50"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -108,4 +109,3 @@ export function ConfirmDialog({
     </div>
   );
 }
-

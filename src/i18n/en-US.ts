@@ -207,6 +207,8 @@ export default {
     tokenRatio: 'Token Ratio',
     inscriptionCrossChain: 'Inscription Cross-chain',
     kolRewards: 'KOL Rewards',
+    kolRewardsContract: 'KOL Rewards Contract',
+    kolRewardsContractTooltip: '*KOL Rewards Contract value ≤ Your actual staked SOS amount ÷ 1000, and must be an integer. For example, if you actually staked 20,500 SOS, the KOL ratio can be filled with an integer within 20; Single KOL mode requires at least 10,000 SOS staked.',
     lpAddition: 'LP Addition',
     launchPool: 'Launch Pool',
     launchPoolNote: '* Launch pool share is customized by the creator. When creating tokens, it will be automatically transferred to their wallet and should be used entirely to create LP (Pancake V2, base token can be USDT, BNB, BTCB or SOS). LP should be fully exchanged for tokens (all belong to the creator).',
