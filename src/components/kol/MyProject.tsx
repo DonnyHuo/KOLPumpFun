@@ -18,6 +18,7 @@ import { kolApi, type KolInfo, type ProjectInfo } from "@/lib/api";
 import { useStore } from "@/store/useStore";
 import zhCN from "@/i18n/zh-CN";
 import enUS from "@/i18n/en-US";
+import ConfirmButton from "../ui/ConfirmButton";
 
 interface MyProjectProps {
   kolInfo: KolInfo;
@@ -135,19 +136,14 @@ export default function MyProject({ kolInfo }: MyProjectProps) {
           </span>
         </div>
         {isConnected ? (
-          <button
+          <ConfirmButton
             onClick={handleWithdraw}
-            disabled={
-              isPending ||
-              isConfirming ||
-              parseFloat(viewCanWithdrawValue) === 0
-            }
+            disabled={isPending || isConfirming || parseFloat(viewCanWithdrawValue) === 0}
             className="btn-primary text-sm px-5 py-2"
+            loading={isPending || isConfirming}
           >
-            {isPending || isConfirming
-              ? `${home.receiveBenefits}...`
-              : (home.receiveBenefits as string)}
-          </button>
+            {home.receiveBenefits as string}
+          </ConfirmButton>
         ) : (
           <button
             onClick={openConnectModal}

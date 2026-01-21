@@ -110,13 +110,7 @@ function RainbowKitWrapper({ children }: { children: ReactNode }) {
 export function Providers({ children }: ProvidersProps) {
   const [queryClient] = useState(
     () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 10 * 1000, // 10s
-          },
-        },
-      })
+      new QueryClient()
   );
 
   return (

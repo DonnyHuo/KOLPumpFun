@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useConnection, useBalance as useWagmiBalance } from "wagmi";
 import {
@@ -109,21 +109,43 @@ export default function PoolDetailPage() {
   const [activeTab, setActiveTab] = useState<"buy" | "redeem">("buy");
   const [amount, setAmount] = useState("");
   const [rate, setRate] = useState(0);
+  
+  // 用于跟踪已经处理过的交易哈希，避免重复处理
+  const processedSwapHash = useRef<string | null>(null);
+  const processedWithdrawHash = useRef<string | null>(null);
 
   // 原生 BNB 余额
   const { data: bnbBalance, refetch: refetchBnbBalance } = useWagmiBalance({
     address: address as `0x${string}`,
   });
 
-  // USDT 余额
-  const { formatted: usdtBalance, refetch: refetchUsdtBalance } = useBalance(
+  // USDT 余额和decimals
+  const { formatted: usdtBalance, decimals: usdtDecimals, refetch: refetchUsdtBalance } = useBalance(
     "0x55d398326f99059ff775485246999027b3197955" as `0x${string}`,
     address as `0x${string}`
   );
 
-  // SOS 余额
-  const { formatted: sosBalance, refetch: refetchSosBalance } = useBalance(
+  // SOS 余额和decimals
+  const { formatted: sosBalance, decimals: sosDecimals, refetch: refetchSosBalance } = useBalance(
     CONTRACTS.SOS as `0x${string}`,
+    address as `0x${string}`
+  );
+
+  // 授权检查
+  // 抢购时需要的代币：支付代币（coinMintToken）或项目代币（contract）
+  const buyToken = poolInfo.coinMintToken || poolInfo.contract;
+  // 赎回时需要的代币：项目代币（contract）
+  const redeemToken = poolInfo.contract;
+
+  // 项目代币的decimals（用于赎回）
+  const { decimals: projectTokenDecimals } = useBalance(
+    poolInfo.contract as `0x${string}`,
+    address as `0x${string}`
+  );
+
+  // 支付代币的decimals（用于抢购，如果不是BNB）
+  const { decimals: paymentTokenDecimals } = useBalance(
+    buyToken as `0x${string}`,
     address as `0x${string}`
   );
 
@@ -155,21 +177,83 @@ export default function PoolDetailPage() {
     ? parseFloat(formatUnits(userContribution as bigint, 18)).toFixed(6)
     : "0";
 
-  // 授权检查
-  const getSpenderToken = () => {
+  // 获取当前token的decimals
+  const getCurrentTokenDecimals = (): number => {
     if (activeTab === "buy") {
-      return poolInfo.coinMintToken || poolInfo.contract;
+      // 抢购时：BNB是18，其他ERC20从paymentTokenDecimals获取
+      if (poolInfo.token === "BNB") {
+        return 18;
+      } else if (poolInfo.token === "USDT") {
+        return Number(usdtDecimals) || 18;
+      } else if (poolInfo.token === "SOS") {
+        return Number(sosDecimals) || 18;
+      } else {
+        return Number(paymentTokenDecimals) || 18;
+      }
+    } else {
+      // 赎回时：项目代币的decimals
+      return Number(projectTokenDecimals) || 18;
     }
-    return poolInfo.contract;
   };
 
-  const { data: allowanceData, refetch: refetchAllowance } = useAllowance(
-    getSpenderToken() as `0x${string}`,
+  // 处理输入，限制小数位数
+  const handleAmountChange = (value: string) => {
+    const decimals = getCurrentTokenDecimals();
+    // 允许输入数字和小数点
+    const regex = new RegExp(`^\\d*\\.?\\d{0,${decimals}}$`);
+    
+    // 如果输入为空，允许清空
+    if (value === "" || value === ".") {
+      setAmount(value);
+      return;
+    }
+    
+    // 检查是否符合格式
+    if (regex.test(value)) {
+      setAmount(value);
+    }
+  };
+
+  // 检查抢购时的授权（支付代币或项目代币）
+  const { data: buyAllowanceData, refetch: refetchBuyAllowance } = useAllowance(
+    buyToken as `0x${string}`,
     address as `0x${string}`,
     CONTRACTS.TOKEN_SHOP as `0x${string}`
   );
 
-  const allowance = allowanceData ? Number(allowanceData.toString()) : 0;
+  // 检查赎回时的授权（项目代币）
+  const { data: redeemAllowanceData, refetch: refetchRedeemAllowance } = useAllowance(
+    redeemToken as `0x${string}`,
+    address as `0x${string}`,
+    CONTRACTS.TOKEN_SHOP as `0x${string}`
+  );
+
+  // 根据当前 tab 获取对应的授权额度
+  const getCurrentAllowance = () => {
+    if (activeTab === "buy") {
+      return buyAllowanceData ? Number(buyAllowanceData.toString()) : 0;
+    }
+    return redeemAllowanceData ? Number(redeemAllowanceData.toString()) : 0;
+  };
+
+  const allowance = getCurrentAllowance();
+
+  // 获取当前需要授权的代币地址
+  const getSpenderToken = () => {
+    if (activeTab === "buy") {
+      return buyToken;
+    }
+    return redeemToken;
+  };
+
+  // 刷新授权（根据当前 tab 刷新对应的授权）
+  const refetchAllowance = useCallback(() => {
+    if (activeTab === "buy") {
+      refetchBuyAllowance();
+    } else {
+      refetchRedeemAllowance();
+    }
+  }, [activeTab, refetchBuyAllowance, refetchRedeemAllowance]);
 
   // 授权
   const {
@@ -272,7 +356,10 @@ export default function PoolDetailPage() {
 
   // Swap 成功后
   useEffect(() => {
-    if (isSwapSuccess && swapHash && address) {
+    if (isSwapSuccess && swapHash && address && processedSwapHash.current !== swapHash) {
+      // 标记这个交易已经处理过
+      processedSwapHash.current = swapHash;
+      
       toast.success((t.poolDetail.buySuccess as string) || "抢购成功");
       recordTradeMutation.mutate({
         pool_id: Number(poolInfo.id),
@@ -292,15 +379,18 @@ export default function PoolDetailPage() {
     isSwapSuccess,
     poolInfo.exchangeRate,
     poolInfo.id,
-    recordTradeMutation,
-    refreshBalances,
     swapHash,
     t.poolDetail.buySuccess,
+    recordTradeMutation,
+    refreshBalances,
   ]);
 
   // Withdraw 成功后
   useEffect(() => {
-    if (isWithdrawSuccess && withdrawHash && address) {
+    if (isWithdrawSuccess && withdrawHash && address && processedWithdrawHash.current !== withdrawHash) {
+      // 标记这个交易已经处理过
+      processedWithdrawHash.current = withdrawHash;
+      
       toast.success((t.poolDetail.redeemSuccess as string) || "赎回成功");
       recordTradeMutation.mutate({
         pool_id: Number(poolInfo.id),
@@ -320,11 +410,11 @@ export default function PoolDetailPage() {
     isWithdrawSuccess,
     poolInfo.id,
     rate,
-    recordTradeMutation,
-    refreshBalances,
     stakeBalance,
     t.poolDetail.redeemSuccess,
     withdrawHash,
+    recordTradeMutation,
+    refreshBalances,
   ]);
 
   // 快捷金额按钮
@@ -332,10 +422,15 @@ export default function PoolDetailPage() {
     setRate(percentage);
     const balance = getTokenBalance();
     if (activeTab === "buy") {
-      setAmount((parseFloat(balance) * percentage).toString());
+      // 使用 toFixed 和 parseFloat 避免精度问题
+      const balanceNum = parseFloat(balance) || 0;
+      const result = parseFloat((balanceNum * percentage).toFixed(6));
+      setAmount(result.toString());
     } else {
+      // 使用 toFixed 和 parseFloat 避免精度问题
       const redeemBalance = parseFloat(stakeBalance) * poolInfo.exchangeRate;
-      setAmount((redeemBalance * percentage).toString());
+      const result = parseFloat((redeemBalance * percentage).toFixed(6));
+      setAmount(result.toString());
     }
   };
 
@@ -437,13 +532,13 @@ export default function PoolDetailPage() {
 
       {/* Token Image */}
       <div className="px-4 mt-4">
-        <div className="rounded-2xl overflow-hidden bg-background-card border border-border">
+        <div className="flex justify-center items-center rounded-2xl overflow-hidden bg-background-card border border-border m-auto w-fit">
           <Image
             src={poolInfo.logoUrl || "/images/default-token.png"}
             alt={poolInfo.symbol}
-            width={500}
-            height={300}
-            className="w-full h-auto object-contain"
+            width={200}
+            height={200}
+            className="object-cover"
             unoptimized
           />
         </div>
@@ -547,9 +642,10 @@ export default function PoolDetailPage() {
             </span>
             <div className="flex flex-1 items-center gap-2">
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => handleAmountChange(e.target.value)}
                 placeholder={t.poolDetail.inputAmount}
                 className="bg-transparent text-right text-secondary w-28 outline-none flex-1"
               />

@@ -116,7 +116,7 @@ export const kolApi = {
   getMemeOrders: (address: string) =>
     request<{ data: MemeOrder[] }>("/kol/meme_orders", {
       method: "POST",
-      body: JSON.stringify({ address }),
+      body: JSON.stringify({ address: address.toLowerCase() }),
     }),
 
   // 创建 Meme 交易记录
@@ -269,6 +269,10 @@ export interface ProjectInfo {
   airdrop_process_percent?: string; // 格式: "总量,百分比"
   coin_mint_token?: string;
   mint_status?: number;
+  // 投票相关字段
+  vote_start_time?: string;
+  vote_end_time?: string;
+  vote_num?: number;
 }
 
 export interface ProjectWaitInfo {

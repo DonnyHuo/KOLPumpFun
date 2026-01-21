@@ -17,7 +17,7 @@ interface KolCertificationProps {
 }
 
 // 官推链接
-const OFFICIAL_TWITTER_URL = "https://x.com/SmartBTCdao";
+const OFFICIAL_TWITTER_URL = "https://x.com/KOLtokens";
 
 export function KolCertification({
   kolInfo,
@@ -179,7 +179,7 @@ export function KolCertification({
             rel="noopener noreferrer"
             className={`${inputClass} bg-[#0D0D0F]/50 flex items-center justify-between cursor-pointer hover:border-white/10 focus:border-white/10`}
           >
-            <span>@SmartBTCdao</span>
+            <span>@KOLtokens</span>
             <ExternalLink className="w-4 h-4 text-text-muted" />
           </a>
         </div>

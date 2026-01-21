@@ -107,7 +107,7 @@ const lan = {
     telegramAddress: "Telegram地址",
     binanceSquare: "關注官推",
     desc1:
-      'KOL認證時，請關注官推@SmartBTCdao，轉發其置頂推文，同步配文認證資訊"影響力資產智能發幣平臺kolpump.fun認證碼+錢包地址後4位"',
+      'KOL認證時，請關注官推@KOLtokens，轉發其置頂推文，同步配文認證資訊"影響力資產智能發幣平臺kolpump.fun認證碼+錢包地址後4位"',
     submit: "提交認證",
     kolReview: "待審核中...",
     certified: "已認證",
@@ -132,7 +132,7 @@ const lan = {
     sure: "我已閱讀並認可認領規則，同意認領此項目。",
     tweet:
       "我的錢包{address}已經質押SOS，正在SmartBTC.io平台提交KOL認證，參與推廣{name}銘文，請大家幫忙點讚、轉發這則推文，助力{name}銘文上SmartBTC熱門！",
-    tweetTips: "複製以上文案發佈推特並@smartbtcdao",
+    tweetTips: "複製以上文案發佈推特並@KOLtokens",
     contentDesc: [
       "1.原則上，KOL應保持常態透過Twitter、Telegram等社交網絡，或組織線下活動等方式，積極參與某銘文項目的推廣佈道，才能認領成為該項目的社區KOL（項目方）；",
       "2.提交認領時，SmartBTC.io會多維度測算KOL的質押SOS數量、社交帳戶活躍度、認證推文閱讀點讚轉發數、社交帳戶歷史動態與項目的關聯度、認領地址項目代幣持倉數量等綜合因素，透過演算法自動計算出當前KOL對應的社群空投獎勵分配權重；",
