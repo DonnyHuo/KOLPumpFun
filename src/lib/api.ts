@@ -116,7 +116,7 @@ export const kolApi = {
   getMemeOrders: (address: string) =>
     request<{ data: MemeOrder[] }>("/kol/meme_orders", {
       method: "POST",
-      body: JSON.stringify({ address }),
+      body: JSON.stringify({ address: address.toLowerCase() }),
     }),
 
   // 创建 Meme 交易记录
