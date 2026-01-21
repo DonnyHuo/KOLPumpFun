@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useMemo } from "react";
 import { useConnection } from "wagmi";
 import { toast } from "sonner";
 import { ExternalLink, X } from "lucide-react";
@@ -10,18 +9,16 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   adminApi,
   kolApi,
-  type KolWaitInfo,
-  type ProjectWaitInfo,
-  type BindProjectWaitInfo,
   type ProjectInfo,
+  type BindProjectWaitInfo,
 } from "@/lib/api";
 import { CONTRACTS, ADMIN_ADDRESSES } from "@/constants/contracts";
 import {
   shortAddress,
-  formatDate,
   isValidUrl,
   getBscScanUrl,
 } from "@/lib/utils";
+import dayjs from "dayjs";
 import { useUserDepositedAmount } from "@/hooks/useDepositContract";
 import {
   useTokenRatiosIndex,
@@ -38,7 +35,7 @@ import {
 } from "wagmi";
 import erc20Abi from "@/constants/abi/erc20.json";
 
-type Tab = "kol" | "project" | "claim" | "migrate";
+type Tab = "project" | "claim" | "migrate";
 
 interface MigrateToken {
   project_name: string;
@@ -50,15 +47,13 @@ interface MigrateToken {
 }
 
 export default function ReviewPage() {
-  const router = useRouter();
   const { address } = useConnection();
-  const { lang, setCurrentProject } = useStore();
+  const { lang } = useStore();
   const t = lang === "zh" ? zhCN : enUS;
   const review = t.review as Record<string, unknown>;
   const tabs = review.tabs as Record<string, string>;
-  const statusMap = review.statusMap as Record<number, string>;
 
-  const [activeTab, setActiveTab] = useState<Tab>("kol");
+  const [activeTab, setActiveTab] = useState<Tab>("project");
   const [loading, setLoading] = useState(false);
 
   // 认领审核弹窗
@@ -70,10 +65,10 @@ export default function ReviewPage() {
   // 不通过确认弹窗
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
   const [rejectType, setRejectType] = useState<
-    "kol" | "project" | "claim" | null
+    "project" | "claim" | null
   >(null);
   const [rejectItem, setRejectItem] = useState<
-    KolWaitInfo | ProjectWaitInfo | BindProjectWaitInfo | null
+    ProjectInfo | BindProjectWaitInfo | null
   >(null);
 
   // 迁移表单
@@ -116,79 +111,60 @@ export default function ReviewPage() {
       )
     : false;
 
-  const {
-    data: kolListData,
-    isLoading: kolLoading,
-    isFetching: kolFetching,
-    refetch: refetchKolList,
-  } = useQuery<{ data: KolWaitInfo[] }>({
-    queryKey: ["kolWaitAgreeList"],
-    queryFn: () => kolApi.getKolWaitAgreeList(),
-    enabled: isAdmin && activeTab === "kol",
-  });
-  const kolList = kolListData?.data || [];
 
   const {
     data: projectListData,
     isLoading: projectLoading,
     isFetching: projectFetching,
     refetch: refetchProjectList,
-  } = useQuery<{ data: ProjectWaitInfo[] }>({
-    queryKey: ["projectWaitAgreeList"],
-    queryFn: () => kolApi.getProjectWaitAgreeList(),
+  } = useQuery<{ data: ProjectInfo[] }>({
+    queryKey: ["projectIssuedList"],
+    queryFn: () => kolApi.getProjectIssuedList(),
     enabled: isAdmin && activeTab === "project",
   });
-  const projectList = projectListData?.data || [];
+  
+  // 对项目列表按创建时间降序排序（最新的在最上面）
+  const projectList = useMemo(() => {
+    const list = projectListData?.data || [];
+    return [...list].sort((a, b) => {
+      const timeA = a.mint_pool_create_time 
+        ? dayjs(a.mint_pool_create_time).valueOf() 
+        : 0;
+      const timeB = b.mint_pool_create_time 
+        ? dayjs(b.mint_pool_create_time).valueOf() 
+        : 0;
+      return timeB - timeA; // 降序
+    });
+  }, [projectListData?.data]);
 
   const {
     data: claimData,
     isLoading: claimLoading,
     isFetching: claimFetching,
     refetch: refetchClaimList,
-  } = useQuery<{
-    claimList: BindProjectWaitInfo[];
-    issuedProjects: ProjectInfo[];
-  }>({
+  } = useQuery<{ data: BindProjectWaitInfo[] }>({
     queryKey: ["bindProjectWaitList"],
-    queryFn: async () => {
-      const [claimRes, issuedRes] = await Promise.all([
-        kolApi.getBindProjectWaitList(),
-        kolApi.getProjectIssuedList(),
-      ]);
-      return {
-        claimList: claimRes.data || [],
-        issuedProjects: issuedRes.data || [],
-      };
-    },
+    queryFn: () => kolApi.getBindProjectWaitList(),
     enabled: isAdmin && activeTab === "claim",
   });
-  const claimList = claimData?.claimList || [];
-  const issuedProjects = claimData?.issuedProjects || [];
+  
+  // 对认领列表按创建时间降序排序（最新的在最上面）
+  const claimList = useMemo(() => {
+    const list = claimData?.data || [];
+    return [...list].sort((a, b) => {
+      const timeA = dayjs(a.created_at).valueOf();
+      const timeB = dayjs(b.created_at).valueOf();
+      return timeB - timeA; // 降序
+    });
+  }, [claimData?.data]);
 
   const dataLoading =
-    activeTab === "kol"
-      ? kolLoading || kolFetching
-      : activeTab === "project"
+    activeTab === "project"
       ? projectLoading || projectFetching
       : activeTab === "claim"
       ? claimLoading || claimFetching
       : false;
 
-  // 跳转到项目详情
-  const goToDetail = (projectName: string) => {
-    const project = issuedProjects.find((p) => p.project_name === projectName);
-    if (project) {
-      setCurrentProject(project);
-      // 根据项目类型跳转到不同页面
-      if (project.mint_pool_id) {
-        router.push("/pool-detail");
-      } else {
-        router.push("/early-bird-detail");
-      }
-    } else {
-      toast.error("項目詳情未找到");
-    }
-  };
 
   const migrateMutation = useMutation({
     mutationFn: (payload: {
@@ -238,31 +214,8 @@ export default function ReviewPage() {
     }
   }, [address, migrateMutation, migrateLoading, migrateToken, transferSuccess]);
 
-  // 审核 KOL
-  const handleKolAgree = async (item: KolWaitInfo, agree: boolean) => {
-    if (!address) return;
-    setLoading(true);
-    try {
-      const res = await adminApi.agreeKol(address, item.address, agree);
-      if (res.message) {
-        toast.error(res.message);
-      } else {
-        toast.success(
-          agree
-            ? (t.common.reviewPass as string)
-            : (t.common.reviewReject as string)
-        );
-        refetchKolList();
-      }
-    } catch {
-      toast.error(t.common.operationFailed as string);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // 审核项目
-  const handleProjectAgree = async (item: ProjectWaitInfo, agree: boolean) => {
+  const handleProjectAgree = async (item: ProjectInfo, agree: boolean) => {
     if (!address) return;
     setLoading(true);
     try {
@@ -481,7 +434,7 @@ export default function ReviewPage() {
 
       {/* Tabs */}
       <div className="flex bg-background-card border border-border rounded-xl p-1 mb-6">
-        {(["kol", "project", "claim", "migrate"] as Tab[]).map((tab) => (
+        {(["project", "claim", "migrate"] as Tab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -495,98 +448,6 @@ export default function ReviewPage() {
           </button>
         ))}
       </div>
-
-      {/* KOL 列表 */}
-      {activeTab === "kol" && (
-        <div className="space-y-4">
-          {dataLoading ? (
-            <div className="card text-center py-10">
-              <div className="flex items-center justify-center gap-2 text-text-secondary">
-                <span className="w-4 h-4 border-2 border-text-secondary border-t-transparent rounded-full animate-spin" />
-                <span>{t.common.loading as string}</span>
-              </div>
-            </div>
-          ) : kolList.length === 0 ? (
-            <div className="card text-center py-10 text-text-muted">
-              暫無數據
-            </div>
-          ) : (
-            kolList.map((item, index) => (
-              <div key={index} className="card">
-                <div className="space-y-6 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">
-                      {review.certifyAddress as string}
-                    </span>
-                    <a
-                      href={getBscScanUrl(item.address, "address")}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#FFC519] hover:text-[#e6b117] transition-colors"
-                    >
-                      {shortAddress(item.address)}
-                    </a>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">
-                      {review.twitterAddress as string}
-                    </span>
-                    {renderLink(item.twitter_account)}
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">
-                      {review.telegramAddress as string}
-                    </span>
-                    {renderLink(item.tg_account)}
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">
-                      {review.binanceSquare as string}
-                    </span>
-                    {renderLink(item.discord_account)}
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">
-                      {review.status as string}
-                    </span>
-                    <span className="text-secondary">
-                      {statusMap[item.status]}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">
-                      {review.createTime as string}
-                    </span>
-                    <span className="text-secondary">
-                      {formatDate(item.created_at)}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex gap-3 mt-5">
-                  <button
-                    onClick={() => handleKolAgree(item, true)}
-                    disabled={loading || item.status !== 0}
-                    className="btn-primary flex-1 text-sm"
-                  >
-                    {review.approve as string}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setRejectType("kol");
-                      setRejectItem(item);
-                      setShowRejectConfirm(true);
-                    }}
-                    disabled={loading || item.status !== 0}
-                    className="btn-outline flex-1 text-sm"
-                  >
-                    {review.reject as string}
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      )}
 
       {/* 项目列表 */}
       {activeTab === "project" && (
@@ -668,7 +529,9 @@ export default function ReviewPage() {
                       {review.createTime as string}
                     </span>
                     <span className="text-secondary">
-                      {formatDate(item.created_at)}
+                      {item.mint_pool_create_time
+                        ? dayjs(item.mint_pool_create_time).format("YYYY-MM-DD HH:mm:ss")
+                        : "--"}
                     </span>
                   </div>
                 </div>
@@ -720,12 +583,9 @@ export default function ReviewPage() {
                     <span className="text-gray-400">
                       {review.tokenName as string}
                     </span>
-                    <button
-                      onClick={() => goToDetail(item.project_name)}
-                      className="text-[#FFC519] hover:text-[#e6b117] transition-colors underline"
-                    >
+                    <span className="text-secondary">
                       {item.project_name}
-                    </button>
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-text-secondary">
@@ -776,7 +636,7 @@ export default function ReviewPage() {
                       {review.createTime as string}
                     </span>
                     <span className="text-secondary">
-                      {formatDate(item.created_at)}
+                      {dayjs(item.created_at).format("YYYY-MM-DD HH:mm:ss")}
                     </span>
                   </div>
                 </div>
@@ -1048,10 +908,8 @@ export default function ReviewPage() {
           setShowRejectConfirm(false);
 
           // 根据类型执行相应的不通过操作
-          if (rejectType === "kol") {
-            await handleKolAgree(rejectItem as KolWaitInfo, false);
-          } else if (rejectType === "project") {
-            await handleProjectAgree(rejectItem as ProjectWaitInfo, false);
+          if (rejectType === "project") {
+            await handleProjectAgree(rejectItem as ProjectInfo, false);
           } else if (rejectType === "claim") {
             await handleClaimAgreeDirect(
               rejectItem as BindProjectWaitInfo,
