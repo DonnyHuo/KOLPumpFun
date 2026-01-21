@@ -108,7 +108,7 @@ const lan = {
     telegramAddress: "Telegram URL",
     binanceSquare: "Follow Official Twitter",
     desc1:
-      'When certifying as a KOL, please follow the official Twitter @SmartBTCdao, retweet its pinned tweet, and include the certification information: "Influence Asset Smart Token Launch Platform kolpump.fun certification code + last 4 digits of wallet address"',
+      'When certifying as a KOL, please follow the official Twitter @KOLtokens, retweet its pinned tweet, and include the certification information: "Influence Asset Smart Token Launch Platform kolpump.fun certification code + last 4 digits of wallet address"',
     submit: "Submit Certification",
     kolReview: "Under Review...",
     certified: "Certified",
@@ -133,7 +133,7 @@ const lan = {
     sure: "I have read and agree to the claim rules, and agree to claim this project.",
     tweet:
       "My wallet {address} has staked SOS and is submitting KOL certification on SmartBTC.io platform to promote {name} inscription. Please help like and retweet this tweet to boost {name} inscription on SmartBTC!",
-    tweetTips: "Copy the above text to post on Twitter and @smartbtcdao",
+    tweetTips: "Copy the above text to post on Twitter and @KOLtokens",
     contentDesc: [
       "1. In principle, KOL should actively participate in promoting inscription projects through Twitter, Telegram and other social networks, or organizing offline activities to claim as the community KOL (project party);",
       "2. When submitting a claim, SmartBTC.io will multi-dimensionally calculate comprehensive factors such as the amount of SOS staked, social account activity, certification tweet reads/likes/retweets, relevance of social account history to the project, and the amount of project tokens held at the claim address, to automatically calculate the current KOL's community airdrop reward allocation weight;",

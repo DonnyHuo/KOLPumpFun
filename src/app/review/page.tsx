@@ -624,7 +624,7 @@ export default function ReviewPage() {
                         className="text-[#FFC519] hover:text-[#e6b117] flex items-center gap-1 transition-colors"
                         title={item.discord_account}
                       >
-                        @SmartBTCdao
+                        @KOLtokens
                         <ExternalLink className="w-3 h-3 shrink-0" />
                       </a>
                     ) : (
