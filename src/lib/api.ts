@@ -364,6 +364,7 @@ export interface MemeOrder {
   order_type: number;
   order_state: number;
   created_at: string;
+  pool_id?: number;
 }
 
 export interface MemeTradeParams {

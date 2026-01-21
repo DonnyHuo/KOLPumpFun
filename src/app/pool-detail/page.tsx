@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useConnection, useBalance as useWagmiBalance } from "wagmi";
 import {
@@ -98,6 +98,13 @@ export default function PoolDetailPage() {
     token: currentProject?.display_name?.split("-")[0] || "BNB",
     coinMintToken: currentProject?.coin_mint_token || "",
   };
+
+  // 打印 poolInfo
+  useEffect(() => {
+    console.log("poolInfo:", poolInfo);
+    console.log("currentProject:", currentProject);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentProject]);
 
   // 如果没有项目信息，返回列表页
   useEffect(() => {
@@ -318,7 +325,17 @@ export default function PoolDetailPage() {
     },
     enabled: Boolean(address),
   });
-  const orders = ordersData?.data || [];
+  
+  // 前端过滤：只显示当前项目的订单
+  const orders = useMemo(() => {
+    const allOrders = ordersData?.data || [];
+    const currentPoolId = Number(poolInfo.id);
+    if (!currentPoolId) return [];
+    return allOrders.filter((order) => {
+      const orderWithPoolId = order as MemeOrder & { pool_id?: number };
+      return orderWithPoolId.pool_id === currentPoolId;
+    });
+  }, [ordersData?.data, poolInfo.id]);
 
   // 授权成功后刷新
   useEffect(() => {
