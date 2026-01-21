@@ -26,7 +26,7 @@ export function SocialLinks({
 
         {/* X (Twitter) */}
         <a
-          href="https://twitter.com/SmartBTCdao"
+          href="https://x.com/KOLtokens"
           target="_blank"
           rel="noopener noreferrer"
           className="w-12 h-12 rounded-xl bg-background-card border border-border flex items-center justify-center hover:border-primary/30 hover:text-primary transition-all text-text-secondary"
