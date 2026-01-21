@@ -312,12 +312,11 @@ export function CreateProject({
     }
   };
 
-  // 检查模式是否可选
+  // 检查模式是否可选 - 允许向下兼容（质押多可以用低模式）
   const canSelectMode = (mode: KolMode): boolean => {
     const req = MODE_REQUIREMENTS[mode];
-    return (
-      (activeAmount >= req.min && activeAmount <= req.max) || activeAmount === 0
-    );
+    // 只要质押金额 >= 最小值就允许选择，不检查最大值上限
+    return activeAmount >= req.min || activeAmount === 0;
   };
 
   // 切换模式
@@ -362,6 +361,10 @@ export function CreateProject({
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         toast.error(createProject?.logoSizeLimit as string);
+        // 重置 input value，允许重新选择同一个文件
+        if (e.target) {
+          e.target.value = "";
+        }
         return;
       }
       setLogoFile(file);
@@ -378,8 +381,15 @@ export function CreateProject({
       } catch (error) {
         console.error(createProject?.logoUploadFailed as string, error);
         toast.error(createProject?.logoUploadFailed as string);
+        // 上传失败时清空预览
+        setLogoPreview("");
+        setLogoFile(null);
       } finally {
         setLogoUploading(false);
+        // 重置 input value，允许重新选择同一个文件
+        if (e.target) {
+          e.target.value = "";
+        }
       }
     }
   };
@@ -407,19 +417,15 @@ export function CreateProject({
   // 提交创建项目
   const handleSubmit = async () => {
     if (!address) return;
-
     // 检查认证状态
     if (accountInfoStatus !== 1) {
       toast.error(createProject?.notCertified as string);
       return;
     }
 
-    // 检查质押金额
+    // 检查质押金额 - 只检查最小值，允许向下兼容（质押多可以用低模式）
     const req = MODE_REQUIREMENTS[activeMode];
-    if (
-      activeAmount < req.min ||
-      (req.max !== Infinity && activeAmount > req.max)
-    ) {
+    if (activeAmount < req.min) {
       const tip =
         activeMode === "single"
           ? formatStakeRequirement(
@@ -436,12 +442,12 @@ export function CreateProject({
       toast.error(tip);
       return;
     }
-
     // 检查图片
     if (!logoPreview) {
       toast.error(createProject?.uploadLogo as string);
       return;
     }
+
     if (logoUploading) {
       toast.error(createProject?.logoUploading as string);
       return;
@@ -450,6 +456,7 @@ export function CreateProject({
       toast.error(createProject?.logoUploadFailed as string);
       return;
     }
+
 
     let projectInfo: Record<string, unknown>;
 
@@ -644,7 +651,11 @@ export function CreateProject({
               <div className="flex justify-center mb-6">
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-50 h-37.5 border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors bg-background-card"
+                  className={`w-50 h-37.5 border-2 border-dashed border-border rounded-2xl cursor-pointer hover:border-primary/50 transition-colors bg-background-card ${
+                    logoPreview
+                      ? "relative"
+                      : "flex flex-col items-center justify-center"
+                  }`}
                 >
                   {logoPreview ? (
                     <div className="relative w-full h-full">
@@ -653,7 +664,7 @@ export function CreateProject({
                         alt={createProject.logoAlt as string}
                         fill
                         sizes="200px"
-                        className="w-full h-full object-contain rounded-xl p-2"
+                        className="object-contain rounded-xl p-2"
                         unoptimized={!!logoPreview}
                       />
                       <button
@@ -663,8 +674,12 @@ export function CreateProject({
                           setLogoPreview("");
                           setLogoUploadUrl("");
                           setLogoUploading(false);
+                          // 重置 input value，允许重新选择同一个文件
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = "";
+                          }
                         }}
-                        className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                        className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors z-10"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>

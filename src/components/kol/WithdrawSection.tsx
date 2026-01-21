@@ -74,7 +74,7 @@ export function WithdrawSection({
         {/* 解除质押按钮 */}
         <ConfirmButton
           onClick={() => setShowConfirm(true)}
-          disabled={!(activeAmount > 0) || isLoading || !tokenId}
+          disabled={!(activeAmount > 0) || isLoading || tokenId === undefined}
           className="btn-primary w-full mt-2"
           loading={isLoading}
         >

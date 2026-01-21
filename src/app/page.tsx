@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Globe, Sun, Moon } from "lucide-react";
 import { useConnection, useDisconnect } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
@@ -113,7 +113,9 @@ export default function CreatePage() {
     },
     enabled: Boolean(isConnected && address),
   });
-  const kolInfo = kolInfoData ?? null;
+  const kolInfo = useMemo(() =>{
+    return kolInfoData ?? null;
+  }, [kolInfoData]);
 
   // 点击外部关闭下拉菜单
   useEffect(() => {
