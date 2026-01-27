@@ -78,7 +78,7 @@ export function WithdrawSection({
           className="btn-primary w-full mt-2"
           loading={isLoading}
         >
-          {(home.liftDisposit as string)}
+          {home.liftDisposit as string}
         </ConfirmButton>
       </div>
 

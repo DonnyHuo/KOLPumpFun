@@ -4,8 +4,9 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { formatUnits } from "viem";
 import { kolApi, type ProjectInfo } from "@/lib/api";
-import { copyToClipboard } from "@/lib/utils";
+import { copyToClipboard, formatLargeNumber } from "@/lib/utils";
 import { useStore } from "@/store/useStore";
 import zhCN from "@/i18n/zh-CN";
 import enUS from "@/i18n/en-US";
@@ -48,14 +49,19 @@ export default function SharePage() {
     let list = [...projectList];
     if (searchValue) {
       list = list.filter((item) =>
-        item.symbol.toLowerCase().includes(searchValue.toLowerCase())
+        item.symbol.toLowerCase().includes(searchValue.toLowerCase()),
       );
     }
 
+    // 按内盘进度排序
     list.sort((a, b) => {
-      const marketCapA = Number(a.total_supply) * Number(a.lastPrice || 0);
-      const marketCapB = Number(b.total_supply) * Number(b.lastPrice || 0);
-      return sort === "asc" ? marketCapA - marketCapB : marketCapB - marketCapA;
+      const progressA = a.mint_process_percent
+        ? Number(a.mint_process_percent.split(",")[1])
+        : 0;
+      const progressB = b.mint_process_percent
+        ? Number(b.mint_process_percent.split(",")[1])
+        : 0;
+      return sort === "asc" ? progressA - progressB : progressB - progressA;
     });
 
     return list;
@@ -99,7 +105,7 @@ export default function SharePage() {
           onClick={handleSort}
           className="flex items-center gap-2 bg-background-card border border-border px-4 py-2.5 rounded-xl hover:bg-card-hover transition-colors"
         >
-          <span className="text-secondary text-sm">{newData.marketCap}</span>
+          <span className="text-secondary text-sm">內盤進度</span>
           <div className="flex flex-col gap-0.5">
             <div
               className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent"
@@ -159,20 +165,7 @@ export default function SharePage() {
                     <span className="text-secondary font-semibold">
                       {item.symbol}
                     </span>
-                    <div className="text-text-secondary text-xs mt-0.5">
-                      {newData.marketCap}:{" "}
-                      <span className="text-secondary">
-                        $
-                        {(
-                          Number(item.total_supply) *
-                          Number(item.lastPrice || 0)
-                        ).toFixed(0)}
-                      </span>
-                    </div>
                   </div>
-                </div>
-                <div className="text-primary font-semibold">
-                  ${Number(item.lastPrice || 0).toFixed(6)}
                 </div>
               </div>
 
@@ -222,6 +215,65 @@ export default function SharePage() {
                 )}
               </div>
 
+              {/* 项目数据字段（仅联合KOL和单一KOL显示） */}
+              {(item.project_type === 0 || item.project_type === 1) && (
+                <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                  {/* 开盘涨幅 */}
+                  {item.cross_percent !== undefined &&
+                    item.lm_percent !== undefined &&
+                    item.lm_percent > 100 && (
+                      <div className="flex justify-between bg-background-card-hover border border-border rounded-lg p-2">
+                        <span className="text-text-secondary">開盤漲幅</span>
+                        <span className="text-primary font-medium">
+                          {(
+                            (item.cross_percent * 0.9) /
+                            (item.lm_percent - 100)
+                          ).toFixed(2)}
+                          %
+                        </span>
+                      </div>
+                    )}
+
+                  {/* 早鸟进度 */}
+                  {item.airdrop_process_percent && (
+                    <div className="flex justify-between bg-background-card-hover border border-border rounded-lg p-2">
+                      <span className="text-text-secondary">早鳥進度</span>
+                      <span className="text-secondary font-medium">
+                        {item.airdrop_process_percent.split(",")[1]}%
+                      </span>
+                    </div>
+                  )}
+
+                  {/* 内盘进度 */}
+                  {item.mint_process_percent && (
+                    <div className="flex justify-between bg-background-card-hover border border-border rounded-lg p-2">
+                      <span className="text-text-secondary">內盤進度</span>
+                      <span className="text-secondary font-medium">
+                        {Number(
+                          item.mint_process_percent.split(",")[1],
+                        ).toFixed(2)}
+                        %
+                      </span>
+                    </div>
+                  )}
+
+                  {/* 内盘额度 */}
+                  {item.mint_process_percent && (
+                    <div className="flex justify-between bg-background-card-hover border border-border rounded-lg p-2">
+                      <span className="text-text-secondary">內盤額度</span>
+                      <span className="text-secondary font-medium">
+                        {(() => {
+                          const rawAmount =
+                            item.mint_process_percent.split(",")[0];
+                          const formatted = formatUnits(BigInt(rawAmount), 18);
+                          return formatLargeNumber(Number(formatted));
+                        })()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* 项目描述 */}
               {item.details && (
                 <div className="flex items-center justify-between gap-4 mt-4">
@@ -246,8 +298,7 @@ export default function SharePage() {
                     </span>
                     <span className="text-primary ml-2">
                       1 {item.display_name?.split("-")[0] || "BNB"} ={" "}
-                      {item.exchange_rate}{" "}
-                      {item.symbol}
+                      {item.exchange_rate} {item.symbol}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 justify-end">

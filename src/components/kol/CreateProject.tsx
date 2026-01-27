@@ -6,14 +6,24 @@ import { useConnection } from "wagmi";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ChevronDown, Upload, X, Copy, Check, Send } from "lucide-react";
+import { formatUnits } from "viem";
 import { Tip } from "@/components/ui/Tip";
 import { kolApi, type SelectToken, type ProjectInfo } from "@/lib/api";
 import { useStore } from "@/store/useStore";
-import { shortAddress, copyToClipboard, cn } from "@/lib/utils";
+import {
+  shortAddress,
+  copyToClipboard,
+  cn,
+  formatLargeNumber,
+} from "@/lib/utils";
 import { getTokenIcon } from "@/assets/images/tokenList";
 
 import Image from "next/image";
 import ConfirmButton from "../ui/ConfirmButton";
+import {
+  useTokenRatiosIndex,
+  useTokenAirdropKols,
+} from "@/hooks/useKolContract";
 
 interface CreateProjectProps {
   activeAmount: number;
@@ -29,8 +39,8 @@ type KolMode = "joint" | "single" | "marketMaking";
 type ProjectTab = "create" | "claim";
 
 const MODE_REQUIREMENTS = {
-  joint: { min: 100, max: 2099 },
-  single: { min: 10000, max: Infinity },
+  joint: { min: 1, max: 19999 },
+  single: { min: 20000, max: 20000 },
   marketMaking: { min: 2100, max: 9999 },
 };
 
@@ -40,6 +50,7 @@ function PercentBox({
   value,
   editable = false,
   onChange,
+  onBlur,
   tooltip,
   placeholder,
 }: {
@@ -47,6 +58,7 @@ function PercentBox({
   value: string;
   editable?: boolean;
   onChange?: (value: string) => void;
+  onBlur?: () => void;
   tooltip?: string;
   placeholder?: string;
 }) {
@@ -62,8 +74,9 @@ function PercentBox({
             type="text"
             value={value}
             onChange={(e) => onChange?.(e.target.value)}
+            onBlur={onBlur}
             placeholder={placeholder}
-            className="w-12.5 h-7.5 text-xs text-right bg-background-card border border-border rounded-lg px-2 text-foreground focus:outline-none focus:border-primary"
+            className="w-26 h-7.5 text-xs text-right bg-background-card border border-border rounded-lg px-2 text-foreground focus:outline-none focus:border-primary"
           />
           <span className="ml-2 text-text-secondary">%</span>
         </div>
@@ -113,11 +126,40 @@ export function CreateProject({
   const [filteredList, setFilteredList] = useState<ProjectInfo[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [selectedProject, setSelectedProject] = useState<ProjectInfo | null>(
-    null
+    null,
   );
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [claimChecked, setClaimChecked] = useState(false);
   const [claimLoading, setClaimLoading] = useState(false);
+
+  // 获取选中项目的 tokenId 和权重
+  const { data: selectedTokenId } = useTokenRatiosIndex(
+    selectedProject?.project_name || "",
+  );
+  const { percentage: projectWeight } = useTokenAirdropKols(
+    selectedTokenId !== undefined
+      ? BigInt(selectedTokenId as number)
+      : undefined,
+  );
+
+  // 打印项目权重
+  useEffect(() => {
+    if (selectedProject && projectWeight !== undefined) {
+      console.log("=== 認領綁定 - 項目權重信息 ===");
+      console.log("項目名稱:", selectedProject.project_name);
+      console.log("項目符號:", selectedProject.symbol);
+      console.log("TokenId:", selectedTokenId);
+      console.log("當前權重:", projectWeight);
+      console.log("是否可認領:", parseFloat(projectWeight) < 100);
+      console.log("=====================================");
+    }
+  }, [selectedProject, projectWeight, selectedTokenId]);
+
+  // 检查项目权重是否可以认领（< 100）
+  const canClaim = useMemo(() => {
+    const weight = parseFloat(projectWeight || "0");
+    return weight < 100;
+  }, [projectWeight]);
   const [copied, setCopied] = useState(false);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
@@ -127,16 +169,16 @@ export function CreateProject({
     brc20_id: "",
     symbol: "",
     details: "",
-    percents: ["45", "20", "15", "20"], // 公平发射, LP添加, 启动池, KOL奖励
+    percents: ["60", "0", "20", "20"], // 公平发射60%, LP添加0%(隐藏), 启动池20%, KOL奖励20%
   });
 
-  // 单一KOL模式表单数据 (LP添加和KOL奖励可编辑)
+  // 单一KOL模式表单数据 (KOL奖励可编辑10-30，启动池自动计算)
   const [typeTwo, setTypeTwo] = useState({
     brc20_name: "",
     brc20_id: "",
     symbol: "",
     details: "",
-    percents: ["45", "", "15", ""], // 公平发射固定45%, 启动池固定15%, LP添加和KOL奖励可编辑
+    percents: ["60", "0", "", ""], // 公平发射60%, LP添加0%(隐藏), 启动池自动计算, KOL奖励10-30
   });
 
   // 铭文做市商模式表单数据 (所有比例可编辑)
@@ -165,7 +207,7 @@ export function CreateProject({
     template: string,
     modeLabel: string,
     min: number,
-    max?: number
+    max?: number,
   ) => {
     let text = template || "";
     text = text.replace("{mode}", modeLabel).replace("{min}", String(min));
@@ -174,12 +216,6 @@ export function CreateProject({
     }
     return text;
   };
-  const exchangeRateTemplate = (createProject?.exchangeRate as string) || "";
-  const formatExchangeRate = (token: string, rate: number | string) =>
-    exchangeRateTemplate
-      .replace("{token}", token)
-      .replace("{rate}", String(rate));
-
   // 认领规则文案
   const contentDesc = kol?.contentDesc as string[];
 
@@ -187,19 +223,23 @@ export function CreateProject({
   const defaultTokens = useMemo(() => {
     return [
       {
-        mint_base_token: "BNB",
-        mint_base_token_addr: "0x55d398326f99059ff775485246999027b3197955",
-        exchange_rate: "9000000",
-      },
-      {
         mint_base_token: "USDT",
         mint_base_token_addr: "0x55d398326f99059ff775485246999027b3197955",
-        exchange_rate: "10000",
+        exchange_rate: "60000",
+        description: "早鸟上限 10K KB",
       },
+      {
+        mint_base_token: "BNB",
+        mint_base_token_addr: "0x55d398326f99059ff775485246999027b3197955",
+        exchange_rate: "6000000",
+        description: "早鸟上限 80K KB",
+      },
+
       {
         mint_base_token: "BTCB",
         mint_base_token_addr: "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c",
-        exchange_rate: "900000000",
+        exchange_rate: "120000000",
+        description: "早鸟上限 300K KB ",
       },
     ];
   }, []);
@@ -222,7 +262,7 @@ export function CreateProject({
   });
   const issuedProjects = useMemo(
     () => issuedProjectsData ?? [],
-    [issuedProjectsData]
+    [issuedProjectsData],
   );
 
   useEffect(() => {
@@ -234,7 +274,7 @@ export function CreateProject({
   useEffect(() => {
     if (searchValue) {
       const filtered = projectList.filter((item) =>
-        item.project_name?.toLowerCase().includes(searchValue.toLowerCase())
+        item.project_name?.toLowerCase().includes(searchValue.toLowerCase()),
       );
       setFilteredList(filtered);
     } else {
@@ -264,16 +304,18 @@ export function CreateProject({
     }
   };
 
-  // 排序项目列表
+  // 排序项目列表（按内盘进度）
   const handleSort = () => {
     const newOrder = sortOrder === "desc" ? "asc" : "desc";
     setSortOrder(newOrder);
     const sorted = [...filteredList].sort((a, b) => {
-      const marketCapA = Number(a.total_supply || 0) * Number(a.lastPrice || 0);
-      const marketCapB = Number(b.total_supply || 0) * Number(b.lastPrice || 0);
-      return newOrder === "asc"
-        ? marketCapA - marketCapB
-        : marketCapB - marketCapA;
+      const progressA = a.mint_process_percent
+        ? Number(a.mint_process_percent.split(",")[1])
+        : 0;
+      const progressB = b.mint_process_percent
+        ? Number(b.mint_process_percent.split(",")[1])
+        : 0;
+      return newOrder === "asc" ? progressA - progressB : progressB - progressA;
     });
     setFilteredList(sorted);
   };
@@ -394,24 +436,71 @@ export function CreateProject({
     }
   };
 
-  // 单一KOL模式：KOL奖励改变时自动计算LP添加
-  // 单一KOL模式：LP和KOL总共40%
-  const handleTypeTwoLpChange = (value: string) => {
-    const lpPercent = parseInt(value) || 0;
-    const kolPercent = Math.max(0, 40 - lpPercent); // 总共40%分给LP和KOL
+  // 单一KOL模式：KOL奖励输入时更新（允许自由输入）
+  const handleTypeTwoKolChange = (value: string) => {
+    // 允许清空
+    if (value === "") {
+      setTypeTwo((prev) => ({
+        ...prev,
+        percents: ["60", "0", "", ""],
+      }));
+      return;
+    }
+
+    // 只允许输入数字
+    if (!/^\d+$/.test(value)) {
+      return;
+    }
+
+    // 直接更新输入值，不进行校验和计算（保持启动池不变）
     setTypeTwo((prev) => ({
       ...prev,
-      percents: ["45", value, "15", kolPercent.toString()],
+      percents: ["60", "0", prev.percents[2], value],
     }));
   };
 
-  const handleTypeTwoKolChange = (value: string) => {
-    const kolPercent = parseInt(value) || 0;
-    const lpPercent = Math.max(0, 40 - kolPercent); // 总共40%分给LP和KOL
+  // 单一KOL模式：失焦时校验并计算启动池
+  const handleTypeTwoKolBlur = () => {
+    const value = typeTwo.percents[3];
+
+    if (value === "") {
+      return;
+    }
+
+    let kolPercent = parseInt(value);
+
+    // 限制范围10-30
+    if (kolPercent < 10) {
+      kolPercent = 10;
+    } else if (kolPercent > 30) {
+      kolPercent = 30;
+    }
+
+    // 计算启动池
+    const launchPoolPercent = 40 - kolPercent;
     setTypeTwo((prev) => ({
       ...prev,
-      percents: ["45", lpPercent.toString(), "15", value],
+      percents: [
+        "60",
+        "0",
+        launchPoolPercent.toString(),
+        kolPercent.toString(),
+      ],
     }));
+  };
+
+  // 计算开盘价（公平发射比例 ÷ 启动池比例）
+  const calculateOpenPrice = (launchPoolPercent: number): number => {
+    if (launchPoolPercent === 0) return 0;
+    return (60 / launchPoolPercent) * 100; // 转换为百分比
+  };
+
+  // 获取当前开盘价提示
+  const getOpenPriceHint = (): string => {
+    const launchPoolPercent = parseInt(typeTwo.percents[2]) || 0;
+    if (launchPoolPercent === 0) return "";
+    const openPrice = calculateOpenPrice(launchPoolPercent);
+    return `開盤價約為 ${openPrice.toFixed(0)}%`;
   };
 
   // 提交创建项目
@@ -431,13 +520,13 @@ export function CreateProject({
           ? formatStakeRequirement(
               stakeRequirement.min,
               kolTypes[activeMode],
-              req.min
+              req.min,
             )
           : formatStakeRequirement(
               stakeRequirement.range,
               kolTypes[activeMode],
               req.min,
-              req.max
+              req.max,
             );
       toast.error(tip);
       return;
@@ -456,7 +545,6 @@ export function CreateProject({
       toast.error(createProject?.logoUploadFailed as string);
       return;
     }
-
 
     let projectInfo: Record<string, unknown>;
 
@@ -482,8 +570,10 @@ export function CreateProject({
         toast.error(common?.fillComplete as string);
         return;
       }
-      if (!typeTwo.percents[1] || !typeTwo.percents[3]) {
-        toast.error(createProject?.fillLpKolRatio as string);
+      // 验证KOL奖励是否填写（10-30）
+      const kolPercent = parseInt(typeTwo.percents[3]) || 0;
+      if (!typeTwo.percents[3] || kolPercent < 10 || kolPercent > 30) {
+        toast.error("請填寫KOL獎勵比例（10-30之間的整數）");
         return;
       }
       projectInfo = {
@@ -567,10 +657,13 @@ export function CreateProject({
             {selectedToken?.mint_base_token}
           </span>
           <span className="text-xs text-text-secondary">
-            {formatExchangeRate(
+            1 {selectedToken?.mint_base_token} :{" "}
+            {formatLargeNumber(Number(selectedToken?.exchange_rate))} KB (
+            {selectedToken?.description})
+            {/* {formatExchangeRate(
               selectedToken?.mint_base_token || "",
-              selectedToken?.exchange_rate || ""
-            )}
+              selectedToken?.exchange_rate || "",
+            )} */}
           </span>
         </div>
         <ChevronDown
@@ -592,7 +685,10 @@ export function CreateProject({
                   : "text-foreground hover:bg-background-card-hover"
               }`}
             >
-              {formatExchangeRate(token.mint_base_token, token.exchange_rate)}
+              1 {token.mint_base_token} :{" "}
+              {formatLargeNumber(Number(token.exchange_rate))} KB (
+              {token.description})
+              {/* {formatExchangeRate(token.mint_base_token, token.exchange_rate)} */}
             </button>
           ))}
         </div>
@@ -719,13 +815,13 @@ export function CreateProject({
                         activeMode === mode
                           ? "bg-linear-to-r from-primary to-primary-hover text-black font-semibold"
                           : canSelectMode(mode)
-                          ? "text-text-secondary hover:text-foreground"
-                          : "text-text-muted cursor-not-allowed opacity-40"
+                            ? "text-text-secondary hover:text-foreground"
+                            : "text-text-muted cursor-not-allowed opacity-40"
                       }`}
                     >
                       {kolTypes[mode]}
                     </button>
-                  )
+                  ),
                 )}
               </div>
 
@@ -774,10 +870,7 @@ export function CreateProject({
                         label={createProject.fairLaunchContract as string}
                         value={typeOne.percents[0]}
                       />
-                      <PercentBox
-                        label={createProject.lpAddContract as string}
-                        value={typeOne.percents[1]}
-                      />
+                      {/* LP添加合約已隐藏，设为0% */}
                       <PercentBox
                         label={createProject.launchPoolContract as string}
                         value={typeOne.percents[2]}
@@ -850,7 +943,7 @@ export function CreateProject({
                     </div>
                   </div>
 
-                  {/* 分配比例（部分可编辑） */}
+                  {/* 分配比例（KOL奖励可编辑10-30） */}
                   <div className="mt-5">
                     <div className="text-text-secondary font-medium text-xs mb-3">
                       {createProject.tokenSupplyNote as string}
@@ -860,26 +953,30 @@ export function CreateProject({
                         label={createProject.fairLaunchContract as string}
                         value={typeTwo.percents[0]}
                       />
-                      <PercentBox
-                        label={createProject.lpAddContract as string}
-                        value={typeTwo.percents[1]}
-                        editable
-                        onChange={handleTypeTwoLpChange}
-                        placeholder={percentPlaceholder}
-                      />
+                      {/* LP添加合約已隐藏 */}
                       <PercentBox
                         label={createProject.launchPoolContract as string}
-                        value={typeTwo.percents[2]}
+                        value={typeTwo.percents[2] || "0"}
                       />
                       <PercentBox
                         label={newData.kolRewardsContract as string}
                         value={typeTwo.percents[3]}
                         editable
                         onChange={handleTypeTwoKolChange}
-                        tooltip={newData.kolRewardsContractTooltip as string}
-                        placeholder={percentPlaceholder}
+                        onBlur={handleTypeTwoKolBlur}
+                        tooltip=""
+                        placeholder="請輸入 10-30"
                       />
                     </div>
+                    {/* 开盘价提示 */}
+                    {typeTwo.percents[3] && typeTwo.percents[2] && (
+                      <div className="mt-3 text-xs text-primary bg-primary/10 border border-primary/30 rounded-lg p-3">
+                        💡 {getOpenPriceHint()}
+                        <p className="text-xs pl-4">
+                          开盘价=公平发射合约比例÷启动池比例
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <TokenSelector />
@@ -1072,7 +1169,7 @@ export function CreateProject({
                   className="btn-primary w-full"
                   loading={loading}
                 >
-                  {(home?.createProject as string)}
+                  {home?.createProject as string}
                 </ConfirmButton>
               </div>
 
@@ -1087,22 +1184,20 @@ export function CreateProject({
               {/* 已认领项目展示 */}
 
               <>
-                {/* 顶部：市值排序 + 搜索框 */}
+                {/* 顶部：内盘进度排序 + 搜索框 */}
                 <div className="flex items-center justify-between gap-4 mb-4">
                   <button
                     onClick={() => handleSort()}
                     className="flex items-center gap-2 bg-background-card border border-border px-4 py-2.5 rounded-xl hover:bg-background-card-hover transition-colors"
                   >
-                    <span className="text-foreground text-sm">
-                      {newData.marketCap as string}
-                    </span>
+                    <span className="text-foreground text-sm">內盤進度</span>
                     <div className="flex flex-col gap-0.5 shrink-0">
                       <div
                         className={cn(
                           "w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent",
                           sortOrder === "asc"
                             ? "border-b-primary"
-                            : "border-b-text-muted"
+                            : "border-b-text-muted",
                         )}
                       />
                       <div
@@ -1110,7 +1205,7 @@ export function CreateProject({
                           "w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent",
                           sortOrder === "desc"
                             ? "border-t-primary"
-                            : "border-t-text-muted"
+                            : "border-t-text-muted",
                         )}
                       />
                     </div>
@@ -1128,13 +1223,6 @@ export function CreateProject({
                 {filteredList.length > 0 ? (
                   <div className="space-y-3">
                     {filteredList.map((project, index) => {
-                      const marketCap =
-                        project.total_supply && project.lastPrice
-                          ? (
-                              Number(project.total_supply) *
-                              Number(project.lastPrice)
-                            ).toFixed(0)
-                          : "0";
                       const projectTypes =
                         (shareProject?.projectTypes as Record<
                           string,
@@ -1144,8 +1232,8 @@ export function CreateProject({
                         project.project_type === 2
                           ? projectTypes.marketMaking
                           : project.project_type === 0
-                          ? projectTypes.joint
-                          : projectTypes.single;
+                            ? projectTypes.joint
+                            : projectTypes.single;
 
                       return (
                         <div
@@ -1176,16 +1264,7 @@ export function CreateProject({
                                 <div className="text-sm font-semibold text-foreground">
                                   {project.symbol}
                                 </div>
-                                <div className="text-text-secondary text-xs mt-0.5">
-                                  {newData.marketCap as string}:{" "}
-                                  <span className="text-foreground">
-                                    ${marketCap}
-                                  </span>
-                                </div>
                               </div>
-                            </div>
-                            <div className="text-sm text-primary font-semibold">
-                              ${Number(project.lastPrice || 0).toFixed(6)}
                             </div>
                           </div>
 
@@ -1230,28 +1309,116 @@ export function CreateProject({
                             <div className="bg-primary/10 border border-primary/30 text-primary p-1.5 px-2.5 rounded-lg">
                               {projectTypeName}
                             </div>
-                            {!project.details && (
-                              <button
-                                onClick={() => handleClickProject(project)}
-                                className="ml-auto btn-primary h-auto py-2 px-4 text-xs"
-                              >
-                                {newData.approve as string}
-                              </button>
-                            )}
+                            {/* 认领按钮（联合KOL和铭文做市，且无描述时显示） */}
+                            {!project.details &&
+                              (project.project_type === 0 ||
+                                project.project_type === 2) && (
+                                <button
+                                  onClick={() => handleClickProject(project)}
+                                  className="ml-auto btn-primary h-auto py-2 px-4 text-xs"
+                                >
+                                  {newData.approve as string}
+                                </button>
+                              )}
                           </div>
 
-                          {/* 描述和认领按钮 */}
+                          {/* 项目数据字段（仅联合KOL和单一KOL显示） */}
+                          {(project.project_type === 0 ||
+                            project.project_type === 1) && (
+                            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                              {/* 开盘涨幅 */}
+                              {project.cross_percent !== undefined &&
+                                project.lm_percent !== undefined &&
+                                project.lm_percent > 100 && (
+                                  <div className="flex justify-between bg-background-card-hover border border-border rounded-lg p-2">
+                                    <span className="text-text-secondary">
+                                      開盤漲幅
+                                    </span>
+                                    <span className="text-primary font-medium">
+                                      {(
+                                        (project.cross_percent * 0.9) /
+                                        (project.lm_percent - 100)
+                                      ).toFixed(2)}
+                                      %
+                                    </span>
+                                  </div>
+                                )}
+
+                              {/* 早鸟进度 */}
+                              {project.airdrop_process_percent && (
+                                <div className="flex justify-between bg-background-card-hover border border-border rounded-lg p-2">
+                                  <span className="text-text-secondary">
+                                    早鳥進度
+                                  </span>
+                                  <span className="text-secondary font-medium">
+                                    {
+                                      project.airdrop_process_percent.split(
+                                        ",",
+                                      )[1]
+                                    }
+                                    %
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* 内盘进度 */}
+                              {project.mint_process_percent && (
+                                <div className="flex justify-between bg-background-card-hover border border-border rounded-lg p-2">
+                                  <span className="text-text-secondary">
+                                    內盤進度
+                                  </span>
+                                  <span className="text-secondary font-medium">
+                                    {Number(
+                                      project.mint_process_percent.split(
+                                        ",",
+                                      )[1],
+                                    ).toFixed(2)}
+                                    %
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* 内盘额度 */}
+                              {project.mint_process_percent && (
+                                <div className="flex justify-between bg-background-card-hover border border-border rounded-lg p-2">
+                                  <span className="text-text-secondary">
+                                    內盤額度
+                                  </span>
+                                  <span className="text-secondary font-medium">
+                                    {(() => {
+                                      const rawAmount =
+                                        project.mint_process_percent.split(
+                                          ",",
+                                        )[0];
+                                      const formatted = formatUnits(
+                                        BigInt(rawAmount),
+                                        18,
+                                      );
+                                      return formatLargeNumber(
+                                        Number(formatted),
+                                      );
+                                    })()}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* 描述和认领按钮（联合KOL和铭文做市显示认领按钮） */}
                           {project.details && (
                             <div className="flex items-center justify-between gap-4 mt-3">
                               <div className="text-text-secondary text-xs text-left flex-1">
                                 {project.details}
                               </div>
-                              <button
-                                onClick={() => handleClickProject(project)}
-                                className="btn-primary h-auto py-2 px-4 text-xs shrink-0"
-                              >
-                                {newData.approve as string}
-                              </button>
+                              {(project.project_type === 0 ||
+                                project.project_type === 2) && (
+                                <button
+                                  onClick={() => handleClickProject(project)}
+                                  className="btn-primary h-auto py-2 px-4 text-xs shrink-0"
+                                >
+                                  {newData.approve as string}
+                                </button>
+                              )}
                             </div>
                           )}
 
@@ -1387,6 +1554,14 @@ export function CreateProject({
                       </div>
                     </div>
 
+                    {/* 项目权重提示 */}
+                    {!canClaim && (
+                      <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-xs text-red-500 shrink-0">
+                        ⚠️ 當前項目權重已達 {projectWeight}
+                        %，無法認領（權重需小於100%）
+                      </div>
+                    )}
+
                     {/* 确认勾选 */}
                     <label className="flex items-start gap-3 text-left mb-5 cursor-pointer shrink-0 group">
                       <input
@@ -1394,8 +1569,15 @@ export function CreateProject({
                         checked={claimChecked}
                         onChange={(e) => setClaimChecked(e.target.checked)}
                         className="mt-0.5 w-5 h-5 rounded border-border bg-background checked:bg-primary checked:border-primary"
+                        disabled={!canClaim}
                       />
-                      <span className="text-sm text-text-secondary group-hover:text-text-secondary transition-colors">
+                      <span
+                        className={`text-sm transition-colors ${
+                          canClaim
+                            ? "text-text-secondary group-hover:text-text-secondary"
+                            : "text-text-muted cursor-not-allowed"
+                        }`}
+                      >
                         {kol?.sure as string}
                       </span>
                     </label>
@@ -1403,11 +1585,11 @@ export function CreateProject({
                     {/* 认领按钮 */}
                     <ConfirmButton
                       onClick={handleClaim}
-                      disabled={!claimChecked || claimLoading}
+                      disabled={!claimChecked || claimLoading || !canClaim}
                       className="btn-primary w-full shrink-0"
                       loading={claimLoading}
                     >
-                      {(kol?.claim as string)}
+                      {kol?.claim as string}
                     </ConfirmButton>
                   </div>
                 </div>

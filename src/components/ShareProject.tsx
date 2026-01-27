@@ -215,12 +215,15 @@ export default function ShareProject({
                       {newData.copy || "Copy"}
                     </button>
                   ) : (
-                    <button
-                      onClick={() => handleClickItem(item)}
-                      className="btn-primary text-xs px-3 py-1"
-                    >
-                      {newData.approve}
-                    </button>
+                    // 认领按钮（联合KOL和铭文做市显示）
+                    (item.project_type === 0 || item.project_type === 2) && (
+                      <button
+                        onClick={() => handleClickItem(item)}
+                        className="btn-primary text-xs px-3 py-1"
+                      >
+                        {newData.approve}
+                      </button>
+                    )
                   )}
                 </div>
               </div>

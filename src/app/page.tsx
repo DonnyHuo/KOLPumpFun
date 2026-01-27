@@ -113,7 +113,7 @@ export default function CreatePage() {
     },
     enabled: Boolean(isConnected && address),
   });
-  const kolInfo = useMemo(() =>{
+  const kolInfo = useMemo(() => {
     return kolInfoData ?? null;
   }, [kolInfoData]);
 
@@ -165,7 +165,7 @@ export default function CreatePage() {
     <div className="bg-background bg-grid p-4 min-h-full text-left">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Image
             src={logo}
             alt="KOLPumpFun"
@@ -206,8 +206,8 @@ export default function CreatePage() {
                   ? "切換到淺色模式"
                   : "Switch to Light Mode"
                 : lang === "zh"
-                ? "切換到深色模式"
-                : "Switch to Dark Mode"
+                  ? "切換到深色模式"
+                  : "Switch to Dark Mode"
             }
           >
             {theme === "dark" ? (

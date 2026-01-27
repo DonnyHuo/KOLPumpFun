@@ -116,7 +116,7 @@ export default function PoolDetailPage() {
   const [activeTab, setActiveTab] = useState<"buy" | "redeem">("buy");
   const [amount, setAmount] = useState("");
   const [rate, setRate] = useState(0);
-  
+
   // 用于跟踪已经处理过的交易哈希，避免重复处理
   const processedSwapHash = useRef<string | null>(null);
   const processedWithdrawHash = useRef<string | null>(null);
@@ -127,16 +127,21 @@ export default function PoolDetailPage() {
   });
 
   // USDT 余额和decimals
-  const { formatted: usdtBalance, decimals: usdtDecimals, refetch: refetchUsdtBalance } = useBalance(
+  const {
+    formatted: usdtBalance,
+    decimals: usdtDecimals,
+    refetch: refetchUsdtBalance,
+  } = useBalance(
     "0x55d398326f99059ff775485246999027b3197955" as `0x${string}`,
-    address as `0x${string}`
+    address as `0x${string}`,
   );
 
   // SOS 余额和decimals
-  const { formatted: sosBalance, decimals: sosDecimals, refetch: refetchSosBalance } = useBalance(
-    CONTRACTS.SOS as `0x${string}`,
-    address as `0x${string}`
-  );
+  const {
+    formatted: sosBalance,
+    decimals: sosDecimals,
+    refetch: refetchSosBalance,
+  } = useBalance(CONTRACTS.SOS as `0x${string}`, address as `0x${string}`);
 
   // 授权检查
   // 抢购时需要的代币：支付代币（coinMintToken）或项目代币（contract）
@@ -147,13 +152,13 @@ export default function PoolDetailPage() {
   // 项目代币的decimals（用于赎回）
   const { decimals: projectTokenDecimals } = useBalance(
     poolInfo.contract as `0x${string}`,
-    address as `0x${string}`
+    address as `0x${string}`,
   );
 
   // 支付代币的decimals（用于抢购，如果不是BNB）
   const { decimals: paymentTokenDecimals } = useBalance(
     buyToken as `0x${string}`,
-    address as `0x${string}`
+    address as `0x${string}`,
   );
 
   // 根据 token 类型获取余额
@@ -208,13 +213,13 @@ export default function PoolDetailPage() {
     const decimals = getCurrentTokenDecimals();
     // 允许输入数字和小数点
     const regex = new RegExp(`^\\d*\\.?\\d{0,${decimals}}$`);
-    
+
     // 如果输入为空，允许清空
     if (value === "" || value === ".") {
       setAmount(value);
       return;
     }
-    
+
     // 检查是否符合格式
     if (regex.test(value)) {
       setAmount(value);
@@ -225,15 +230,16 @@ export default function PoolDetailPage() {
   const { data: buyAllowanceData, refetch: refetchBuyAllowance } = useAllowance(
     buyToken as `0x${string}`,
     address as `0x${string}`,
-    CONTRACTS.TOKEN_SHOP as `0x${string}`
+    CONTRACTS.TOKEN_SHOP as `0x${string}`,
   );
 
   // 检查赎回时的授权（项目代币）
-  const { data: redeemAllowanceData, refetch: refetchRedeemAllowance } = useAllowance(
-    redeemToken as `0x${string}`,
-    address as `0x${string}`,
-    CONTRACTS.TOKEN_SHOP as `0x${string}`
-  );
+  const { data: redeemAllowanceData, refetch: refetchRedeemAllowance } =
+    useAllowance(
+      redeemToken as `0x${string}`,
+      address as `0x${string}`,
+      CONTRACTS.TOKEN_SHOP as `0x${string}`,
+    );
 
   // 根据当前 tab 获取对应的授权额度
   const getCurrentAllowance = () => {
@@ -325,7 +331,7 @@ export default function PoolDetailPage() {
     },
     enabled: Boolean(address),
   });
-  
+
   // 前端过滤：只显示当前项目的订单
   const orders = useMemo(() => {
     const allOrders = ordersData?.data || [];
@@ -373,10 +379,15 @@ export default function PoolDetailPage() {
 
   // Swap 成功后
   useEffect(() => {
-    if (isSwapSuccess && swapHash && address && processedSwapHash.current !== swapHash) {
+    if (
+      isSwapSuccess &&
+      swapHash &&
+      address &&
+      processedSwapHash.current !== swapHash
+    ) {
       // 标记这个交易已经处理过
       processedSwapHash.current = swapHash;
-      
+
       toast.success((t.poolDetail.buySuccess as string) || "抢购成功");
       recordTradeMutation.mutate({
         pool_id: Number(poolInfo.id),
@@ -404,10 +415,15 @@ export default function PoolDetailPage() {
 
   // Withdraw 成功后
   useEffect(() => {
-    if (isWithdrawSuccess && withdrawHash && address && processedWithdrawHash.current !== withdrawHash) {
+    if (
+      isWithdrawSuccess &&
+      withdrawHash &&
+      address &&
+      processedWithdrawHash.current !== withdrawHash
+    ) {
       // 标记这个交易已经处理过
       processedWithdrawHash.current = withdrawHash;
-      
+
       toast.success((t.poolDetail.redeemSuccess as string) || "赎回成功");
       recordTradeMutation.mutate({
         pool_id: Number(poolInfo.id),
@@ -456,7 +472,7 @@ export default function PoolDetailPage() {
     approve(
       getSpenderToken() as `0x${string}`,
       CONTRACTS.TOKEN_SHOP as `0x${string}`,
-      maxUint256
+      maxUint256,
     );
   };
 

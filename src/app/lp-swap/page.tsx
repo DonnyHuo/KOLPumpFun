@@ -88,18 +88,18 @@ export default function LpSwapPage() {
   // 获取选中代币的余额和总供应量
   const { formatted: lpBalance } = useBalance(
     selectedToken?.address as `0x${string}`,
-    CONTRACTS.LP_EXCHANGE as `0x${string}`
+    CONTRACTS.LP_EXCHANGE as `0x${string}`,
   );
 
   const { totalSupply, decimals } = useTokenInfo(
     (selectedToken?.address as `0x${string}`) ||
-      "0x0000000000000000000000000000000000000000"
+      "0x0000000000000000000000000000000000000000",
   );
 
   // 获取用户余额
   const { formatted: userBalance } = useBalance(
     selectedToken?.address as `0x${string}`,
-    address
+    address,
   );
 
   // 获取代币的交换对索引
@@ -119,7 +119,7 @@ export default function LpSwapPage() {
         return [];
       }
     },
-    [publicClient]
+    [publicClient],
   );
 
   // 获取单个交换对详情
@@ -140,7 +140,7 @@ export default function LpSwapPage() {
           boolean,
           string,
           bigint,
-          boolean
+          boolean,
         ];
 
         // 返回值顺序: [lpToken, pairName, disPlayNmae, baseTokenIsToken0, changeToken, rate, isOpen]
@@ -169,7 +169,7 @@ export default function LpSwapPage() {
         return null;
       }
     },
-    [publicClient]
+    [publicClient],
   );
 
   // 初始化代币列表
@@ -198,7 +198,7 @@ export default function LpSwapPage() {
       // 过滤目标 token (SOS)
       const targetToken = "0x1d887f723f77b2f8c99bed8b94f4e3ba71baf70e";
       const filteredTokens = (exchangeTokens as string[]).filter(
-        (addr) => addr.toLowerCase() === targetToken
+        (addr) => addr.toLowerCase() === targetToken,
       );
 
       if (filteredTokens.length > 0) {
@@ -238,7 +238,7 @@ export default function LpSwapPage() {
                 index: [],
               };
             }
-          })
+          }),
         );
 
         setTokens(tokensInfo);
@@ -297,12 +297,12 @@ export default function LpSwapPage() {
       try {
         // 并行获取所有交换对详情
         const pairsInfo = await Promise.all(
-          selectedToken.index.map((pairIndex) => getPairInfo(pairIndex))
+          selectedToken.index.map((pairIndex) => getPairInfo(pairIndex)),
         );
 
         // 过滤掉 null 值和未开放的交换对
         const validPairs = pairsInfo.filter(
-          (pair): pair is PairInfo => pair !== null && pair.isOpen
+          (pair): pair is PairInfo => pair !== null && pair.isOpen,
         );
 
         setPairs(validPairs);

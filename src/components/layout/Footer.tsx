@@ -38,13 +38,13 @@ export function Footer() {
       icon: share,
       iconAct: shareAct,
     },
-    {
-      name: "lpSwap",
-      route: "/lp-swap",
-      text: footer.swap,
-      icon: lp,
-      iconAct: lpAct,
-    },
+    // {
+    //   name: "lpSwap",
+    //   route: "/lp-swap",
+    //   text: footer.swap,
+    //   icon: lp,
+    //   iconAct: lpAct,
+    // },
     {
       name: "btcSwap",
       route: "/btc-swap",

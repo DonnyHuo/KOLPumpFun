@@ -67,7 +67,7 @@ export const kolApi = {
   // 获取最低门槛
   getMinThreshold: () =>
     request<{ data: { RepMinThreshold: number; vote_pass_nums: number } }>(
-      "/kol/min_threshold"
+      "/kol/min_threshold",
     ),
 
   // 获取待审核 KOL 列表
@@ -77,7 +77,7 @@ export const kolApi = {
   // 获取待审核绑定项目列表
   getBindProjectWaitList: () =>
     request<{ data: BindProjectWaitInfo[] }>(
-      "/kol/bind_project_wait_aggre_list"
+      "/kol/bind_project_wait_aggre_list",
     ),
 
   // 获取项目私募列表
@@ -174,7 +174,7 @@ export const adminApi = {
     kolAddress: string,
     projectName: string,
     agree: boolean,
-    percent: number
+    percent: number,
   ) =>
     request<{ message?: string }>("/kol_admin/bind_project_aggree", {
       method: "POST",
@@ -326,6 +326,7 @@ export interface SelectToken {
   mint_base_token: string;
   mint_base_token_addr: string;
   exchange_rate: string;
+  description: string;
 }
 
 export interface CreateProjectParams {
