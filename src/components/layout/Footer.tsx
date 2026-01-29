@@ -55,7 +55,7 @@ export function Footer() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-125 mx-auto bg-background/95 backdrop-blur-xl border-t border-border pt-3 pb-[max(env(safe-area-inset-bottom),12px)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-125 mx-auto bg-background/95 backdrop-blur-xl border-t border-border py-2">
       <div className="flex items-center justify-around">
         {navList.map((item) => {
           const isActive = pathname === item.route;
@@ -63,35 +63,30 @@ export function Footer() {
             <Link
               key={item.name}
               href={item.route}
-              className={`flex flex-col items-center text-xs no-underline transition-all duration-200 ${
-                isActive
-                  ? "text-primary"
-                  : "text-text-muted hover:text-text-secondary"
-              }`}
+              className={`flex flex-col items-center text-xs no-underline transition-all duration-200 ${isActive
+                ? "text-primary"
+                : "text-text-muted hover:text-text-secondary"
+                }`}
             >
               <div
-                className={`p-2 rounded-xl transition-all ${
-                  isActive ? "bg-primary/10" : ""
-                }`}
+                className={`p-2 rounded-xl transition-all ${isActive ? "bg-primary/10" : ""
+                  }`}
               >
                 <Image
                   src={item.iconAct}
                   alt={item.name}
                   width={22}
                   height={22}
-                  className={`w-5.5 h-5.5 transition-all ${
-                    !isActive
-                      ? `grayscale ${
-                          theme === "light" ? "opacity-85" : "opacity-65"
-                        }`
-                      : ""
-                  }`}
+                  className={`w-5.5 h-5.5 transition-all ${!isActive
+                    ? `grayscale ${theme === "light" ? "opacity-85" : "opacity-65"
+                    }`
+                    : ""
+                    }`}
                 />
               </div>
               <div
-                className={`pt-1 text-[11px] font-medium ${
-                  isActive ? "text-primary" : ""
-                }`}
+                className={`pt-1 text-[11px] font-medium ${isActive ? "text-primary" : ""
+                  }`}
               >
                 {item.text}
               </div>

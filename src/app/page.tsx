@@ -96,6 +96,10 @@ export default function CreatePage() {
   // 语言选择下拉菜单
   const [showLangMenu, setShowLangMenu] = useState(false);
 
+  // Header 滚动隐藏/显示
+  const [showHeader, setShowHeader] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
   const {
     data: kolInfoData,
     isLoading: kolLoading,
@@ -131,6 +135,32 @@ export default function CreatePage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // 监听滚动事件，控制 Header 显示/隐藏
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const currentScrollY = target.scrollTop;
+
+      // 向下滚动且滚动距离大于 60px 时隐藏 header
+      if (currentScrollY > lastScrollY && currentScrollY > 60) {
+        setShowHeader(false);
+      }
+      // 向上滚动时显示 header
+      else if (currentScrollY < lastScrollY) {
+        setShowHeader(true);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    // 监听 main 元素的滚动事件（而不是 window）
+    const mainElement = document.querySelector("main");
+    if (mainElement) {
+      mainElement.addEventListener("scroll", handleScroll, { passive: true });
+      return () => mainElement.removeEventListener("scroll", handleScroll);
+    }
+  }, [lastScrollY]);
+
   // 切换语言
   const handleSelectLang = (newLang: "zh" | "en") => {
     setLang(newLang);
@@ -164,7 +194,10 @@ export default function CreatePage() {
   return (
     <div className="bg-background bg-grid p-4 min-h-full text-left">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div
+        className="flex items-center justify-between fixed top-0 left-0 right-0 z-50 py-3 px-4 bg-background transition-transform duration-300 ease-in-out"
+        style={{ transform: showHeader ? 'translateY(0)' : 'translateY(-100%)' }}
+      >
         <div className="flex items-center gap-2">
           <Image
             src={logo}
@@ -228,17 +261,15 @@ export default function CreatePage() {
               <div className="absolute right-0 top-10.5 bg-background-card border border-border rounded-xl overflow-hidden z-50 min-w-30">
                 <button
                   onClick={() => handleSelectLang("zh")}
-                  className={`w-full px-4 py-2.5 text-sm text-left hover:bg-card-hover transition-colors ${
-                    lang === "zh" ? "text-primary" : "text-secondary"
-                  }`}
+                  className={`w-full px-4 py-2.5 text-sm text-left hover:bg-card-hover transition-colors ${lang === "zh" ? "text-primary" : "text-secondary"
+                    }`}
                 >
                   繁体中文
                 </button>
                 <button
                   onClick={() => handleSelectLang("en")}
-                  className={`w-full px-4 py-2.5 text-sm text-left hover:bg-card-hover transition-colors ${
-                    lang === "en" ? "text-primary" : "text-secondary"
-                  }`}
+                  className={`w-full px-4 py-2.5 text-sm text-left hover:bg-card-hover transition-colors ${lang === "en" ? "text-primary" : "text-secondary"
+                    }`}
                 >
                   English
                 </button>
@@ -249,7 +280,7 @@ export default function CreatePage() {
       </div>
 
       {/* Banner Title */}
-      <div className="mt-10 text-center">
+      <div className="mt-20 text-center">
         <h1 className="text-[32px] font-bold gradient-text leading-tight">
           {t.create.title}
         </h1>
@@ -289,9 +320,8 @@ export default function CreatePage() {
           <div className="card">
             <div className="flex items-center gap-4 mb-5">
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                  hasSubmittedKol ? "bg-[#FFC519]/20" : "bg-blue-500/20"
-                }`}
+                className={`w-12 h-12 rounded-xl flex items-center justify-center ${hasSubmittedKol ? "bg-[#FFC519]/20" : "bg-blue-500/20"
+                  }`}
               >
                 <Image
                   src={hasSubmittedKol ? success : step1}
@@ -301,9 +331,8 @@ export default function CreatePage() {
                 />
               </div>
               <span
-                className={`text-xl font-bold ${
-                  hasSubmittedKol ? "text-[#FFC519]" : "text-blue-400"
-                }`}
+                className={`text-xl font-bold ${hasSubmittedKol ? "text-[#FFC519]" : "text-blue-400"
+                  }`}
               >
                 {(t.home as Record<string, unknown>).kolCertification as string}
               </span>
@@ -315,9 +344,8 @@ export default function CreatePage() {
           <div className="card">
             <div className="flex items-center gap-4 mb-5">
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                  hasStaked ? "bg-[#FFC519]/20" : "bg-blue-500/20"
-                }`}
+                className={`w-12 h-12 rounded-xl flex items-center justify-center ${hasStaked ? "bg-[#FFC519]/20" : "bg-blue-500/20"
+                  }`}
               >
                 <Image
                   src={hasStaked ? success : step2}
@@ -327,9 +355,8 @@ export default function CreatePage() {
                 />
               </div>
               <span
-                className={`text-xl font-bold ${
-                  hasStaked ? "text-[#FFC519]" : "text-blue-400"
-                }`}
+                className={`text-xl font-bold ${hasStaked ? "text-[#FFC519]" : "text-blue-400"
+                  }`}
               >
                 {((t.home as Record<string, unknown>).stakeSOS as string) ||
                   "SOS質押"}
@@ -351,9 +378,8 @@ export default function CreatePage() {
           <div className="card">
             <div className="flex items-center gap-4 mb-5">
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                  hasProject ? "bg-[#FFC519]/20" : "bg-blue-500/20"
-                }`}
+                className={`w-12 h-12 rounded-xl flex items-center justify-center ${hasProject ? "bg-[#FFC519]/20" : "bg-blue-500/20"
+                  }`}
               >
                 <Image
                   src={hasProject ? success : step3}
@@ -363,9 +389,8 @@ export default function CreatePage() {
                 />
               </div>
               <span
-                className={`text-xl font-bold ${
-                  hasProject ? "text-[#FFC519]" : "text-blue-400"
-                }`}
+                className={`text-xl font-bold ${hasProject ? "text-[#FFC519]" : "text-blue-400"
+                  }`}
               >
                 {(t.home as Record<string, unknown>).becomeProject as string}
               </span>

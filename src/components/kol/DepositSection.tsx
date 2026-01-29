@@ -213,11 +213,10 @@ export function DepositSection({ kolInfo, onSuccess, t }: DepositSectionProps) {
                 setSelectedType(range.type);
               }
             }}
-            className={`rounded-xl p-3 text-center transition-all ${
-              selectedType === range.type
-                ? "bg-primary/10 border-2 border-primary"
+            className={`rounded-xl p-3 text-center transition-all ${selectedType === range.type
+                ? "bg-primary/10 border border-primary"
                 : "bg-background-card border border-border hover:border-primary/30"
-            }`}
+              }`}
           >
             <div className="text-xs text-text-secondary mb-1">{range.name}</div>
             <div className="text-sm font-semibold text-primary">
