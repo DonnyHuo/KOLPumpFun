@@ -686,8 +686,8 @@ export function CreateProject({
               }`}
             >
               1 {token.mint_base_token} :{" "}
-              {formatLargeNumber(Number(token.exchange_rate))} KB (
-              {token.description})
+              {formatLargeNumber(Number(token.exchange_rate))}{" "}
+              {createProject?.token as string} ({token.description})
               {/* {formatExchangeRate(token.mint_base_token, token.exchange_rate)} */}
             </button>
           ))}
